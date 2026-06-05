@@ -83,7 +83,6 @@
       { id: 'adm_2', username: 'siska_admin', password: 'ADMIN456', name: 'Siska Saraswati', isSuper: false, donationLink: '' }
     ];
     
-    // Struktur Ujian Kosong
     const emptyExam = {
       minScore: 70,
       questions: Array.from({length: 10}, () => ({ q: '', options: ['','','',''], answer: 0 }))
@@ -283,6 +282,27 @@
         setClassroomMode('video'); setStudentAnswers({}); setExamModalOpen(false);
       };
 
+      const handleRegisterAdmin = async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const username = fd.get('username');
+        if (admins.some(a => a.username === username)) return showToast("Username sudah dipakai!");
+
+        const newAdminData = { name: fd.get('name'), username: username, password: fd.get('password'), isSuper: false, donationLink: '' };
+
+        await execDbAction(
+          () => {
+            const updatedA = [...admins, { id: `adm_${Date.now()}`, ...newAdminData }];
+            setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
+          },
+          async () => {
+             const docRef = doc(collection(fbDb, 'admins'));
+             await setDoc(docRef, newAdminData);
+          }
+        );
+        e.target.reset(); showToast("Instruktur Baru Ditambahkan!");
+      };
+
       const handleDeleteAdmin = (id) => {
         setConfirmDialog({
             isOpen: true,
@@ -312,8 +332,18 @@
         showToast("Kursus berhasil dihapus permanen.");
       };
 
+      const handleDeleteCourseSuper = (courseId) => {
+        setConfirmDialog({
+            isOpen: true,
+            message: "Peringatan: Yakin ingin menghapus kursus ini secara permanen? Semua data materi dan komentar di dalamnya akan hilang tanpa memandang isi.",
+            onConfirm: () => {
+                setConfirmDialog({ isOpen: false, message: "", onConfirm: null });
+                executeDeleteCourse(courseId);
+            }
+        });
+      };
+
       const handleSafeDeleteCourse = (courseId) => {
-        // Logika Proteksi: Cek apakah ada enrollment
         const hasEnrolled = enrollments.some(e => e.courseId === courseId);
         if (hasEnrolled) {
             showToast("Gagal: Kursus ini sudah memiliki peserta dan tidak boleh dihapus.");
@@ -420,6 +450,29 @@
         e.target.reset(); showToast("Peserta terdaftar!");
       };
 
+      const handleEnrollExisting = async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const email = fd.get('email');
+        const cId = fd.get('cId');
+
+        const participant = participants.find(p => p.email === email);
+        if (!participant) return showToast("Gagal: Peserta dengan email tersebut tidak ditemukan!");
+
+        const pId = participant.id;
+        if(enrollments.some(en => en.participantId === pId && en.courseId === cId)) return showToast("Sudah terdaftar di kursus ini!");
+
+        const enrData = { participantId: pId, courseId: cId, completedModules: [], isGraduated: false, certDownloaded: false, examScore: null };
+        await execDbAction(
+          () => {
+            const updatedE = [...enrollments, { id: `e_${Date.now()}`, ...enrData }];
+            setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE));
+          },
+          async () => await setDoc(doc(collection(fbDb, 'enrollments')), enrData)
+        );
+        showToast("Kursus ditambahkan ke akun Peserta!");
+      };
+
       const jumpToClassroom = (courseId, targetModuleId = null) => {
         const course = courses.find(c => c.id === courseId);
         let modToOpen = course.modules[0] || null;
@@ -486,7 +539,7 @@
           );
 
           if (!isLast) { setActiveModule(cMods[cIdx + 1]); showToast("Selesai! Lanjut materi."); } 
-          else { setClassroomMode('exam'); } // Lanjut ke Ujian
+          else { setClassroomMode('exam'); } 
         } else {
           if (!isLast) setActiveModule(cMods[cIdx + 1]); else { setClassroomMode('exam'); }
         }
@@ -533,7 +586,43 @@
         showToast("Sertifikat berhasil diunduh!");
       };
 
+      const markNotifsRead = async () => {
+        await execDbAction(
+          () => {
+            const updatedN = notifications.map(n => n.adminId === session.data.id ? { ...n, isRead: true } : n);
+            setNotifications(updatedN); localStorage.setItem('edu_notifications', JSON.stringify(updatedN));
+          },
+          async () => {
+            const myNotifs = notifications.filter(n => n.adminId === session.data.id && !n.isRead);
+            for(let n of myNotifs) await updateDoc(doc(fbDb, 'notifications', n.id), { isRead: true });
+          }
+        );
+      };
 
+      const handleSaveFirebaseConfig = () => {
+        try {
+          let str = fbConfigInput.trim();
+          if (str.includes('firebaseConfig')) {
+            str = str.substring(str.indexOf('{'), str.lastIndexOf('}') + 1);
+          }
+          const configObj = new Function("return " + str)();
+          if (!configObj.apiKey || !configObj.projectId) throw new Error("Missing keys");
+          localStorage.setItem('edu_fb_config', JSON.stringify(configObj));
+          localStorage.setItem('edu_db_mode', 'firebase');
+          window.location.reload(); 
+        } catch (e) {
+          setSetupError("Format konfigurasi tidak valid.");
+        }
+      };
+
+      const handleSwitchToLocal = () => {
+        localStorage.setItem('edu_db_mode', 'local');
+        window.location.reload();
+      };
+
+      // ----------------------------------------------------
+      // UI RENDERERS
+      // ----------------------------------------------------
       if (!dbReady && appMode !== 'setup_db') return (
         <div className="flex flex-col items-center justify-center h-screen bg-slate-50"><Loader2 size={48} className="animate-spin text-indigo-600 mb-4" /><h2 className="text-xl font-bold text-slate-800">Menyiapkan Aplikasi...</h2></div>
       );
@@ -555,7 +644,6 @@
         );
       };
 
-      // Modal Buat Ujian (Admin)
       const ManageExamModal = () => {
         if (!examModalOpen) return null;
         return (
@@ -595,18 +683,60 @@
             </div>
           </div>
         )
+      };
+
+      if (appMode === 'setup_db') {
+        return (
+          <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4">
+            <ConfirmModal />
+            {toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"><CheckCircle2 size={20}/><span>{toast}</span></div>}
+            <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-xl border border-slate-100">
+              <div className="flex flex-col items-center mb-6 text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-4"><Globe size={32} /></div>
+                <h1 className="text-2xl font-bold text-slate-900">Koneksi Database Online</h1>
+                <p className="text-slate-500 mt-2 text-sm">Aplikasi ini mendukung penyimpanan Cloud menggunakan Firebase. Paste konfigurasi proyek Anda di bawah ini.</p>
+              </div>
+              {setupError && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">{setupError}</div>}
+              <div className="space-y-4">
+                <textarea 
+                  value={fbConfigInput} onChange={e => setFbConfigInput(e.target.value)}
+                  className="w-full h-40 p-4 border border-slate-300 rounded-xl outline-none focus:border-blue-500 font-mono text-sm bg-slate-50"
+                  placeholder={`const firebaseConfig = {\n  apiKey: "...",\n  authDomain: "...",\n  projectId: "..."\n};`}
+                ></textarea>
+                <button onClick={handleSaveFirebaseConfig} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition shadow-md">Hubungkan ke Firebase</button>
+                <div className="relative flex py-2 items-center"><div className="flex-grow border-t border-slate-200"></div><span className="flex-shrink-0 mx-4 text-slate-400 text-xs">ATAU</span><div className="flex-grow border-t border-slate-200"></div></div>
+                <button onClick={handleSwitchToLocal} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-medium transition flex items-center justify-center space-x-2">
+                  <HardDrives size={20} /><span>Lanjutkan Offline (Local Storage)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
       }
 
       if (appMode === 'auth') {
         return (
           <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4">
             <ConfirmModal />
+            <div className="absolute top-4 right-4">
+              <button onClick={() => setAppMode('setup_db')} className="flex items-center space-x-2 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-sm text-xs font-medium hover:bg-slate-50 transition">
+                <span className={`w-2 h-2 rounded-full ${dbMode === 'local' ? 'bg-slate-400' : 'bg-green-500'}`}></span>
+                <span>{dbMode === 'local' ? 'Offline Mode' : 'Online Mode'} - Ubah DB</span>
+              </button>
+            </div>
             <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100 relative">
               <div className="flex flex-col items-center mb-6">
                 <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 mb-4"><Lock size={32} /></div>
                 <h1 className="text-2xl font-bold text-slate-900">EduLearn Portal</h1>
                 <p className="text-slate-500 text-center mt-2 text-sm leading-relaxed"><b>Peserta:</b> Email & Kode Akses.<br/><b>Instruktur/Admin:</b> Username & Password.</p>
               </div>
+
+              {admins.length === 0 && (
+                <div className="mb-4 bg-amber-50 border border-amber-200 p-4 rounded-xl text-center">
+                  <p className="text-sm text-amber-800 mb-3 font-medium">Database kosong. Klik tombol di bawah untuk Inisialisasi Akun Bawaan.</p>
+                  <button onClick={handleSeedDatabase} disabled={isLoggingIn} className="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold w-full shadow-sm">Inisialisasi Database Bawaan</button>
+                </div>
+              )}
 
               {loginError && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg text-center">{loginError}</div>}
               
@@ -636,8 +766,6 @@
 
       if (appMode === 'super_dashboard') {
         const regularAdmins = admins.filter(a => !a.isSuper);
-        
-        // Filter Data Array
         const filteredAdmins = regularAdmins.filter(a => a.name.toLowerCase().includes(searchInst.toLowerCase()) || a.username.toLowerCase().includes(searchInst.toLowerCase()));
         const filteredCourses = courses.filter(c => c.title.toLowerCase().includes(searchCourse.toLowerCase()) || c.code.toLowerCase().includes(searchCourse.toLowerCase()) || c.instructor.toLowerCase().includes(searchCourse.toLowerCase()));
         const allEnrollmentsData = enrollments.map(enr => {
@@ -672,25 +800,24 @@
                   <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center space-x-4"><div className="p-3 bg-blue-100 text-blue-600 rounded-xl"><GraduationCap size={28}/></div><div><p className="text-slate-500 text-sm font-medium">Total Relasi / Progress</p><h3 className="text-2xl font-bold">{enrollments.length}</h3></div></div>
               </div>
 
-              {/* TABS SUPER ADMIN */}
               {superTab === 'instructors' && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="lg:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-fit">
                     <h2 className="font-bold text-slate-800 mb-4 flex items-center"><PlusCircle size={18} className="mr-2 text-indigo-600" /> Tambah Instruktur</h2>
                     <form onSubmit={handleRegisterAdmin} className="space-y-3">
-                      <div><label className="text-xs font-bold text-slate-500 mb-1 block">Nama Lengkap</label><input name="name" required className="w-full p-2 text-sm border rounded-lg bg-slate-50"/></div>
-                      <div><label className="text-xs font-bold text-slate-500 mb-1 block">Username (Login)</label><input name="username" required className="w-full p-2 text-sm border rounded-lg bg-slate-50"/></div>
-                      <div><label className="text-xs font-bold text-slate-500 mb-1 block">Password Default</label><input name="password" required className="w-full p-2 text-sm border rounded-lg bg-slate-50" defaultValue="GURU123"/></div>
-                      <button type="submit" className="w-full bg-slate-900 text-white py-2.5 rounded-lg text-sm font-medium mt-2">Buat Akun</button>
+                      <div><label className="text-xs font-bold text-slate-500 mb-1 block">Nama Lengkap</label><input name="name" required className="w-full p-2 text-sm border rounded-lg bg-slate-50 outline-none focus:border-indigo-500"/></div>
+                      <div><label className="text-xs font-bold text-slate-500 mb-1 block">Username (Login)</label><input name="username" required className="w-full p-2 text-sm border rounded-lg bg-slate-50 outline-none focus:border-indigo-500"/></div>
+                      <div><label className="text-xs font-bold text-slate-500 mb-1 block">Password Default</label><input name="password" required className="w-full p-2 text-sm border rounded-lg bg-slate-50 outline-none focus:border-indigo-500" defaultValue="GURU123"/></div>
+                      <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-lg text-sm font-medium mt-2 transition">Buat Akun</button>
                     </form>
                   </div>
                   <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="font-bold text-slate-800 flex items-center"><Users size={18} className="mr-2 text-indigo-600" /> Daftar Instruktur</h2>
-                        <div className="relative"><MagnifyingGlass size={16} className="absolute left-2 top-2 text-slate-400"/><input type="text" placeholder="Cari..." value={searchInst} onChange={e=>setSearchInst(e.target.value)} className="pl-8 p-1.5 text-sm border rounded-lg outline-none"/></div>
+                        <div className="relative"><MagnifyingGlass size={16} className="absolute left-2 top-2 text-slate-400"/><input type="text" placeholder="Cari..." value={searchInst} onChange={e=>setSearchInst(e.target.value)} className="pl-8 p-1.5 text-sm border rounded-lg outline-none focus:border-indigo-500"/></div>
                     </div>
                     <table className="w-full text-left text-sm whitespace-nowrap">
-                        <thead className="bg-slate-100 text-slate-600"><tr><th className="p-3">Nama</th><th className="p-3">Username</th><th className="p-3">Kinerja</th><th className="p-3 text-right">Aksi</th></tr></thead>
+                        <thead className="bg-slate-100 text-slate-600"><tr><th className="p-3 rounded-tl-lg">Nama</th><th className="p-3">Username</th><th className="p-3">Kinerja</th><th className="p-3 text-right rounded-tr-lg">Aksi</th></tr></thead>
                         <tbody className="divide-y divide-slate-100">
                           {filteredAdmins.length === 0 ? <tr><td colSpan="4" className="p-4 text-center text-slate-500">Data tidak ditemukan.</td></tr> : filteredAdmins.map(adm => {
                             const courseCount = courses.filter(c => c.authorId === adm.id).length;
@@ -715,11 +842,11 @@
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                   <div className="flex justify-between items-center mb-4">
                         <h2 className="font-bold text-slate-800 flex items-center"><BookOpen size={18} className="mr-2 text-indigo-600" /> Semua Kursus</h2>
-                        <div className="relative"><MagnifyingGlass size={16} className="absolute left-2 top-2 text-slate-400"/><input type="text" placeholder="Cari Kode/Judul..." value={searchCourse} onChange={e=>setSearchCourse(e.target.value)} className="pl-8 p-1.5 text-sm border rounded-lg outline-none w-64"/></div>
+                        <div className="relative"><MagnifyingGlass size={16} className="absolute left-2 top-2 text-slate-400"/><input type="text" placeholder="Cari Kode/Judul..." value={searchCourse} onChange={e=>setSearchCourse(e.target.value)} className="pl-8 p-1.5 text-sm border rounded-lg outline-none w-64 focus:border-indigo-500"/></div>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm whitespace-nowrap">
-                        <thead className="bg-slate-100 text-slate-600"><tr><th className="p-3">Kode</th><th className="p-3">Nama Kursus</th><th className="p-3">Instruktur</th><th className="p-3">Materi</th><th className="p-3 text-right">Aksi</th></tr></thead>
+                        <thead className="bg-slate-100 text-slate-600"><tr><th className="p-3 rounded-tl-lg">Kode</th><th className="p-3">Nama Kursus</th><th className="p-3">Instruktur</th><th className="p-3">Total Materi</th><th className="p-3 text-right rounded-tr-lg">Aksi</th></tr></thead>
                         <tbody className="divide-y divide-slate-100">
                           {filteredCourses.length === 0 ? <tr><td colSpan="5" className="p-4 text-center text-slate-500">Tidak ada data.</td></tr> : filteredCourses.map(crs => (
                             <tr key={crs.id} className="hover:bg-slate-50">
@@ -729,7 +856,7 @@
                               <td className="p-3 text-slate-600">{crs.modules.length} Materi</td>
                               <td className="p-3 text-right space-x-2">
                                 <button onClick={() => jumpToClassroom(crs.id)} className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg font-medium transition-colors">Masuk</button>
-                                <button onClick={() => handleSafeDeleteCourse(crs.id)} className="text-xs bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1.5 rounded-lg font-medium transition-colors">Hapus</button>
+                                <button onClick={() => handleDeleteCourseSuper(crs.id)} className="text-xs bg-red-100 hover:bg-red-200 text-red-600 px-3 py-1.5 rounded-lg font-medium transition-colors">Hapus</button>
                               </td>
                             </tr>
                           ))}
@@ -743,11 +870,11 @@
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                   <div className="flex justify-between items-center mb-4">
                         <h2 className="font-bold text-slate-800 flex items-center"><GraduationCap size={18} className="mr-2 text-indigo-600" /> Pantau Progress Global</h2>
-                        <div className="relative"><MagnifyingGlass size={16} className="absolute left-2 top-2 text-slate-400"/><input type="text" placeholder="Cari Nama/Kursus..." value={searchPart} onChange={e=>setSearchPart(e.target.value)} className="pl-8 p-1.5 text-sm border rounded-lg outline-none w-64"/></div>
+                        <div className="relative"><MagnifyingGlass size={16} className="absolute left-2 top-2 text-slate-400"/><input type="text" placeholder="Cari Nama/Kursus..." value={searchPart} onChange={e=>setSearchPart(e.target.value)} className="pl-8 p-1.5 text-sm border rounded-lg outline-none w-64 focus:border-indigo-500"/></div>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm whitespace-nowrap">
-                        <thead className="bg-slate-100 text-slate-600"><tr><th className="p-3">Nama Peserta</th><th className="p-3">Email</th><th className="p-3">Kursus</th><th className="p-3">Progress</th><th className="p-3">Nilai Ujian</th><th className="p-3">Status</th></tr></thead>
+                        <thead className="bg-slate-100 text-slate-600"><tr><th className="p-3 rounded-tl-lg">Nama Peserta</th><th className="p-3">Email</th><th className="p-3">Kursus</th><th className="p-3">Progress</th><th className="p-3">Nilai Ujian</th><th className="p-3 rounded-tr-lg">Status</th></tr></thead>
                         <tbody className="divide-y divide-slate-100">
                           {filteredEnrs.length === 0 ? <tr><td colSpan="6" className="p-4 text-center text-slate-500">Tidak ada data terdaftar.</td></tr> : filteredEnrs.map((enr, i) => (
                             <tr key={i} className="hover:bg-slate-50">
@@ -771,6 +898,7 @@
         );
       }
 
+      // ADMIN (INSTRUKTUR) DASHBOARD
       if (appMode === 'admin_dashboard') {
         const myCourses = courses.filter(c => c.authorId === session.data.id);
         const myNotifs = notifications.filter(n => n.adminId === session.data.id);
@@ -779,20 +907,20 @@
         const myEnrollments = enrollments.filter(e => myCourseIds.includes(e.courseId));
 
         return (
-          <div className="min-h-screen flex flex-col">
+          <div className="min-h-screen flex flex-col bg-slate-50">
             <ConfirmModal />
             <ManageExamModal />
             {toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"><CheckCircle2 size={20}/><span>{toast}</span></div>}
             
             <header className="bg-slate-900 text-white px-6 py-4 flex flex-col sm:flex-row items-center justify-between z-20 gap-4">
               <div className="flex items-center space-x-2"><Database size={24} className="text-indigo-400" /><h1 className="text-xl font-bold">EduLearn Admin</h1></div>
-              <div className="flex space-x-2 bg-slate-800 p-1 rounded-lg">
-                <button onClick={() => setAdminTab('courses')} className={`px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 ${adminTab==='courses'?'bg-indigo-600':'text-slate-300 hover:bg-slate-700'}`}><Book size={16}/> <span className="hidden sm:inline">Kursusku</span></button>
-                <button onClick={() => setAdminTab('participants')} className={`px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 ${adminTab==='participants'?'bg-indigo-600':'text-slate-300 hover:bg-slate-700'}`}><Users size={16}/> <span className="hidden sm:inline">Peserta</span></button>
-                <button onClick={() => { setAdminTab('notifications'); markNotifsRead(); }} className={`px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 relative ${adminTab==='notifications'?'bg-indigo-600':'text-slate-300 hover:bg-slate-700'}`}>
+              <div className="flex space-x-2 bg-slate-800 p-1 rounded-lg overflow-x-auto max-w-full">
+                <button onClick={() => setAdminTab('courses')} className={`px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 shrink-0 ${adminTab==='courses'?'bg-indigo-600':'text-slate-300 hover:bg-slate-700'}`}><Book size={16}/> <span className="hidden sm:inline">Kursusku</span></button>
+                <button onClick={() => setAdminTab('participants')} className={`px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 shrink-0 ${adminTab==='participants'?'bg-indigo-600':'text-slate-300 hover:bg-slate-700'}`}><Users size={16}/> <span className="hidden sm:inline">Peserta</span></button>
+                <button onClick={() => { setAdminTab('notifications'); markNotifsRead(); }} className={`px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 relative shrink-0 ${adminTab==='notifications'?'bg-indigo-600':'text-slate-300 hover:bg-slate-700'}`}>
                   <Bell size={16}/> <span className="hidden sm:inline">Pesan</span>{unread > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">{unread}</span>}
                 </button>
-                <button onClick={() => setAdminTab('profile')} className={`px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 ${adminTab==='profile'?'bg-indigo-600':'text-slate-300 hover:bg-slate-700'}`}><UserIcon size={16}/> <span className="hidden sm:inline">Profil</span></button>
+                <button onClick={() => setAdminTab('profile')} className={`px-4 py-2 rounded-md text-sm font-medium flex items-center space-x-2 shrink-0 ${adminTab==='profile'?'bg-indigo-600':'text-slate-300 hover:bg-slate-700'}`}><UserIcon size={16}/> <span className="hidden sm:inline">Profil</span></button>
               </div>
               <div className="flex items-center space-x-4">
                 <span className="text-sm font-bold text-slate-300">{session.data.name}</span>
@@ -801,7 +929,6 @@
             </header>
 
             <div className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full">
-              {/* TAB KURSUS ADMIN */}
               {adminTab === 'courses' && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div className="lg:col-span-1 space-y-6">
@@ -809,45 +936,45 @@
                       <h2 className="font-bold text-slate-800 mb-4 flex items-center"><PlusCircle size={18} className="mr-2 text-indigo-600" /> Buat Kursus</h2>
                       <form onSubmit={handleCreateCourse} className="space-y-3">
                         <div className="flex gap-2">
-                          <input name="code" id="crscode" required maxLength={10} className="w-full p-2 text-sm border rounded-lg outline-none" placeholder="Kode Unik"/>
-                          <button type="button" onClick={()=>document.getElementById('crscode').value = generateRandomCode("CR")} className="bg-slate-200 px-2 rounded-lg text-xs font-bold"><RefreshCw size={14}/></button>
+                          <input name="code" id="crscode" required maxLength={10} className="w-full p-2 text-sm border rounded-lg outline-none focus:border-indigo-500" placeholder="Kode Unik"/>
+                          <button type="button" onClick={()=>document.getElementById('crscode').value = generateRandomCode("CR")} className="bg-slate-200 hover:bg-slate-300 px-2 rounded-lg text-xs font-bold flex items-center transition"><RefreshCw size={14}/></button>
                         </div>
-                        <input name="title" required maxLength={60} className="w-full p-2 text-sm border rounded-lg outline-none" placeholder="Nama Kursus (Maks 60 Karakter)"/>
-                        <input name="inst" defaultValue={session.data.name} required className="w-full p-2 text-sm border rounded-lg outline-none" placeholder="Nama Instruktur"/>
-                        <button type="submit" className="w-full bg-slate-900 text-white py-2 rounded-lg text-sm font-medium">Buat Kursus</button>
+                        <input name="title" required maxLength={60} className="w-full p-2 text-sm border rounded-lg outline-none focus:border-indigo-500" placeholder="Nama Kursus (Maks 60 Karakter)"/>
+                        <input name="inst" defaultValue={session.data.name} required className="w-full p-2 text-sm border rounded-lg outline-none focus:border-indigo-500" placeholder="Nama Instruktur"/>
+                        <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-2 rounded-lg text-sm font-medium transition">Buat Kursus</button>
                       </form>
                     </div>
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                       <h2 className="font-bold text-slate-800 mb-4 flex items-center"><Video size={18} className="mr-2 text-indigo-600" /> Tambah Video Modul</h2>
                       <form onSubmit={handleCreateModule} className="space-y-3">
-                        <select name="courseId" required className="w-full p-2 text-sm border rounded-lg bg-white outline-none" defaultValue="">
+                        <select name="courseId" required className="w-full p-2 text-sm border rounded-lg bg-white outline-none focus:border-indigo-500" defaultValue="">
                           <option value="" disabled>-- Pilih Kursus --</option>
                           {myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                         </select>
-                        <input name="title" required maxLength={60} className="w-full p-2 text-sm border rounded-lg outline-none" placeholder="Judul Materi"/>
-                        <input name="vidUrl" required type="url" className="w-full p-2 text-sm border rounded-lg outline-none" placeholder="URL YouTube Embed"/>
-                        <textarea name="desc" required maxLength={300} className="w-full p-2 text-sm border rounded-lg resize-none outline-none" placeholder="Deskripsi materi (Maks 300 Karakter)..."/>
-                        <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium">Simpan Video</button>
+                        <input name="title" required maxLength={60} className="w-full p-2 text-sm border rounded-lg outline-none focus:border-indigo-500" placeholder="Judul Materi (Maks 60 Karakter)"/>
+                        <input name="vidUrl" required type="url" className="w-full p-2 text-sm border rounded-lg outline-none focus:border-indigo-500" placeholder="URL YouTube Embed"/>
+                        <textarea name="desc" required maxLength={300} className="w-full p-2 text-sm border rounded-lg resize-none outline-none focus:border-indigo-500" placeholder="Deskripsi materi (Maks 300 Karakter)..."/>
+                        <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-sm font-medium transition">Simpan Video</button>
                       </form>
                     </div>
                   </div>
                   <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <h2 className="font-bold text-slate-800 mb-4 flex items-center"><BookOpen size={18} className="mr-2 text-indigo-600" /> Katalog Kursus Anda</h2>
-                    {myCourses.length === 0 ? <p className="text-slate-500">Anda belum membuat kursus.</p> : myCourses.map(course => (
+                    {myCourses.length === 0 ? <p className="text-slate-500 text-sm">Anda belum membuat kursus.</p> : myCourses.map(course => (
                       <div key={course.id} className="mb-6 border border-slate-200 rounded-xl overflow-hidden">
-                        <div className="bg-slate-100 p-4 flex justify-between items-center">
-                          <div className="flex items-center space-x-2"><span className="font-mono text-xs bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded font-bold">{course.code}</span><h3 className="font-bold">{course.title}</h3></div>
-                          <div className="flex space-x-2">
-                              <button onClick={() => openExamBuilder(course.id)} className="text-xs bg-amber-500 hover:bg-amber-600 text-slate-900 px-3 py-2 rounded-lg font-bold flex items-center"><CheckSquareOffset size={14} className="mr-1"/> Kelola Ujian</button>
-                              <button onClick={() => handleSafeDeleteCourse(course.id)} className="text-xs bg-red-100 hover:bg-red-200 text-red-600 px-3 py-2 rounded-lg font-bold"><Trash2 size={14}/></button>
-                              <button onClick={() => jumpToClassroom(course.id)} className="text-xs bg-indigo-600 text-white px-3 py-2 rounded-lg font-bold hover:bg-indigo-700">Masuk Kelas</button>
+                        <div className="bg-slate-100 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                          <div className="flex items-center space-x-2"><span className="font-mono text-xs bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded font-bold">{course.code}</span><h3 className="font-bold text-slate-800">{course.title}</h3></div>
+                          <div className="flex space-x-2 w-full sm:w-auto">
+                              <button onClick={() => openExamBuilder(course.id)} className="flex-1 sm:flex-none text-xs bg-amber-500 hover:bg-amber-600 text-slate-900 px-3 py-2 rounded-lg font-bold flex items-center justify-center transition"><CheckSquareOffset size={14} className="mr-1"/> Ujian</button>
+                              <button onClick={() => handleSafeDeleteCourse(course.id)} className="text-xs bg-red-100 hover:bg-red-200 text-red-600 px-3 py-2 rounded-lg font-bold transition flex items-center justify-center" title="Hapus Kursus"><Trash2 size={14}/></button>
+                              <button onClick={() => jumpToClassroom(course.id)} className="flex-1 sm:flex-none text-xs bg-indigo-600 text-white px-3 py-2 rounded-lg font-bold hover:bg-indigo-700 transition">Masuk Kelas</button>
                           </div>
                         </div>
                         <div className="p-4 space-y-2">
                           {course.modules.length === 0 ? <p className="text-sm text-slate-400 italic">Belum ada materi.</p> : course.modules.map((m, i) => (
                             <div key={m.id} className="flex justify-between items-center text-sm border-b border-slate-100 pb-2 last:border-0 last:pb-0">
-                              <span className="flex items-center"><PlayCircle size={14} className="mr-2 text-slate-400"/> {i+1}. {m.title}</span>
-                              <button onClick={()=>handleDeleteModule(course.id, m.id)} className="text-red-500 p-1"><Trash2 size={14}/></button>
+                              <span className="flex items-center text-slate-700"><PlayCircle size={14} className="mr-2 text-slate-400"/> {i+1}. {m.title}</span>
+                              <button onClick={()=>handleDeleteModule(course.id, m.id)} className="text-red-500 p-1 hover:bg-red-50 rounded transition"><Trash2 size={14}/></button>
                             </div>
                           ))}
                         </div>
@@ -857,42 +984,41 @@
                 </div>
               )}
 
-              {/* TAB PESERTA */}
               {adminTab === 'participants' && (
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                   <div className="lg:col-span-1 space-y-6">
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                       <h2 className="font-bold text-slate-800 mb-4 flex items-center"><PlusCircle size={18} className="mr-2 text-emerald-600" /> Daftar Peserta Baru</h2>
                       <form onSubmit={handleRegisterParticipant} className="space-y-3">
-                        <input name="name" required className="w-full p-2 text-sm border rounded-lg outline-none" placeholder="Nama Lengkap"/>
-                        <input name="email" required type="email" className="w-full p-2 text-sm border rounded-lg outline-none" placeholder="Email"/>
+                        <input name="name" required className="w-full p-2 text-sm border rounded-lg outline-none focus:border-emerald-500" placeholder="Nama Lengkap"/>
+                        <input name="email" required type="email" className="w-full p-2 text-sm border rounded-lg outline-none focus:border-emerald-500" placeholder="Email"/>
                         <div className="flex gap-2">
-                          <input name="code" id="ptcode" required className="w-full p-2 text-sm border rounded-lg font-mono outline-none" placeholder="Kode Akses"/>
-                          <button type="button" onClick={()=>document.getElementById('ptcode').value = generateRandomCode()} className="bg-slate-200 px-2 rounded-lg text-xs font-bold flex items-center"><RefreshCw size={14}/></button>
+                          <input name="code" id="ptcode" required className="w-full p-2 text-sm border rounded-lg font-mono outline-none focus:border-emerald-500" placeholder="Kode Akses"/>
+                          <button type="button" onClick={()=>document.getElementById('ptcode').value = generateRandomCode()} className="bg-slate-200 hover:bg-slate-300 px-2 rounded-lg text-xs font-bold flex items-center transition"><RefreshCw size={14}/></button>
                         </div>
-                        <select name="courseId" required className="w-full p-2 text-sm border rounded-lg bg-white outline-none" defaultValue="">
+                        <select name="courseId" required className="w-full p-2 text-sm border rounded-lg bg-white outline-none focus:border-emerald-500" defaultValue="">
                           <option value="" disabled>-- Pilih Kursus --</option>
                           {myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                         </select>
-                        <button type="submit" className="w-full bg-emerald-600 text-white py-2 rounded-lg text-sm font-medium">Buat Akun</button>
+                        <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg text-sm font-medium transition">Buat Akun</button>
                       </form>
                     </div>
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-indigo-500">
                       <h2 className="font-bold text-slate-800 mb-4 flex items-center"><Users size={18} className="mr-2 text-indigo-600" /> Peserta Lama</h2>
                       <form onSubmit={handleEnrollExisting} className="space-y-3">
-                        <input name="email" required type="email" className="w-full p-2 text-sm border rounded-lg outline-none" placeholder="Ketik Email Peserta..." />
-                        <select name="cId" required className="w-full p-2 text-sm border rounded-lg bg-white outline-none" defaultValue="">
+                        <input name="email" required type="email" className="w-full p-2 text-sm border rounded-lg outline-none focus:border-indigo-500" placeholder="Ketik Email Peserta..." title="Ketik email peserta untuk menambahkan mereka ke kursus Anda" />
+                        <select name="cId" required className="w-full p-2 text-sm border rounded-lg bg-white outline-none focus:border-indigo-500" defaultValue="">
                           <option value="" disabled>-- Pilih Kursus --</option>
                           {myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                         </select>
-                        <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium">Tambahkan Kursus</button>
+                        <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-sm font-medium transition">Tambahkan Kursus</button>
                       </form>
                     </div>
                   </div>
                   <div className="lg:col-span-3 bg-white p-6 rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
                     <h2 className="font-bold text-slate-800 mb-4 flex items-center"><GraduationCap size={18} className="mr-2 text-indigo-600" /> Data Progress & Nilai (Kelas Anda)</h2>
                     <table className="w-full text-left text-sm whitespace-nowrap">
-                      <thead className="bg-slate-100 text-slate-600"><tr><th className="p-3">Peserta</th><th className="p-3">Kode Akun</th><th className="p-3">Kursus</th><th className="p-3">Progress</th><th className="p-3">Nilai</th><th className="p-3">Status</th></tr></thead>
+                      <thead className="bg-slate-100 text-slate-600"><tr><th className="p-3 rounded-tl-lg">Peserta</th><th className="p-3">Kode Akun</th><th className="p-3">Kursus</th><th className="p-3">Progress</th><th className="p-3">Nilai</th><th className="p-3 rounded-tr-lg">Status</th></tr></thead>
                       <tbody className="divide-y divide-slate-100">
                         {myEnrollments.length === 0 ? <tr><td colSpan="6" className="p-4 text-center text-slate-500">Belum ada peserta di kelas Anda.</td></tr> : myEnrollments.map(enr => {
                           const part = participants.find(p => p.id === enr.participantId);
@@ -901,11 +1027,11 @@
                           if(!part || !crs) return null;
                           return (
                             <tr key={enr.id} className="hover:bg-slate-50">
-                              <td className="p-3"><p className="font-medium">{part.name}</p><p className="text-xs text-slate-500">{part.email}</p></td>
+                              <td className="p-3"><p className="font-medium text-slate-800">{part.name}</p><p className="text-xs text-slate-500">{part.email}</p></td>
                               <td className="p-3 font-mono text-xs font-bold text-slate-600">{part.accessCode}</td>
                               <td className="p-3 text-slate-600">{crs.title}</td>
                               <td className="p-3"><div className="flex items-center space-x-2"><div className="w-16 bg-slate-200 rounded-full h-1.5"><div className="bg-indigo-500 h-1.5 rounded-full" style={{width: `${prog}%`}}></div></div><span className="text-xs">{prog}%</span></div></td>
-                              <td className="p-3 font-bold">{enr.examScore !== null ? enr.examScore : '-'}</td>
+                              <td className="p-3 font-bold text-slate-800">{enr.examScore !== null ? enr.examScore : '-'}</td>
                               <td className="p-3">
                                 {enr.certDownloaded ? <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-bold">Lulus & Diunduh</span> : enr.isGraduated ? <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded-full font-bold">Lulus</span> : <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded-full font-bold">Berproses</span>}
                               </td>
@@ -918,22 +1044,20 @@
                 </div>
               )}
 
-              {/* TAB NOTIFIKASI */}
               {adminTab === 'notifications' && (
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-3xl mx-auto">
-                  <h2 className="font-bold text-slate-800 mb-6 flex items-center"><Bell size={18} className="mr-2 text-indigo-600" /> Inbox Pertanyaan Kelas</h2>
+                  <h2 className="font-bold text-slate-800 mb-6 flex items-center"><Bell size={18} className="mr-2 text-indigo-600" /> Inbox Pertanyaan Kelas Anda</h2>
                   <div className="space-y-4">
-                    {myNotifs.length === 0 ? <p className="text-slate-500">Tidak ada pesan.</p> : myNotifs.map(n => (
-                      <div key={n.id} className={`flex items-center justify-between p-4 rounded-xl border ${n.isRead ? 'border-slate-100 bg-slate-50' : 'border-indigo-100 bg-indigo-50'}`}>
-                        <div className="flex items-start space-x-3"><AlertCircle size={20} className="text-indigo-600 mt-0.5"/><div><p className="text-sm font-medium">{n.text}</p><p className="text-xs text-slate-500 mt-1">{n.time}</p></div></div>
-                        {n.courseId && <button onClick={() => jumpToClassroom(n.courseId, n.moduleId)} className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm shrink-0">Tanggapi di Kelas</button>}
+                    {myNotifs.length === 0 ? <p className="text-slate-500 text-sm">Tidak ada pesan.</p> : myNotifs.map(n => (
+                      <div key={n.id} className={`flex items-center justify-between p-4 rounded-xl border transition ${n.isRead ? 'border-slate-100 bg-slate-50' : 'border-indigo-100 bg-indigo-50'}`}>
+                        <div className="flex items-start space-x-3"><AlertCircle size={20} className="text-indigo-600 mt-0.5"/><div><p className="text-sm font-medium text-slate-800">{n.text}</p><p className="text-xs text-slate-500 mt-1">{n.time}</p></div></div>
+                        {n.courseId && <button onClick={() => jumpToClassroom(n.courseId, n.moduleId)} className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm shrink-0 transition">Tanggapi di Kelas</button>}
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* TAB PROFIL & TRAKTEER */}
               {adminTab === 'profile' && (
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-lg mx-auto">
                   <h2 className="font-bold text-slate-800 mb-4 flex items-center"><Coffee size={18} className="mr-2 text-amber-600" /> Pengaturan Profil Instruktur</h2>
@@ -941,9 +1065,9 @@
                   <form onSubmit={handleUpdateProfile} className="space-y-4">
                       <div>
                           <label className="block font-bold text-slate-700 mb-2 text-sm">Link Traktir Kopi / Es Krim (Opsional)</label>
-                          <input type="url" value={profileForm.donationLink} onChange={e=>setProfileForm({donationLink: e.target.value})} className="w-full p-3 border rounded-xl outline-none focus:border-amber-500" placeholder="https://trakteer.id/username_anda" />
+                          <input type="url" value={profileForm.donationLink} onChange={e=>setProfileForm({donationLink: e.target.value})} className="w-full p-3 border rounded-xl outline-none focus:border-amber-500 transition" placeholder="https://trakteer.id/username_anda" />
                       </div>
-                      <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 py-3 rounded-xl font-bold shadow-md">Simpan Profil</button>
+                      <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 py-3 rounded-xl font-bold shadow-md transition">Simpan Profil</button>
                   </form>
                 </div>
               )}
@@ -958,11 +1082,12 @@
 
         return (
           <div className="min-h-screen flex flex-col bg-slate-50">
+            <ConfirmModal />
             <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
               <div className="flex items-center space-x-2 text-indigo-600"><BookOpen size={28} /><h1 className="text-2xl font-bold">EduLearn</h1></div>
               <div className="flex items-center space-x-4">
-                <div className="text-right hidden sm:block"><p className="text-sm font-bold">{session.data.name}</p><p className="text-xs text-slate-500 font-mono">Kode: {session.data.accessCode}</p></div>
-                <button onClick={handleLogout} className="p-2 hover:bg-red-50 rounded-lg text-red-500"><LogOut size={20} /></button>
+                <div className="text-right hidden sm:block"><p className="text-sm font-bold text-slate-800">{session.data.name}</p><p className="text-xs text-slate-500 font-mono">Kode: {session.data.accessCode}</p></div>
+                <button onClick={handleLogout} className="p-2 hover:bg-red-50 rounded-lg text-red-500 flex items-center transition"><LogOut size={20} /></button>
               </div>
             </header>
 
@@ -978,12 +1103,12 @@
                   
                   return (
                     <div key={enr.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col hover:border-indigo-300 transition-colors group">
-                      <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 mb-4"><Video size={24} /></div>
-                      <h3 className="text-lg font-bold mb-1">{course.title}</h3>
+                      <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 mb-4 group-hover:scale-110 transition-transform duration-300"><Video size={24} /></div>
+                      <h3 className="text-lg font-bold mb-1 text-slate-800">{course.title}</h3>
                       <p className="text-sm text-slate-500 mb-6 flex-1">Pengajar: {course.instructor}</p>
-                      <div className="mb-6"><div className="flex justify-between text-xs font-medium mb-2"><span>Progres</span><span>{prog}%</span></div><div className="w-full bg-slate-100 rounded-full h-2"><div className={`h-2 rounded-full ${prog === 100 ? 'bg-emerald-500' : 'bg-indigo-500'}`} style={{ width: `${prog}%` }}></div></div></div>
-                      <button onClick={() => jumpToClassroom(course.id)} className={`w-full py-3 rounded-xl font-medium flex items-center justify-center space-x-2 ${enr.isGraduated ? 'bg-emerald-50 text-emerald-700' : 'bg-indigo-600 text-white'}`}>
-                        <PlayCircle size={18}/> <span>{enr.isGraduated ? 'Lihat Sertifikat' : prog > 0 ? 'Lanjutkan Belajar' : 'Mulai Belajar'}</span>
+                      <div className="mb-6"><div className="flex justify-between text-xs font-medium mb-2 text-slate-600"><span>Progres</span><span>{prog}%</span></div><div className="w-full bg-slate-100 rounded-full h-2"><div className={`h-2 rounded-full transition-all duration-500 ${prog === 100 ? 'bg-emerald-500' : 'bg-indigo-500'}`} style={{ width: `${prog}%` }}></div></div></div>
+                      <button onClick={() => jumpToClassroom(course.id)} className={`w-full py-3 rounded-xl font-medium flex items-center justify-center space-x-2 transition ${enr.isGraduated ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>
+                        {enr.isGraduated ? <Award size={18}/> : <PlayCircle size={18}/>} <span>{enr.isGraduated ? 'Lihat Sertifikat' : prog > 0 ? 'Lanjutkan Belajar' : 'Mulai Belajar'}</span>
                       </button>
                     </div>
                   );
@@ -1001,7 +1126,8 @@
         const instructorData = admins.find(a => a.id === activeCourse.authorId);
 
         return (
-          <div className="flex flex-col h-screen">
+          <div className="flex flex-col h-screen bg-slate-50">
+            <ConfirmModal />
             {toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"><CheckCircle2 size={20} /><span>{toast}</span></div>}
 
             <header className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shrink-0 z-50 shadow-sm">
@@ -1012,7 +1138,7 @@
               <button onClick={() => {
                 if(session.role === 'super_admin') setAppMode('super_dashboard');
                 else setAppMode(isStudent ? 'part_dashboard' : 'admin_dashboard');
-              }} className="flex items-center space-x-2 text-sm bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg font-medium">
+              }} className="flex items-center space-x-2 text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-medium transition">
                 <ArrowLeft size={16} /> <span className="hidden sm:inline">Keluar Kelas</span>
               </button>
             </header>
@@ -1021,7 +1147,8 @@
               <aside className={`absolute lg:static w-80 bg-white border-r h-full z-40 transition-transform flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
                 <div className="p-4 border-b">
                   <h2 className="font-semibold text-slate-800">Daftar Materi</h2>
-                  {isStudent && <div className="mt-3"><div className="flex justify-between text-xs mb-1"><span>Progres</span><span>{prog}%</span></div><div className="w-full bg-slate-200 rounded-full h-2"><div className="bg-emerald-500 h-2 rounded-full" style={{ width: `${prog}%` }}></div></div></div>}
+                  {isStudent && <div className="mt-3"><div className="flex justify-between text-xs mb-1 text-slate-600"><span>Progres</span><span>{prog}%</span></div><div className="w-full bg-slate-200 rounded-full h-2"><div className="bg-emerald-500 h-2 rounded-full transition-all" style={{ width: `${prog}%` }}></div></div></div>}
+                  {!isStudent && <span className="inline-block mt-2 text-xs font-bold bg-amber-100 text-amber-800 px-2 py-1 rounded">Mode Pemantau</span>}
                 </div>
                 <div className="overflow-y-auto flex-1 p-2">
                   {activeCourse.modules.map((mod, index) => {
@@ -1030,16 +1157,16 @@
                     return (
                       <button key={mod.id} disabled={!isUnlck} onClick={() => { setClassroomMode('video'); setActiveModule(mod); setIsSidebarOpen(false); }}
                         className={`w-full text-left p-3 mb-1 rounded-lg flex items-start space-x-3 transition-colors ${!isUnlck ? 'opacity-50 bg-slate-50' : activeModule.id === mod.id && classroomMode==='video' ? 'bg-indigo-50 border border-indigo-100' : 'hover:bg-slate-50'}`}>
-                        {!isUnlck ? <Lock size={18} className="text-slate-400 mt-0.5" /> : isComp ? <CheckCircle2 size={18} className="text-emerald-500 mt-0.5" /> : <PlayCircle size={18} className={`mt-0.5 ${activeModule.id === mod.id && classroomMode==='video' ? 'text-indigo-600' : 'text-slate-400'}`} />}
-                        <div className="flex-1 min-w-0"><p className={`text-sm font-medium truncate ${!isUnlck ? 'text-slate-500' : activeModule.id === mod.id && classroomMode==='video' ? 'text-indigo-900' : 'text-slate-700'}`}>{index + 1}. {mod.title}</p></div>
+                        {!isUnlck ? <Lock size={18} className="text-slate-400 mt-0.5 shrink-0" /> : isComp ? <CheckCircle2 size={18} className="text-emerald-500 mt-0.5 shrink-0" /> : <PlayCircle size={18} className={`mt-0.5 shrink-0 ${activeModule.id === mod.id && classroomMode==='video' ? 'text-indigo-600' : 'text-slate-400'}`} />}
+                        <div className="flex-1 min-w-0"><p className={`text-sm font-medium leading-snug truncate ${!isUnlck ? 'text-slate-500' : activeModule.id === mod.id && classroomMode==='video' ? 'text-indigo-900' : 'text-slate-700'}`}>{index + 1}. {mod.title}</p></div>
                       </button>
                     );
                   })}
-                  {/* TOMBOL UJIAN AKHIR DI SIDEBAR */}
+                  
                   {isStudent && prog === 100 && activeCourse.exam && (
-                      <button onClick={() => { setIsSidebarOpen(false); setClassroomMode(myEnr.isGraduated ? 'result' : 'exam'); }} className={`w-full mt-4 text-left p-3 rounded-lg flex items-center space-x-3 font-bold border-2 ${myEnr.isGraduated ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-amber-50 border-amber-200 text-amber-700'}`}>
-                          {myEnr.isGraduated ? <Award size={20}/> : <CheckSquareOffset size={20}/>}
-                          <span>{myEnr.isGraduated ? 'Sertifikat Kelulusan' : 'Ujian Akhir Kelas'}</span>
+                      <button onClick={() => { setIsSidebarOpen(false); setClassroomMode(myEnr.isGraduated ? 'result' : 'exam'); }} className={`w-full mt-4 text-left p-3 rounded-lg flex items-center space-x-3 font-bold border-2 transition-colors ${myEnr.isGraduated ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100' : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'}`}>
+                          {myEnr.isGraduated ? <Award size={20} className="shrink-0"/> : <CheckSquareOffset size={20} className="shrink-0"/>}
+                          <span className="truncate">{myEnr.isGraduated ? 'Sertifikat Kelulusan' : 'Ujian Akhir Kelas'}</span>
                       </button>
                   )}
                 </div>
@@ -1053,24 +1180,24 @@
                       <>
                         <div className="relative w-full rounded-2xl overflow-hidden shadow-lg bg-black aspect-video mb-6"><iframe src={activeModule.videoUrl} title={activeModule.title} allowFullScreen className="absolute top-0 left-0 w-full h-full border-0"></iframe></div>
                         <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
-                            <h2 className="text-2xl font-bold mb-3">{activeModule.title}</h2><p className="text-slate-600">{activeModule.description}</p>
+                            <h2 className="text-2xl font-bold mb-3 text-slate-800">{activeModule.title}</h2><p className="text-slate-600 leading-relaxed">{activeModule.description}</p>
                             {isStudent && (
                             <div className="mt-6 pt-6 flex justify-end border-t border-slate-100">
-                                <button onClick={handleCompleteModule} className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl font-medium ${myEnr.completedModules.includes(activeModule.id) ? 'bg-slate-100 text-slate-700' : 'bg-indigo-600 text-white'}`}>
+                                <button onClick={handleCompleteModule} className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl font-medium transition ${myEnr.completedModules.includes(activeModule.id) ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}>
                                 <span>{myEnr.completedModules.includes(activeModule.id) ? 'Lanjut ke Materi Berikutnya' : 'Tandai Selesai & Lanjut'}</span><ChevronRight size={18} />
                                 </button>
                             </div>
                             )}
                             <div className="mt-8 pt-8 border-t border-slate-200">
-                            <h3 className="text-xl font-bold mb-4 flex items-center"><MessageSquare className="mr-2 text-indigo-600" /> Forum Diskusi</h3>
+                            <h3 className="text-xl font-bold mb-4 flex items-center text-slate-800"><MessageSquare className="mr-2 text-indigo-600" /> Forum Diskusi</h3>
                             <form onSubmit={handlePostComment} className="mb-6 flex gap-3">
-                                <input type="text" maxLength={500} value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder={!isStudent ? "Balas komentar..." : "Tanya sesuatu (Maks 500 huruf)..."} className="flex-1 px-4 py-3 rounded-xl border outline-none focus:border-indigo-500" />
-                                <button type="submit" disabled={!commentText.trim()} className="bg-indigo-600 text-white px-6 rounded-xl font-medium disabled:bg-slate-300">Kirim</button>
+                                <input type="text" maxLength={500} value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder={!isStudent ? "Balas komentar..." : "Tanya sesuatu (Maks 500 huruf)..."} className="flex-1 px-4 py-3 rounded-xl border outline-none focus:border-indigo-500 transition" />
+                                <button type="submit" disabled={!commentText.trim()} className="bg-indigo-600 text-white px-6 rounded-xl font-medium disabled:bg-slate-300 transition hover:bg-indigo-700">Kirim</button>
                             </form>
                             <div className="space-y-3">
                                 {activeModule.comments.length === 0 ? <p className="text-slate-500 text-sm text-center py-4 bg-slate-50 rounded-xl border border-dashed">Belum ada diskusi.</p> : activeModule.comments.map(c => (
                                     <div key={c.id} className={`p-4 rounded-xl border ${c.isAdmin ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-slate-100'}`}>
-                                    <div className="flex items-center space-x-2 mb-1"><p className="font-semibold text-sm">{c.user}</p>{c.isAdmin && <span className="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-full font-bold uppercase">Instruktur</span>}</div>
+                                    <div className="flex items-center space-x-2 mb-1"><p className="font-semibold text-sm text-slate-800">{c.user}</p>{c.isAdmin && <span className="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-full font-bold uppercase">Instruktur</span>}</div>
                                     <p className="text-sm text-slate-700">{c.text}</p>
                                     </div>
                                 ))}
@@ -1083,10 +1210,10 @@
                   {/* VIEW: UJIAN AKHIR */}
                   {classroomMode === 'exam' && (
                       <div className="bg-white rounded-2xl p-8 shadow-xl border border-slate-200">
-                          <div className="text-center mb-8 border-b pb-6">
+                          <div className="text-center mb-8 border-b border-slate-100 pb-6">
                               <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4"><CheckSquareOffset size={32}/></div>
                               <h2 className="text-3xl font-bold text-slate-900 mb-2">Ujian Akhir Kelas</h2>
-                              <p className="text-slate-500">Jawab 10 pertanyaan berikut. Anda harus mendapatkan nilai minimal <b>{activeCourse.exam.minScore}</b> untuk lulus dan mendapatkan sertifikat.</p>
+                              <p className="text-slate-500">Jawab {activeCourse.exam.questions.length} pertanyaan berikut. Anda harus mendapatkan nilai minimal <b>{activeCourse.exam.minScore}</b> untuk lulus dan mendapatkan sertifikat.</p>
                           </div>
                           
                           <div className="space-y-8">
@@ -1096,8 +1223,8 @@
                                       <div className="space-y-3">
                                           {q.options.map((opt, optIdx) => (
                                               <label key={optIdx} className={`flex items-center p-4 border rounded-xl cursor-pointer transition ${studentAnswers[qIdx] === optIdx ? 'bg-indigo-50 border-indigo-500 ring-1 ring-indigo-500' : 'bg-white border-slate-200 hover:bg-slate-100'}`}>
-                                                  <input type="radio" name={`q_${qIdx}`} value={optIdx} onChange={() => setStudentAnswers({...studentAnswers, [qIdx]: optIdx})} checked={studentAnswers[qIdx] === optIdx} className="w-4 h-4 text-indigo-600" />
-                                                  <span className="ml-3 font-medium text-slate-700">{opt}</span>
+                                                  <input type="radio" name={`q_${qIdx}`} value={optIdx} onChange={() => setStudentAnswers({...studentAnswers, [qIdx]: optIdx})} checked={studentAnswers[qIdx] === optIdx} className="w-4 h-4 text-indigo-600 cursor-pointer" />
+                                                  <span className="ml-3 font-medium text-slate-700 select-none">{opt}</span>
                                               </label>
                                           ))}
                                       </div>
@@ -1105,8 +1232,8 @@
                               ))}
                           </div>
                           
-                          <div className="mt-10 flex justify-end pt-6 border-t">
-                              <button onClick={submitExam} disabled={Object.keys(studentAnswers).length < 10} className="bg-indigo-600 disabled:bg-slate-300 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-md transition">Kumpulkan Jawaban</button>
+                          <div className="mt-10 flex justify-end pt-6 border-t border-slate-100">
+                              <button onClick={submitExam} disabled={Object.keys(studentAnswers).length < activeCourse.exam.questions.length} className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-bold text-lg shadow-md transition">Kumpulkan Jawaban</button>
                           </div>
                       </div>
                   )}
@@ -1119,7 +1246,7 @@
                               {myEnr.isGraduated ? <Award size={48}/> : <X size={48}/>}
                           </div>
                           <h2 className="text-3xl font-bold text-slate-900 mb-2">{myEnr.isGraduated ? 'Selamat, Anda Lulus!' : 'Maaf, Anda Belum Lulus'}</h2>
-                          <p className="text-slate-600 mb-8 text-lg">Nilai Akhir Anda: <b className={`text-2xl ml-2 ${myEnr.isGraduated ? 'text-emerald-600' : 'text-red-600'}`}>{myEnr.examScore}</b> / 100</p>
+                          <p className="text-slate-600 mb-8 text-lg">Nilai Akhir Anda: <b className={`text-2xl ml-2 ${myEnr.isGraduated ? 'text-emerald-600' : 'text-red-600'}`}>{myEnr.examScore}</b> / {activeCourse.exam.questions.length * 10}</p>
                           
                           {!myEnr.isGraduated ? (
                               <button onClick={()=>{setClassroomMode('exam'); setStudentAnswers({});}} className="w-full bg-slate-800 hover:bg-slate-900 text-white py-4 rounded-xl font-bold text-lg transition">Ulangi Ujian Kembali</button>
