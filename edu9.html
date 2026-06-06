@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EduLearn by SenTools</title>
+  <title>EduLearn by SenTools - LMS Platform</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -11,7 +11,11 @@
   <!-- React & ReactDOM -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- Phosphor Icons -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
   <style>
@@ -19,6 +23,7 @@
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     .animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   </style>
@@ -27,44 +32,77 @@
   <div id="root"></div>
 
   <script type="text/babel" data-type="module">
+    // =========================================================================
+    // IMPORTS UNTUK FIREBASE (OPSI CADANGAN REALTIME CLOUD)
+    // =========================================================================
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, onSnapshot, doc, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    let fbApp = null, fbAuth = null, fbDb = null;
+    let fbApp = null;
+    let fbAuth = null;
+    let fbDb = null;
 
-    // --- ENKRIPSI URL GOOGLE APPS SCRIPT ---
-    const _a = "aHR0cHM6Ly9zY3JpcHQuZ29";
-    const _b = "vZ2xlLmNvbS9tYWNyb3Mvcy";
-    const _c = "9BS2Z5Y2J4ZXV6OHl5VnNiW";
-    const _d = "XZYUktsSmxheHNsdnhXbjM2R";
-    const _e = "GNFNHRQeGNXRTVpQ0RWSi1vR";
-    const _f = "G9pbFVPaWdibmItbVk2aEo2e";
-    const _g = "TkvZXhlYw==";
-    // URL Dekripsi berjalan pada memori, tidak bisa disorot pada HTML statis
-    const DEFAULT_GAS_URL = atob(_a + _b + _c + _d + _e + _f + _g);
+    // =========================================================================
+    // ENKRIPSI URL GOOGLE APPS SCRIPT DATABASE UTAMA
+    // =========================================================================
+    const _encGas = [19,15,15,11,8,65,84,84,8,24,9,18,11,15,85,20,28,28,20,7,22,85,24,28,6,84,6,26,24,9,28,8,84,8,84,58,48,21,2,24,25,3,42,20,53,36,18,36,15,54,53,40,9,14,38,28,78,73,15,5,31,36,82,52,22,79,53,79,57,20,9,5,12,43,21,54,35,67,24,55,37,28,40,55,75,35,10,54,25,82,52,67,57,36,21,50,79,75,13,41,10,28,53,77,8,53,72,84,22,3,22,24];
+    const DEFAULT_GAS_URL = _encGas.map(c => String.fromCharCode(c ^ 123)).join('');
 
-    // --- ICONS SETUP ---
-    const IconWrapper = ({ name, size = 24, className = "", weight = "regular" }) => <i className={`ph-${weight === 'fill' ? 'fill' : 'regular'} ph-${name} ${className}`} style={{ fontSize: size }}></i>;
-    const Icons = {
-      Play: (p) => <IconWrapper name="play-circle" {...p} />, Download: (p) => <IconWrapper name="download" {...p} />,
-      Menu: (p) => <IconWrapper name="list" {...p} />, X: (p) => <IconWrapper name="x" {...p} />, Book: (p) => <IconWrapper name="book-open" {...p} />,
-      Video: (p) => <IconWrapper name="video" {...p} />, Check: (p) => <IconWrapper name="check-circle" {...p} />,
-      Right: (p) => <IconWrapper name="caret-right" {...p} />, Spin: (p) => <IconWrapper name="spinner" className="animate-spin" {...p} />,
-      Chat: (p) => <IconWrapper name="chat-circle" {...p} />, Lock: (p) => <IconWrapper name="lock" {...p} />, Key: (p) => <IconWrapper name="key" {...p} />,
-      Out: (p) => <IconWrapper name="sign-out" {...p} />, Plus: (p) => <IconWrapper name="plus-circle" {...p} />, Trash: (p) => <IconWrapper name="trash" {...p} />,
-      Award: (p) => <IconWrapper name="medal" {...p} />, Bell: (p) => <IconWrapper name="bell" {...p} />, Users: (p) => <IconWrapper name="users" {...p} />,
-      Grad: (p) => <IconWrapper name="graduation-cap" {...p} />, Alert: (p) => <IconWrapper name="warning-circle" {...p} />,
-      Left: (p) => <IconWrapper name="arrow-left" {...p} />, Sync: (p) => <IconWrapper name="arrows-clockwise" {...p} />, User: (p) => <IconWrapper name="user" {...p} />,
-      Shield: (p) => <IconWrapper name="shield-check" {...p} />, Search: (p) => <IconWrapper name="magnifying-glass" {...p} />,
-      Coffee: (p) => <IconWrapper name="coffee" {...p} />, Exam: (p) => <IconWrapper name="check-square-offset" {...p} />
+    // =========================================================================
+    // PHOSPHOR ICONS WRAPPER
+    // =========================================================================
+    const IconWrapper = ({ name, size = 24, className = "", weight = "regular" }) => (
+      <i className={`ph-${weight === 'fill' ? 'fill' : 'regular'} ph-${name} ${className}`} style={{ fontSize: size }}></i>
+    );
+    const PlayCircle = (p) => <IconWrapper name="play-circle" {...p} />;
+    const Download = (p) => <IconWrapper name="download" {...p} />;
+    const Menu = (p) => <IconWrapper name="list" {...p} />;
+    const X = (p) => <IconWrapper name="x" {...p} />;
+    const BookOpen = (p) => <IconWrapper name="book-open" {...p} />;
+    const Video = (p) => <IconWrapper name="video" {...p} />;
+    const CheckCircle2 = (p) => <IconWrapper name="check-circle" {...p} />;
+    const ChevronRight = (p) => <IconWrapper name="caret-right" {...p} />;
+    const Loader2 = (p) => <IconWrapper name="spinner" className="animate-spin" {...p} />;
+    const MessageSquare = (p) => <IconWrapper name="chat-circle" {...p} />;
+    const Lock = (p) => <IconWrapper name="lock" {...p} />;
+    const Key = (p) => <IconWrapper name="key" {...p} />;
+    const LogOut = (p) => <IconWrapper name="sign-out" {...p} />;
+    const PlusCircle = (p) => <IconWrapper name="plus-circle" {...p} />;
+    const Database = (p) => <IconWrapper name="database" {...p} />;
+    const Trash2 = (p) => <IconWrapper name="trash" {...p} />;
+    const Award = (p) => <IconWrapper name="medal" {...p} />;
+    const Bell = (p) => <IconWrapper name="bell" {...p} />;
+    const Users = (p) => <IconWrapper name="users" {...p} />;
+    const GraduationCap = (p) => <IconWrapper name="graduation-cap" {...p} />;
+    const AlertCircle = (p) => <IconWrapper name="warning-circle" {...p} />;
+    const ArrowLeft = (p) => <IconWrapper name="arrow-left" {...p} />;
+    const RefreshCw = (p) => <IconWrapper name="arrows-clockwise" {...p} />;
+    const UserIcon = (p) => <IconWrapper name="user" {...p} />;
+    const Globe = (p) => <IconWrapper name="globe" {...p} />;
+    const HardDrives = (p) => <IconWrapper name="hard-drives" {...p} />;
+    const ShieldCheck = (p) => <IconWrapper name="shield-check" {...p} />;
+    const MagnifyingGlass = (p) => <IconWrapper name="magnifying-glass" {...p} />;
+    const Coffee = (p) => <IconWrapper name="coffee" {...p} />;
+    const CheckSquareOffset = (p) => <IconWrapper name="check-square-offset" {...p} />;
+
+    // =========================================================================
+    // INITIAL SYSTEM MOCK DATA (Offline Fallback)
+    // =========================================================================
+    const initialAdmins = [
+      { id: 'adm_super', username: 'senrima', password: 'Sandy236', name: 'Master System', isSuper: true, donationLink: '' }
+    ];
+    
+    const emptyExam = {
+      minScore: 70,
+      questions: Array.from({length: 10}, () => ({ q: '', options: ['','','',''], answer: 0 }))
     };
 
-    const initialAdmins = [{ id: 'adm_super', username: 'senrima', password: 'Sandy236', name: 'Master System', isSuper: true, donationLink: '' }];
-    const emptyExam = { minScore: 70, questions: Array.from({length: 10}, () => ({ q: '', options: ['','','',''], answer: 0 })) };
-
+    // =========================================================================
+    // MAIN APP COMPONENT
+    // =========================================================================
     function App() {
-      // Data Pokok
+      // Database & Mode Konfigurasi
       const [dbMode, setDbMode] = React.useState(() => localStorage.getItem('edu_db_mode') || 'sheets'); 
       const [dbReady, setDbReady] = React.useState(false);
       const [setupError, setSetupError] = React.useState("");
@@ -72,13 +110,14 @@
       const [fbConfigInput, setFbConfigInput] = React.useState("");
       const [sheetsUrlInput, setSheetsUrlInput] = React.useState(() => localStorage.getItem('edu_sheets_url') || DEFAULT_GAS_URL);
       
+      // Global Data State
       const [admins, setAdmins] = React.useState([]);
       const [courses, setCourses] = React.useState([]);
       const [participants, setParticipants] = React.useState([]);
       const [enrollments, setEnrollments] = React.useState([]);
       const [notifications, setNotifications] = React.useState([]);
 
-      // Autentikasi
+      // Autentikasi Sesi
       const [session, setSession] = React.useState(() => JSON.parse(sessionStorage.getItem('edu_session')) || null);
       const [loginInput, setLoginInput] = React.useState({ username: "", password: "" });
       const [loginError, setLoginError] = React.useState("");
@@ -86,17 +125,21 @@
       
       const getInitialAppMode = () => {
         if (!session) return 'auth';
-        return session.role === 'super_admin' ? 'super_dashboard' : session.role === 'admin' ? 'admin_dashboard' : 'part_dashboard';
+        if (session.role === 'super_admin') return 'super_dashboard';
+        if (session.role === 'admin') return 'admin_dashboard';
+        return 'part_dashboard';
       };
 
       const [appMode, setAppMode] = React.useState(getInitialAppMode()); 
       const [adminTab, setAdminTab] = React.useState("courses"); 
       const [superTab, setSuperTab] = React.useState("instructors"); 
       
+      // Filter State
       const [searchInst, setSearchInst] = React.useState("");
       const [searchCourse, setSearchCourse] = React.useState("");
       const [searchPart, setSearchPart] = React.useState("");
       
+      // Kelas & Pembelajaran
       const [activeCourse, setActiveCourse] = React.useState(null);
       const [activeModule, setActiveModule] = React.useState(null);
       const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
@@ -104,7 +147,7 @@
       const [classroomMode, setClassroomMode] = React.useState('video'); 
       const [studentAnswers, setStudentAnswers] = React.useState({});
       
-      // Modals & PIN
+      // Dialog Modals
       const [toast, setToast] = React.useState(null);
       const [confirmDialog, setConfirmDialog] = React.useState({ isOpen: false, message: "", onConfirm: null });
       const [showPinModal, setShowPinModal] = React.useState(false);
@@ -116,6 +159,7 @@
       const [examForm, setExamForm] = React.useState(emptyExam);
       const [profileForm, setProfileForm] = React.useState({ donationLink: "" });
 
+      // --- SINKRONISASI DATABASE ---
       React.useEffect(() => {
         if (appMode === 'setup_db') return;
 
@@ -130,7 +174,9 @@
           try {
             const configStr = localStorage.getItem('edu_fb_config');
             if (!configStr) throw new Error("No Config");
-            fbApp = initializeApp(JSON.parse(configStr)); fbAuth = getAuth(fbApp); fbDb = getFirestore(fbApp);
+            const config = JSON.parse(configStr);
+            fbApp = initializeApp(config); fbAuth = getAuth(fbApp); fbDb = getFirestore(fbApp);
+
             signInAnonymously(fbAuth).then(() => {
               const getRef = (colName) => collection(fbDb, colName);
               onSnapshot(getRef('admins'), snap => setAdmins(snap.docs.map(d => ({id: d.id, ...d.data()}))) );
@@ -139,43 +185,67 @@
               onSnapshot(getRef('enrollments'), snap => setEnrollments(snap.docs.map(d => ({id: d.id, ...d.data()}))) );
               onSnapshot(getRef('notifications'), snap => setNotifications(snap.docs.map(d => ({id: d.id, ...d.data()}))) );
               setDbReady(true);
-            }).catch(e => { setSetupError("Gagal login anonim ke Firebase."); setAppMode('setup_db'); });
-          } catch (e) { setSetupError("Konfigurasi Firebase salah/kosong."); setAppMode('setup_db'); }
+            }).catch(e => {
+              console.error("Firebase Connection Error:", e);
+              setSetupError("Gagal login anonim ke Firebase.");
+              setAppMode('setup_db');
+            });
+          } catch (e) {
+            console.error("Firebase Config Error:", e);
+            setSetupError("Konfigurasi Firebase salah/kosong.");
+            setAppMode('setup_db');
+          }
         } else if (dbMode === 'sheets') {
           const url = localStorage.getItem('edu_sheets_url') || DEFAULT_GAS_URL;
+          
           fetch(url)
-            .then(res => { if(!res.ok) throw new Error("API Offline"); return res.json(); })
+            .then(res => {
+                if(!res.ok) throw new Error("Database Offline");
+                return res.json();
+            })
             .then(data => {
                 setAdmins(data.admins?.length > 0 ? data.admins : initialAdmins);
                 if(data.courses) setCourses(data.courses);
                 if(data.participants) setParticipants(data.participants);
                 if(data.enrollments) setEnrollments(data.enrollments);
                 if(data.notifications) setNotifications(data.notifications);
-                setSetupError(""); setDbReady(true);
+                
+                setSetupError("");
+                setDbReady(true);
             })
             .catch(e => {
-                console.warn("Spreadsheet Offline, Fallback Local:", e);
-                setSetupError("Mode Cloud Terputus. Menjalankan Mode Offline Lokal.");
+                console.warn("Spreadsheet Offline, Fallback ke Lokal:", e);
+                setSetupError("Database utama offline. Dialihkan ke mode lokal sementara.");
+                
+                // Fallback aman agar dashboard tidak crash
                 setAdmins(JSON.parse(localStorage.getItem('edu_admins')) || initialAdmins);
                 setCourses(JSON.parse(localStorage.getItem('edu_courses')) || []);
                 setParticipants(JSON.parse(localStorage.getItem('edu_participants')) || []);
                 setEnrollments(JSON.parse(localStorage.getItem('edu_enrollments')) || []);
                 setNotifications(JSON.parse(localStorage.getItem('edu_notifications')) || []);
+                
                 setDbReady(true);
             });
         }
       }, [dbMode, appMode]);
 
+      // --- SYSTEM HELPER FUNCTIONS ---
       const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
-      const generateRandomCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
-      const calcProgress = (enr, crs) => (!crs?.modules?.length || !enr?.completedModules) ? 0 : Math.round((enr.completedModules.length / crs.modules.length) * 100);
+      const generateRandomCode = (prefix = "", length = 6) => prefix + Math.random().toString(36).substring(2, 2+length).toUpperCase();
+      
+      const calcProgress = (enr, crs) => {
+        if (!crs?.modules?.length || !enr?.completedModules) return 0;
+        return Math.round((enr.completedModules.length / crs.modules.length) * 100);
+      };
 
-      // --- SINKRONISASI MULTI-DATABASE ---
+      // --- HYBRID SINKRONISASI AKSI DATABASE ---
       const execDbAction = async (localAction, firebaseAction) => {
         try {
-          if (dbMode === 'firebase') { await firebaseAction(); } 
-          else if (dbMode === 'sheets') {
-              localAction(); 
+          if (dbMode === 'firebase') { 
+              await firebaseAction(); 
+          } else if (dbMode === 'sheets') {
+              localAction(); // Simpan Lokal Terlebih Dahulu
+              
               const url = localStorage.getItem('edu_sheets_url') || DEFAULT_GAS_URL;
               if (url) {
                   const payload = {
@@ -185,50 +255,80 @@
                       enrollments: JSON.parse(localStorage.getItem('edu_enrollments')) || enrollments,
                       notifications: JSON.parse(localStorage.getItem('edu_notifications')) || notifications
                   };
-                  fetch(url, { method: 'POST', body: JSON.stringify(payload) }).catch(e => console.warn("Background sync delay", e));
+                  fetch(url, { 
+                      method: 'POST', 
+                      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                      body: JSON.stringify(payload) 
+                  }).catch(e => console.warn("Sistem background sync tertunda:", e));
               }
-          } else { localAction(); }
-        } catch (error) { showToast("Gagal menyimpan data ke server."); }
+          } else { 
+              localAction(); 
+          }
+        } catch (error) {
+          console.error(error); showToast("Gagal menyimpan data ke server database.");
+        }
       };
 
       const handleSeedDatabase = async () => {
         setIsLoggingIn(true);
         await execDbAction(
-          () => { localStorage.setItem('edu_admins', JSON.stringify(initialAdmins)); setAdmins(initialAdmins); showToast("Sistem Diinisialisasi!"); },
-          async () => { for(let adm of initialAdmins) await setDoc(doc(fbDb, 'admins', adm.id), adm); showToast("Firebase Diinisialisasi!"); }
+          () => {
+            localStorage.setItem('edu_admins', JSON.stringify(initialAdmins)); setAdmins(initialAdmins);
+            showToast("Database Berhasil Dibuat!");
+          },
+          async () => {
+            for(let adm of initialAdmins) await setDoc(doc(fbDb, 'admins', adm.id), adm);
+            showToast("Firebase Berhasil Disiapkan!");
+          }
         );
         setIsLoggingIn(false);
       };
 
+      // --- PIN SECURITY ALGORITHM ---
       const handlePinSubmit = (e) => {
         e.preventDefault();
-        // Cipher Key rahasia untuk "236999" (XOR logic with 123)
+        // Cipher XOR hash matching "236999"
         const targetHash = [73, 72, 77, 66, 66, 66]; 
         const inputArr = pinInput.split('').map(c => c.charCodeAt(0) ^ 123);
+        
         if (targetHash.join(',') === inputArr.join(',')) {
-            setShowPinModal(false); setPinInput(""); setPinError(""); setAppMode('setup_db');
-        } else setPinError("Akses Ditolak. PIN Keamanan Salah!");
+            setShowPinModal(false);
+            setPinInput("");
+            setPinError("");
+            setAppMode('setup_db');
+        } else {
+            setPinError("PIN Akses Salah! Autentikasi Ditolak.");
+        }
       };
 
+      // --- AUTENTIKASI MASUK ---
       const handleLogin = (e) => {
-        e.preventDefault(); setIsLoggingIn(true); setLoginError("");
+        e.preventDefault();
+        setIsLoggingIn(true); setLoginError("");
+        
         setTimeout(() => {
           const { username, password } = loginInput;
           const adminFound = admins.find(a => a.username === username && a.password === password);
+          
           if (adminFound) {
-            const sessData = { role: adminFound.isSuper ? 'super_admin' : 'admin', data: adminFound };
+            const role = adminFound.isSuper ? 'super_admin' : 'admin';
+            const mode = adminFound.isSuper ? 'super_dashboard' : 'admin_dashboard';
+            const sessData = { role: role, data: adminFound };
             setSession(sessData); sessionStorage.setItem('edu_session', JSON.stringify(sessData));
             if(!adminFound.isSuper) setProfileForm({ donationLink: adminFound.donationLink || "" });
-            setAppMode(adminFound.isSuper ? 'super_dashboard' : 'admin_dashboard'); setIsLoggingIn(false); return;
+            setAppMode(mode); setIsLoggingIn(false); return;
           }
+
           const partFound = participants.find(p => p.email === username && p.accessCode === password);
           if (partFound) {
             const sessData = { role: 'participant', data: partFound };
             setSession(sessData); sessionStorage.setItem('edu_session', JSON.stringify(sessData));
             setAppMode('part_dashboard'); setIsLoggingIn(false); return;
           }
-          setLoginError("Kredensial tidak valid."); setIsLoggingIn(false);
-        }, 800);
+
+          setLoginError("Kredensial tidak terdaftar dalam sistem.");
+          setIsLoggingIn(false);
+        }, 600);
       };
 
       const handleLogout = () => {
@@ -238,16 +338,33 @@
       
       const handleExitClassroom = () => {
         setActiveCourse(null); setActiveModule(null); setClassroomMode('video');
-        if(!session) return setAppMode('auth');
-        setAppMode(session.role === 'super_admin' ? 'super_dashboard' : session.role === 'participant' ? 'part_dashboard' : 'admin_dashboard');
+        if(!session) {
+            setAppMode('auth');
+            return;
+        }
+        if (session.role === 'super_admin') {
+            setAppMode('super_dashboard');
+        } else if (session.role === 'admin') {
+            setAppMode('admin_dashboard');
+        } else {
+            setAppMode('part_dashboard');
+        }
       };
 
+      // --- LOGIKA HAK SUPER ADMIN ---
       const handleRegisterAdmin = async (e) => {
-        e.preventDefault(); const fd = new FormData(e.target); const username = fd.get('username');
-        if (admins.some(a => a.username === username)) return showToast("Username terpakai!");
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const username = fd.get('username');
+        if (admins.some(a => a.username === username)) return showToast("Username sudah terpakai!");
+
         const newAdminData = { id: `adm_${Date.now()}`, name: fd.get('name'), username: username, password: fd.get('password'), isSuper: false, donationLink: '' };
+
         await execDbAction(
-          () => { const updatedA = [...admins, newAdminData]; setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA)); },
+          () => {
+            const updatedA = [...admins, newAdminData];
+            setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
+          },
           async () => await setDoc(doc(collection(fbDb, 'admins'), newAdminData.id), newAdminData)
         );
         e.target.reset(); showToast("Instruktur Baru Ditambahkan!");
@@ -255,76 +372,112 @@
 
       const handleDeleteAdmin = (id) => {
         setConfirmDialog({
-            isOpen: true, message: "Hapus instruktur ini? (Kursusnya akan tetap ada tanpa pembuat).",
+            isOpen: true, message: "Yakin ingin menghapus instruktur ini? (Kursusnya akan tetap berada di sistem).",
             onConfirm: async () => {
                 setConfirmDialog({ isOpen: false, message: "", onConfirm: null });
                 await execDbAction(
-                    () => { const updatedA = admins.filter(a => a.id !== id); setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA)); },
+                    () => {
+                        const updatedA = admins.filter(a => a.id !== id);
+                        setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
+                    },
                     async () => await deleteDoc(doc(fbDb, 'admins', id))
-                ); showToast("Instruktur dihapus.");
+                );
+                showToast("Sistem menghapus Instruktur.");
             }
         });
       };
 
       const handleDeleteCourseSuper = (courseId) => {
         setConfirmDialog({
-            isOpen: true, message: "Peringatan Super Admin: Hapus kursus ini secara permanen?",
+            isOpen: true, message: "Tindakan Super Admin: Yakin ingin melenyapkan kursus ini secara paksa beserta materi di dalamnya?",
             onConfirm: async () => {
                 setConfirmDialog({ isOpen: false, message: "", onConfirm: null });
                 await execDbAction(
-                    () => { const updatedC = courses.filter(c => c.id !== courseId); setCourses(updatedC); localStorage.setItem('edu_courses', JSON.stringify(updatedC)); },
+                    () => {
+                        const updatedC = courses.filter(c => c.id !== courseId);
+                        setCourses(updatedC); localStorage.setItem('edu_courses', JSON.stringify(updatedC));
+                    },
                     async () => await deleteDoc(doc(fbDb, 'courses', courseId))
-                ); showToast("Kursus dibrangus.");
+                );
+                showToast("Kursus dibrangus permanen.");
             }
         });
       };
 
+      // --- LOGIKA HAK ADMIN INSTRUKTUR ---
       const handleSafeDeleteCourse = (courseId) => {
         const hasEnrolled = enrollments.some(e => e.courseId === courseId);
-        if (hasEnrolled && session?.role !== 'super_admin') return showToast("Gagal: Kursus ini sudah ada pesertanya.");
+        if (hasEnrolled && session?.role !== 'super_admin') {
+            return showToast("Gagal: Kursus ini tidak boleh dihapus karena sudah ada pesertanya.");
+        }
+
         setConfirmDialog({
-            isOpen: true, message: "Kursus kosong. Yakin ingin menghapus?",
+            isOpen: true, message: "Kursus masih kosong. Yakin ingin menghapus kelas ini?",
             onConfirm: async () => {
                 setConfirmDialog({ isOpen: false, message: "", onConfirm: null });
                 await execDbAction(
-                    () => { const updatedC = courses.filter(c => c.id !== courseId); setCourses(updatedC); localStorage.setItem('edu_courses', JSON.stringify(updatedC)); },
+                    () => {
+                        const updatedC = courses.filter(c => c.id !== courseId);
+                        setCourses(updatedC); localStorage.setItem('edu_courses', JSON.stringify(updatedC));
+                    },
                     async () => await deleteDoc(doc(fbDb, 'courses', courseId))
-                ); showToast("Kursus dihapus.");
+                );
+                showToast("Kelas berhasil dihapus.");
             }
         });
       };
 
       const handleCreateCourse = async (e) => {
-        e.preventDefault(); const fd = new FormData(e.target); const code = fd.get('code');
-        if (courses.some(c => c.code === code)) return showToast("Kode Kursus sudah ada!");
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const code = fd.get('code');
+        if (courses.some(c => c.code === code)) return showToast("Kode Kursus sudah terdaftar!");
+        
         const courseData = { id: `c_${Date.now()}`, authorId: session.data.id, code, title: fd.get('title'), instructor: fd.get('inst'), modules: [], exam: emptyExam };
+        
         await execDbAction(
-          () => { const updated = [...courses, courseData]; setCourses(updated); localStorage.setItem('edu_courses', JSON.stringify(updated)); },
+          () => {
+            const updated = [...courses, courseData];
+            setCourses(updated); localStorage.setItem('edu_courses', JSON.stringify(updated));
+          },
           async () => await setDoc(doc(collection(fbDb, 'courses'), courseData.id), courseData)
         );
-        e.target.reset(); showToast("Kursus dibuat!");
+        e.target.reset(); showToast("Kursus baru berhasil diterbitkan!");
       };
 
       const handleCreateModule = async (e) => {
-        e.preventDefault(); const fd = new FormData(e.target); const courseId = fd.get('courseId');
-        const course = courses.find(c => c.id === courseId); if(!course) return;
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const courseId = fd.get('courseId');
+        const course = courses.find(c => c.id === courseId);
+        if(!course) return;
+
         const newModule = { id: `m_${Date.now()}`, title: fd.get('title'), videoUrl: fd.get('vidUrl'), description: fd.get('desc'), comments: [] };
+        
         await execDbAction(
-          () => { const updated = courses.map(c => c.id === courseId ? { ...c, modules: [...(c.modules||[]), newModule] } : c); setCourses(updated); localStorage.setItem('edu_courses', JSON.stringify(updated)); },
+          () => {
+            const updated = courses.map(c => c.id === courseId ? { ...c, modules: [...(c.modules||[]), newModule] } : c);
+            setCourses(updated); localStorage.setItem('edu_courses', JSON.stringify(updated));
+          },
           async () => await updateDoc(doc(fbDb, 'courses', courseId), { modules: [...(course.modules||[]), newModule] })
-        ); e.target.reset(); showToast("Materi ditambahkan!");
+        );
+        e.target.reset(); showToast("Video materi ditambahkan ke daftar kelas!");
       };
 
       const handleDeleteModule = (courseId, moduleId) => {
         setConfirmDialog({
-            isOpen: true, message: "Hapus materi video ini?",
+            isOpen: true, message: "Apakah Anda yakin ingin menghapus modul materi ini?",
             onConfirm: async () => {
                 setConfirmDialog({ isOpen: false, message: "", onConfirm: null });
                 const course = courses.find(c => c.id === courseId);
                 await execDbAction(
-                    () => { const updated = courses.map(c => c.id === courseId ? { ...c, modules: (c.modules||[]).filter(m => m.id !== moduleId) } : c); setCourses(updated); localStorage.setItem('edu_courses', JSON.stringify(updated)); },
+                    () => {
+                        const updated = courses.map(c => c.id === courseId ? { ...c, modules: (c.modules||[]).filter(m => m.id !== moduleId) } : c);
+                        setCourses(updated); localStorage.setItem('edu_courses', JSON.stringify(updated));
+                    },
                     async () => await updateDoc(doc(fbDb, 'courses', courseId), { modules: (course.modules||[]).filter(m => m.id !== moduleId) })
-                ); showToast("Materi dihapus.");
+                );
+                showToast("Modul terhapus.");
             }
         });
       };
@@ -332,32 +485,47 @@
       const handleUpdateProfile = async (e) => {
         e.preventDefault();
         await execDbAction(
-          () => { const updatedA = admins.map(a => a.id === session.data.id ? { ...a, donationLink: profileForm.donationLink } : a); setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA)); },
+          () => {
+            const updatedA = admins.map(a => a.id === session.data.id ? { ...a, donationLink: profileForm.donationLink } : a);
+            setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
+          },
           async () => await updateDoc(doc(fbDb, 'admins', session.data.id), { donationLink: profileForm.donationLink })
-        ); showToast("Profil Instruktur diperbarui!");
+        );
+        showToast("Tautan apresiasi berhasil disimpan!");
       };
 
       const openExamBuilder = (courseId) => {
-        const course = courses.find(c => c.id === courseId); setExamCourseId(courseId);
-        setExamForm(JSON.parse(JSON.stringify(course?.exam || emptyExam))); setExamModalOpen(true);
+        const course = courses.find(c => c.id === courseId);
+        setExamCourseId(courseId);
+        setExamForm(JSON.parse(JSON.stringify(course?.exam || emptyExam)));
+        setExamModalOpen(true);
       };
 
       const handleSaveExam = async () => {
         await execDbAction(
-          () => { const updated = courses.map(c => c.id === examCourseId ? { ...c, exam: examForm } : c); setCourses(updated); localStorage.setItem('edu_courses', JSON.stringify(updated)); },
+          () => {
+            const updated = courses.map(c => c.id === examCourseId ? { ...c, exam: examForm } : c);
+            setCourses(updated); localStorage.setItem('edu_courses', JSON.stringify(updated));
+          },
           async () => await updateDoc(doc(fbDb, 'courses', examCourseId), { exam: examForm })
-        ); setExamModalOpen(false); showToast("Data Ujian disimpan!");
+        );
+        setExamModalOpen(false); showToast("Kuesioner Ujian Kelas berhasil diperbarui!");
       };
 
+      // FUNGSI PENDAFTARAN PESERTA & KIRIM EMAIL
       const handleRegisterParticipant = async (e) => {
-        e.preventDefault(); const fd = new FormData(e.target); const email = fd.get('email');
-        if (participants.some(p => p.email === email)) return showToast("Gagal: Email terdaftar!");
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const email = fd.get('email');
+        if (participants.some(p => p.email === email)) return showToast("Gagal: Alamat email sudah memiliki akun!");
+
         const partData = { id: `p_${Date.now()}`, name: fd.get('name'), email, accessCode: fd.get('code') };
         const enrData = { id: `e_${Date.now()}`, participantId: partData.id, courseId: fd.get('courseId'), completedModules: [], isGraduated: false, certDownloaded: false, examScore: null };
 
         await execDbAction(
           () => {
-            const updatedP = [...participants, partData]; const updatedE = [...enrollments, enrData];
+            const updatedP = [...participants, partData]; 
+            const updatedE = [...enrollments, enrData];
             setParticipants(updatedP); localStorage.setItem('edu_participants', JSON.stringify(updatedP));
             setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE));
           },
@@ -365,41 +533,38 @@
             await setDoc(doc(collection(fbDb, 'participants'), partData.id), partData);
             await setDoc(doc(collection(fbDb, 'enrollments'), enrData.id), enrData);
           }
-        ); e.target.reset(); showToast("Peserta dimasukkan kelas!");
+        );
+        e.target.reset(); showToast("Peserta berhasil diaktifkan ke dalam sistem!");
       };
 
       const handleEnrollExisting = async (e) => {
-        e.preventDefault(); const fd = new FormData(e.target); const email = fd.get('email'); const cId = fd.get('cId');
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const email = fd.get('email');
+        const cId = fd.get('cId');
+
         const participant = participants.find(p => p.email === email);
-        if (!participant) return showToast("Peserta tidak ditemukan!");
-        if(enrollments.some(en => en.participantId === participant.id && en.courseId === cId)) return showToast("Sudah terdaftar!");
-        const enrData = { id: `e_${Date.now()}`, participantId: participant.id, courseId: cId, completedModules: [], isGraduated: false, certDownloaded: false, examScore: null };
+        if (!participant) return showToast("Peserta tidak ditemukan. Periksa kembali email.");
+
+        const pId = participant.id;
+        if(enrollments.some(en => en.participantId === pId && en.courseId === cId)) return showToast("Siswa sudah mendapatkan akses di kelas ini!");
+
+        const enrData = { id: `e_${Date.now()}`, participantId: pId, courseId: cId, completedModules: [], isGraduated: false, certDownloaded: false, examScore: null };
         await execDbAction(
-          () => { const updatedE = [...enrollments, enrData]; setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE)); },
+          () => {
+            const updatedE = [...enrollments, enrData];
+            setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE));
+          },
           async () => await setDoc(doc(collection(fbDb, 'enrollments'), enrData.id), enrData)
-        ); e.target.reset(); showToast("Kursus ditambahkan!");
+        );
+        e.target.reset(); showToast("Kelas berhasil ditambahkan ke portofolio siswa!");
       };
 
-      const jumpToClassroom = (courseId, targetModuleId = null) => {
-        const course = courses.find(c => c.id === courseId);
-        if(!course) return showToast("Kursus error!");
-        let modToOpen = course?.modules?.[0] || null; setClassroomMode('video');
-
-        if ((session?.role === 'admin' || session?.role === 'super_admin') && targetModuleId) {
-          modToOpen = course?.modules?.find(m => m.id === targetModuleId) || modToOpen;
-        } else if (session?.role === 'participant') {
-          const myEnr = enrollments.find(e => e.participantId === session.data.id && e.courseId === courseId);
-          if (myEnr) {
-            if(myEnr.isGraduated) { setClassroomMode('result'); }
-            else { modToOpen = course?.modules?.find(m => !(myEnr.completedModules||[]).includes(m.id)) || course?.modules?.[(course?.modules?.length||1) - 1]; }
-          }
-        }
-        if(!modToOpen && classroomMode === 'video') return showToast("Belum ada materi di kelas ini!"); 
-        setActiveCourse(course); setActiveModule(modToOpen); setAppMode('classroom');
-      };
-
+      // --- KELAS DAN DISKUSI ---
       const handlePostComment = async (e) => {
-        e.preventDefault(); if (!commentText.trim()) return;
+        e.preventDefault();
+        if (!commentText.trim()) return;
+
         const isAdmin = session.role === 'admin' || session.role === 'super_admin';
         const authorName = session.role === 'super_admin' ? `${session.data.name}` : session.data.name;
         const newComment = { id: `cmt_${Date.now()}`, user: authorName, text: commentText, isAdmin, time: "Baru saja" };
@@ -410,101 +575,168 @@
             const updatedC = courses.map(c => c.id === activeCourse.id ? { ...c, modules: updatedMods } : c);
             setCourses(updatedC); localStorage.setItem('edu_courses', JSON.stringify(updatedC));
             if (!isAdmin) {
-              const updatedN = [{ id: `n_${Date.now()}`, adminId: activeCourse.authorId, text: `${authorName} bertanya di "${activeCourse.title}"`, isRead: false, time: "Baru saja", courseId: activeCourse.id, moduleId: activeModule.id }, ...notifications];
+              const updatedN = [{ id: `n_${Date.now()}`, adminId: activeCourse.authorId, text: `${authorName} mengajukan pertanyaan di kelas "${activeCourse.title}"`, isRead: false, time: "Baru saja", courseId: activeCourse.id, moduleId: activeModule.id }, ...notifications];
               setNotifications(updatedN); localStorage.setItem('edu_notifications', JSON.stringify(updatedN));
             }
           },
           async () => {
             await updateDoc(doc(fbDb, 'courses', activeCourse.id), { modules: updatedMods });
             if (!isAdmin) {
-                const notifData = { id: `n_${Date.now()}`, adminId: activeCourse.authorId, text: `${authorName} bertanya di "${activeCourse.title}"`, isRead: false, time: "Baru saja", courseId: activeCourse.id, moduleId: activeModule.id };
+                const notifData = { id: `n_${Date.now()}`, adminId: activeCourse.authorId, text: `${authorName} bertanya di kelas "${activeCourse.title}"`, isRead: false, time: "Baru saja", courseId: activeCourse.id, moduleId: activeModule.id };
                 await setDoc(doc(collection(fbDb, 'notifications'), notifData.id), notifData);
             }
           }
         );
         setActiveModule(prev => ({ ...prev, comments: [...(prev.comments||[]), newComment] }));
-        setCommentText(""); showToast("Komentar terkirim!");
+        setCommentText(""); showToast("Pesan komentar berhasil diunggah!");
       };
 
       const handleCompleteModule = async () => {
         if (session.role === 'admin' || session.role === 'super_admin') return; 
-        const cMods = activeCourse.modules || []; const cIdx = cMods.findIndex(m => m.id === activeModule?.id); const isLast = cIdx === cMods.length - 1;
+
+        const cMods = activeCourse.modules || [];
+        const cIdx = cMods.findIndex(m => m.id === activeModule?.id);
+        const isLast = cIdx === cMods.length - 1;
         const myEnr = enrollments.find(e => e.participantId === session.data.id && e.courseId === activeCourse.id);
         
         if (!(myEnr.completedModules||[]).includes(activeModule.id)) {
           const newComps = [...(myEnr.completedModules||[]), activeModule.id];
+
           await execDbAction(
-            () => { const updatedE = enrollments.map(en => en.id === myEnr.id ? { ...en, completedModules: newComps } : en); setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE)); },
+            () => {
+              const updatedE = enrollments.map(en => en.id === myEnr.id ? { ...en, completedModules: newComps } : en);
+              setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE));
+            },
             async () => await updateDoc(doc(fbDb, 'enrollments', myEnr.id), { completedModules: newComps })
           );
-          if (!isLast) { setActiveModule(cMods[cIdx + 1]); showToast("Lanjut materi berikutnya."); } else setClassroomMode('exam');
+
+          if (!isLast) { setActiveModule(cMods[cIdx + 1]); showToast("Selesai! Buka materi selanjutnya."); } 
+          else { setClassroomMode('exam'); } 
         } else {
-          if (!isLast) setActiveModule(cMods[cIdx + 1]); else setClassroomMode('exam');
+          if (!isLast) setActiveModule(cMods[cIdx + 1]); else { setClassroomMode('exam'); }
         }
       };
 
       const submitExam = async () => {
-        let correct = 0; (activeCourse?.exam?.questions || []).forEach((q, i) => { if(studentAnswers[i] === q.answer) correct++; });
-        const finalScore = correct * 10; const minScore = activeCourse?.exam?.minScore || 70; const isPassed = finalScore >= minScore;
+        let correct = 0;
+        (activeCourse?.exam?.questions || []).forEach((q, i) => {
+            if(studentAnswers[i] === q.answer) correct++;
+        });
+        const finalScore = correct * 10;
+        const minScore = activeCourse?.exam?.minScore || 70;
+        const isPassed = finalScore >= minScore;
         const myEnr = enrollments.find(e => e.participantId === session.data.id && e.courseId === activeCourse.id);
 
         await execDbAction(
-            () => { const updatedE = enrollments.map(en => en.id === myEnr.id ? { ...en, examScore: finalScore, isGraduated: isPassed } : en); setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE)); },
+            () => {
+                const updatedE = enrollments.map(en => en.id === myEnr.id ? { ...en, examScore: finalScore, isGraduated: isPassed } : en);
+                setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE));
+            },
             async () => await updateDoc(doc(fbDb, 'enrollments', myEnr.id), { examScore: finalScore, isGraduated: isPassed })
-        ); setClassroomMode('result');
-        if(isPassed) showToast(`Selamat! Anda Lulus dengan Nilai ${finalScore}`); else showToast(`Nilai Anda ${finalScore}. Gagal!`);
+        );
+
+        setClassroomMode('result');
+        if(isPassed) showToast(`Selamat! Anda Dinyatakan Lulus Ujian dengan Nilai ${finalScore}`);
+        else showToast(`Ujian Selesai. Nilai Anda ${finalScore}. Batas Kelulusan: ${minScore}.`);
       };
 
-      const handleDownloadCert = async () => {
+      // FUNGSI SERTIFIKAT MINIMALIS & ELEGAN (TANPA ORNAMEN/BINTANG)
+      const getCertHTMLString = (participantName, courseTitle, instructorName) => {
+        return `<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Sertifikat Kelulusan - ${courseTitle}</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+body { font-family: 'Playfair Display', serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background-color: #f1f5f9; padding: 20px; box-sizing: border-box; }
+.cert-container { background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); max-width: 900px; width: 100%; position: relative; }
+.cert-border { border: 4px double #0f172a; padding: 50px 60px; text-align: center; position: relative; background-image: radial-gradient(#f8fafc 20%, transparent 20%), radial-gradient(#f8fafc 20%, transparent 20%); background-color: #ffffff; background-position: 0 0, 10px 10px; background-size: 20px 20px; min-height: 480px;}
+.header-logo { color: #0f172a; font-size: 16px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 50px; }
+.title { color: #0f172a; font-size: 48px; font-weight: 700; text-transform: uppercase; margin-bottom: 25px; letter-spacing: 4px; }
+.subtitle { color: #475569; font-size: 18px; margin-bottom: 20px; font-style: italic; }
+.name { font-size: 42px; color: #1d4ed8; font-weight: 700; margin: 10px 0; border-bottom: 2px solid #cbd5e1; display: inline-block; padding: 0 40px 10px; }
+.course-label { color: #475569; font-size: 18px; margin: 35px 0 15px; font-style: italic; }
+.course-name { font-size: 32px; color: #0f172a; font-weight: 700; line-height: 1.3; margin-bottom: 60px; }
+.footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 50px; padding-bottom: 40px; }
+.signature-block { width: 250px; text-align: center; }
+.signature { font-family: 'Great Vibes', cursive; font-size: 36px; color: #0f172a; border-bottom: 1px solid #94a3b8; margin-bottom: 5px; padding-bottom: 5px; }
+.instructor-name { font-size: 16px; font-weight: bold; color: #0f172a; }
+.instructor-title { font-size: 14px; color: #64748b; }
+.website { position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; color: #64748b; font-family: sans-serif; font-size: 12px; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div class="cert-container">
+  <div class="cert-border">
+    <div class="header-logo">EduLearn by SenTools</div>
+    <div class="title">Sertifikat Kelulusan</div>
+    <div class="subtitle">Diberikan dengan bangga kepada:</div>
+    <div class="name">${participantName}</div>
+    <div class="course-label">Atas dedikasi dan keberhasilannya menyelesaikan:</div>
+    <div class="course-name">${courseTitle}</div>
+    <div class="footer">
+      <div class="signature-block">
+        <div class="signature">${instructorName}</div>
+        <div class="instructor-name">${instructorName}</div>
+        <div class="instructor-title">Instruktur Utama</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature">SenTools</div>
+        <div class="instructor-name">Sistem Manajemen</div>
+        <div class="instructor-title">EduLearn by SenTools</div>
+      </div>
+    </div>
+    <div class="website">https://s-tools.id/edu/</div>
+  </div>
+</div>
+</body>
+</html>`;
+      };
+
+      const handleDownloadCertLocal = async () => {
         const myEnr = enrollments.find(e => e.participantId === session.data.id && e.courseId === activeCourse.id);
         const instructorData = admins.find(a => a.id === activeCourse.authorId);
         const instName = instructorData?.name || activeCourse?.instructor || "Instruktur";
 
         await execDbAction(
-          () => { const updatedE = enrollments.map(en => en.id === myEnr.id ? { ...en, certDownloaded: true } : en); setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE)); },
+          () => {
+            const updatedE = enrollments.map(en => en.id === myEnr.id ? { ...en, certDownloaded: true } : en);
+            setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE));
+          },
           async () => await updateDoc(doc(fbDb, 'enrollments', myEnr.id), { certDownloaded: true })
         );
 
-        const certContent = `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><title>Sertifikat - ${activeCourse?.title}</title><style>@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap'); body { font-family: 'Playfair Display', serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background-color: #f1f5f9; padding: 20px; box-sizing: border-box; } .cert-container { background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); max-width: 900px; width: 100%; position: relative; } .cert-border { border: 4px double #0f172a; padding: 50px 60px; text-align: center; position: relative; background-image: radial-gradient(#f8fafc 20%, transparent 20%), radial-gradient(#f8fafc 20%, transparent 20%); background-color: #ffffff; background-position: 0 0, 10px 10px; background-size: 20px 20px; min-height: 480px;} .header-logo { color: #0f172a; font-size: 16px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 50px; } .title { color: #0f172a; font-size: 48px; font-weight: 700; text-transform: uppercase; margin-bottom: 25px; letter-spacing: 4px; } .subtitle { color: #475569; font-size: 18px; margin-bottom: 20px; font-style: italic; } .name { font-size: 42px; color: #1d4ed8; font-weight: 700; margin: 10px 0; border-bottom: 2px solid #cbd5e1; display: inline-block; padding: 0 40px 10px; } .course-label { color: #475569; font-size: 18px; margin: 35px 0 15px; font-style: italic; } .course-name { font-size: 32px; color: #0f172a; font-weight: 700; line-height: 1.3; margin-bottom: 60px; } .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 50px; padding-bottom: 40px; } .signature-block { width: 250px; text-align: center; } .signature { font-family: 'Great Vibes', cursive; font-size: 36px; color: #0f172a; border-bottom: 1px solid #94a3b8; margin-bottom: 5px; padding-bottom: 5px; } .instructor-name { font-size: 16px; font-weight: bold; color: #0f172a; } .instructor-title { font-size: 14px; color: #64748b; } .website { position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; color: #64748b; font-family: sans-serif; font-size: 12px; letter-spacing: 1px; }</style></head><body><div class="cert-container"><div class="cert-border"><div class="header-logo">EduLearn by SenTools</div><div class="title">Sertifikat Kelulusan</div><div class="subtitle">Diberikan dengan bangga kepada:</div><div class="name">${session.data.name}</div><div class="course-label">Atas dedikasi dan keberhasilannya menyelesaikan:</div><div class="course-name">${activeCourse?.title}</div><div class="footer"><div class="signature-block"><div class="signature">${instName}</div><div class="instructor-name">${instName}</div><div class="instructor-title">Instruktur Utama</div></div><div class="signature-block"><div class="signature">SenTools</div><div class="instructor-name">Sistem Manajemen</div><div class="instructor-title">EduLearn by SenTools</div></div></div><div class="website">https://s-tools.id/edu/</div></div></div></body></html>`;
+        const certContent = getCertHTMLString(session.data.name, activeCourse?.title, instName);
         const blob = new Blob([certContent], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a'); link.href = url; link.download = `Sertifikat-${activeCourse?.title?.replace(/\s+/g, '-') || 'EduLearn'}.html`;
         document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
-        showToast("Sertifikat berhasil diunduh!");
+        
+        showToast("Sertifikat berhasil didownload!");
       };
 
-      const handleSaveFirebaseConfig = () => {
-        try {
-          let str = fbConfigInput.trim();
-          if (str.includes('firebaseConfig')) str = str.substring(str.indexOf('{'), str.lastIndexOf('}') + 1);
-          const configObj = new Function("return " + str)();
-          if (!configObj.apiKey || !configObj.projectId) throw new Error("Missing keys");
-          localStorage.setItem('edu_fb_config', JSON.stringify(configObj));
-          localStorage.setItem('edu_db_mode', 'firebase'); window.location.reload(); 
-        } catch (e) { setSetupError("Format tidak valid."); }
-      };
+      // =========================================================================
+      // RENDERING INTERFACES
+      // =========================================================================
+      
+      if (!dbReady && appMode !== 'setup_db') return (
+        <div className="flex flex-col items-center justify-center h-screen bg-slate-50"><Loader2 size={48} className="animate-spin text-indigo-600 mb-4" /><h2 className="text-xl font-bold text-slate-800">Menyiapkan Aplikasi EduLearn...</h2></div>
+      );
 
-      const handleSaveSheetsConfig = () => {
-        if(!sheetsUrlInput.includes("script.google.com")) return setSetupError("URL tidak valid!");
-        localStorage.setItem('edu_sheets_url', sheetsUrlInput.trim() || DEFAULT_GAS_URL);
-        localStorage.setItem('edu_db_mode', 'sheets'); window.location.reload(); 
-      };
-
-      const handleSwitchToLocal = () => { localStorage.setItem('edu_db_mode', 'local'); window.location.reload(); };
-
-      // ==========================================
-      // UI RENDERS
-      // ==========================================
-      if (!dbReady && appMode !== 'setup_db') return <div className="flex flex-col items-center justify-center h-screen bg-slate-50"><Icons.Spin size={48} className="text-indigo-600 mb-4" /><h2 className="text-xl font-bold text-slate-800">Menyiapkan Aplikasi...</h2></div>;
-
+      // --- MODALS ---
       const ConfirmModal = () => {
         if (!confirmDialog.isOpen) return null;
         return (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in-up">
             <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl relative">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-600 mx-auto mb-4"><Icons.Alert size={32} /></div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Konfirmasi Tindakan</h3><p className="text-sm text-slate-600 mb-6">{confirmDialog.message}</p>
-              <div className="flex space-x-3"><button onClick={() => setConfirmDialog({ isOpen: false, message: "", onConfirm: null })} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl font-medium transition">Batal</button><button onClick={confirmDialog.onConfirm} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl font-medium transition">Lanjutkan</button></div>
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-600 mx-auto mb-4"><AlertCircle size={32} /></div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Konfirmasi Tindakan</h3>
+              <p className="text-sm text-slate-600 mb-6">{confirmDialog.message}</p>
+              <div className="flex space-x-3">
+                <button onClick={() => setConfirmDialog({ isOpen: false, message: "", onConfirm: null })} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl font-medium transition">Batal</button>
+                <button onClick={confirmDialog.onConfirm} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl font-medium transition">Lanjutkan</button>
+              </div>
             </div>
           </div>
         );
@@ -515,113 +747,280 @@
         return (
           <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
             <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-fade-in-up">
-              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 mx-auto mb-5"><Icons.Lock size={40} /></div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-2">Akses Terbatas</h3><p className="text-slate-500 mb-6 text-sm">Masukkan PIN (236999).</p>
+              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center text-slate-600 mx-auto mb-5"><Lock size={40} /></div>
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">Akses Terbatas</h3>
+              <p className="text-slate-500 mb-6 text-sm">Gunakan PIN Sandi Pengaman untuk mengkonfigurasi database sistem.</p>
               {pinError && <div className="bg-red-50 text-red-600 text-xs font-bold p-3 rounded-lg mb-4">{pinError}</div>}
               <form onSubmit={handlePinSubmit} className="space-y-4">
-                <input type="password" value={pinInput} onChange={e=>setPinInput(e.target.value)} className="w-full text-center tracking-[0.5em] text-2xl p-4 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20" autoFocus />
-                <div className="flex space-x-3 pt-2"><button type="button" onClick={() => {setShowPinModal(false); setPinError(""); setPinInput("");}} className="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-bold">Batal</button><button type="submit" className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold">Buka</button></div>
+                <input type="password" value={pinInput} onChange={e=>setPinInput(e.target.value)} className="w-full text-center tracking-[0.5em] text-2xl p-4 border-2 border-slate-200 rounded-xl outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all animate-pulse" placeholder="••••••" autoFocus />
+                <div className="flex space-x-3 pt-2">
+                  <button type="button" onClick={() => {setShowPinModal(false); setPinError(""); setPinInput("");}} className="flex-1 bg-slate-100 text-slate-700 py-3 rounded-xl font-bold transition-colors">Batal</button>
+                  <button type="submit" className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold transition-colors shadow-lg shadow-indigo-200">Buka</button>
+                </div>
               </form>
             </div>
           </div>
         );
       };
 
-      const ManageExamModal = () => {
-        if (!examModalOpen) return null;
-        return (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl flex flex-col max-h-[90vh]">
-                <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-2xl"><div><h2 className="text-xl font-bold text-slate-800">Pembuat Ujian</h2><p className="text-sm text-slate-500">Buat 10 Soal Pilihan Ganda & Nilai Target</p></div><button onClick={()=>setExamModalOpen(false)} className="text-slate-400 hover:text-slate-600"><Icons.X size={24}/></button></div>
-                <div className="p-6 overflow-y-auto flex-1 space-y-8">
-                    <div className="bg-amber-50 p-4 rounded-xl border border-amber-200"><label className="font-bold text-amber-900 block mb-2">Target Kelulusan</label><input type="number" min="0" max="100" value={examForm?.minScore || 70} onChange={e=>setExamForm({...examForm, minScore: parseInt(e.target.value)})} className="w-32 p-2 border border-amber-300 rounded outline-none font-bold text-amber-900 bg-white" /></div>
-                    {examForm?.questions?.map((q, idx) => (
-                        <div key={idx} className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                            <label className="font-bold text-slate-800 block mb-2">Soal {idx+1}</label><input type="text" maxLength={200} value={q.q} onChange={e=>{const newQ = [...(examForm.questions||[])]; newQ[idx].q = e.target.value; setExamForm({...examForm, questions: newQ});}} className="w-full p-2 mb-3 border rounded outline-none focus:border-indigo-500" required />
-                            <div className="grid grid-cols-2 gap-2 mb-3">{q.options?.map((opt, optIdx) => (<input key={optIdx} type="text" maxLength={100} value={opt} onChange={e=>{const newQ = [...(examForm.questions||[])]; newQ[idx].options[optIdx] = e.target.value; setExamForm({...examForm, questions: newQ});}} className="w-full p-2 border rounded outline-none focus:border-indigo-500 text-sm" placeholder={`Opsi ${optIdx+1}`} required />))}</div>
-                            <label className="text-sm font-medium text-slate-600 mr-2">Jawaban Benar:</label><select value={q.answer} onChange={e=>{const newQ = [...(examForm.questions||[])]; newQ[idx].answer = parseInt(e.target.value); setExamForm({...examForm, questions: newQ});}} className="p-1 border rounded text-sm outline-none focus:border-indigo-500 bg-white">{q.options?.map((_, optIdx) => <option key={optIdx} value={optIdx}>Opsi {optIdx+1}</option>)}</select>
-                        </div>
-                    ))}
-                </div>
-                <div className="p-6 border-t bg-white rounded-b-2xl flex justify-end gap-3"><button onClick={()=>setExamModalOpen(false)} className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium">Batal</button><button onClick={handleSaveExam} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium">Simpan Soal Ujian</button></div>
-            </div>
-          </div>
-        )
-      };
-
+      // --- SCREEN 0: SETUP DB (Halaman Pengaturan) ---
       if (appMode === 'setup_db') {
         return (
           <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4 font-sans text-slate-800">
-            <ConfirmModal />{toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"><Icons.Check size={20}/><span>{toast}</span></div>}
+            <ConfirmModal />
+            {toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"><CheckCircle2 size={20}/><span>{toast}</span></div>}
             <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-xl border border-slate-100 animate-fade-in-up">
-              <div className="flex flex-col items-center mb-6 text-center"><div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 mb-4"><Icons.Database size={32} /></div><h1 className="text-2xl font-bold text-slate-900">Konfigurasi Database</h1><p className="text-slate-500 mt-2 text-sm">Pilih database penyimpanan.</p></div>
+              <div className="flex flex-col items-center mb-6 text-center">
+                <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 mb-4"><Database size={32} /></div>
+                <h1 className="text-2xl font-bold text-slate-900">Arsitektur Multi-Database</h1>
+                <p className="text-slate-500 mt-2 text-sm">Pilih database penyimpanan utama atau hubungkan ke database kustom.</p>
+              </div>
+              
               {setupError && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">{setupError}</div>}
+              
               <div className="space-y-4">
-                <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-200"><h3 className="font-bold text-indigo-800 mb-2 flex items-center"><Icons.Database size={18} className="mr-2"/> 1. Google Sheets</h3><input type="url" value={sheetsUrlInput} onChange={e => setSheetsUrlInput(e.target.value)} className="w-full p-2 mb-3 border border-indigo-300 rounded-lg text-sm outline-none focus:border-indigo-500 bg-white"/><div className="flex gap-2"><button onClick={handleSaveSheetsConfig} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium text-sm">Gunakan Sheets</button></div></div>
+                {/* Opsi Google Sheets Utama */}
+                <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-200">
+                  <h3 className="font-bold text-indigo-800 mb-2 flex items-center"><Database size={18} className="mr-2"/> 1. Google Sheets Apps Script</h3>
+                  <input 
+                    type="url" value={sheetsUrlInput} onChange={e => setSheetsUrlInput(e.target.value)}
+                    className="w-full p-2 mb-3 border border-indigo-300 rounded-lg text-sm outline-none focus:border-indigo-500 bg-white font-mono text-xs"
+                    placeholder="URL Apps Script Exec"
+                  />
+                  <div className="flex gap-2">
+                    <button onClick={handleSaveSheetsConfig} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg font-medium transition text-sm">Gunakan Sheets</button>
+                    <button onClick={handleDownloadSpreadsheetTemplate} className="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-4 py-2 rounded-lg transition" title="Download Template CSV"><Download size={18} /></button>
+                  </div>
+                </div>
+
                 <div className="relative flex py-2 items-center"><div className="flex-grow border-t border-slate-200"></div><span className="flex-shrink-0 mx-4 text-slate-400 text-xs">CADANGAN</span><div className="flex-grow border-t border-slate-200"></div></div>
-                <div className="bg-amber-50 p-4 rounded-xl border border-amber-200"><h3 className="font-bold text-amber-800 mb-2 flex items-center"><Icons.Database size={18} className="mr-2"/> 2. Firebase Cloud</h3><textarea value={fbConfigInput} onChange={e => setFbConfigInput(e.target.value)} className="w-full h-24 p-3 border border-amber-300 rounded-xl outline-none focus:border-amber-500 font-mono text-xs bg-white"></textarea><button onClick={handleSaveFirebaseConfig} className="w-full mt-2 bg-amber-500 hover:bg-amber-600 text-slate-900 py-2.5 rounded-xl font-bold">Gunakan Firebase</button></div>
-                <button onClick={handleSwitchToLocal} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-medium flex items-center justify-center space-x-2"><Icons.HardDrives size={20} /><span>3. Lanjutkan Offline (Local)</span></button>
-                <button onClick={() => setAppMode('auth')} className="w-full text-slate-400 hover:text-slate-600 py-2 text-sm">Kembali ke Halaman Login</button>
+
+                {/* Opsi Firebase */}
+                <div className="bg-amber-50 p-4 rounded-xl border border-amber-200">
+                  <h3 className="font-bold text-amber-800 mb-2 flex items-center"><Database size={18} className="mr-2"/> 2. Firebase Cloud Firestore</h3>
+                  <textarea 
+                    value={fbConfigInput} onChange={e => setFbConfigInput(e.target.value)}
+                    className="w-full h-24 p-3 border border-amber-300 rounded-xl outline-none focus:border-amber-500 font-mono text-xs bg-white"
+                    placeholder={`const firebaseConfig = {\n  apiKey: "...",\n  projectId: "..."\n};`}
+                  ></textarea>
+                  <button onClick={handleSaveFirebaseConfig} className="w-full mt-2 bg-amber-500 hover:bg-amber-600 text-slate-900 py-2.5 rounded-xl font-bold transition">Gunakan Firebase</button>
+                </div>
+                
+                {/* Opsi Local */}
+                <button onClick={handleSwitchToLocal} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-medium transition flex items-center justify-center space-x-2">
+                  <HardDrives size={20} /><span>3. Jalankan Offline Lokal (Local Storage)</span>
+                </button>
+
+                {/* Back to Login */}
+                <button onClick={() => setAppMode('auth')} className="w-full text-slate-400 hover:text-slate-600 py-2 text-sm transition mt-2">Kembali ke Portal Login</button>
               </div>
             </div>
           </div>
         );
       }
 
+      // --- SCREEN 1: LOGIN ---
       if (appMode === 'auth') {
         return (
           <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4 font-sans text-slate-800">
-            <ConfirmModal /><PinModal />
-            <div className="absolute top-4 right-4"><button onClick={() => setShowPinModal(true)} className="flex items-center space-x-2 bg-white border px-4 py-2 rounded-full shadow-sm text-xs font-medium hover:bg-slate-50"><span className={`w-2 h-2 rounded-full ${dbMode === 'local' ? 'bg-slate-400' : dbMode === 'firebase' ? 'bg-amber-400' : 'bg-indigo-500'}`}></span><span>DB: {dbMode.toUpperCase()} - Ubah DB</span></button></div>
-            <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md border border-slate-100 animate-fade-in-up">
-              <div className="flex flex-col items-center mb-6"><div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mb-4 border"><Icons.Lock size={36} /></div><h1 className="text-3xl font-black text-slate-900 tracking-tight">EduLearn</h1><p className="text-slate-500 text-center mt-3 text-sm"><b>Peserta:</b> Email & Kode.<br/><b>Admin/Instruktur:</b> Username & Password.</p></div>
-              {admins.length === 0 && (<div className="mb-4 bg-amber-50 border border-amber-200 p-4 rounded-xl text-center"><p className="text-sm text-amber-800 mb-3 font-bold">Database kosong!</p><button onClick={handleSeedDatabase} disabled={isLoggingIn} className="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold w-full">Inisialisasi Master System</button></div>)}
+            <ConfirmModal />
+            <PinModal />
+            
+            <div className="absolute top-4 right-4">
+              <button onClick={() => setShowPinModal(true)} className="flex items-center space-x-2 bg-white border border-slate-200 px-4 py-2 rounded-full shadow-sm text-xs font-medium hover:bg-slate-50 transition">
+                <span className={`w-2 h-2 rounded-full ${dbMode === 'local' ? 'bg-slate-400' : dbMode === 'firebase' ? 'bg-amber-400' : 'bg-green-500'}`}></span>
+                <span>Database: {dbMode.toUpperCase()} - Ubah DB</span>
+              </button>
+            </div>
+
+            <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md border border-slate-100 relative animate-fade-in-up">
+              <div className="flex flex-col items-center mb-6">
+                <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 mb-4 border"><Lock size={36} /></div>
+                <h1 className="text-3xl font-black text-slate-900 tracking-tight">EduLearn</h1>
+                <p className="text-slate-500 text-center mt-3 text-sm leading-relaxed"><b>Siswa:</b> Email & Kode Akses.<br/><b>Instruktur:</b> Username & Password.</p>
+              </div>
+
+              {admins.length === 0 && (
+                <div className="mb-4 bg-amber-50 border border-amber-200 p-4 rounded-xl text-center">
+                  <p className="text-sm text-amber-800 mb-3 font-bold">Database masih kosong.</p>
+                  <button onClick={handleSeedDatabase} disabled={isLoggingIn} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-bold w-full transition">Aktifkan Master Admin</button>
+                </div>
+              )}
+
               {loginError && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg text-center font-medium">{loginError}</div>}
               {setupError && <div className="mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-700 text-xs rounded-lg text-center">{setupError}</div>}
+              
               <form onSubmit={handleLogin} className="space-y-4">
-                <div className="relative"><div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400"><Icons.User size={20} /></div><input required value={loginInput.username} onChange={(e) => setLoginInput({...loginInput, username: e.target.value})} className="pl-12 w-full px-4 py-3.5 border border-slate-300 rounded-xl outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10" placeholder="Email / Username" /></div>
-                <div className="relative"><div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400"><Icons.Key size={20} /></div><input required type="password" value={loginInput.password} onChange={(e) => setLoginInput({...loginInput, password: e.target.value})} className="pl-12 w-full px-4 py-3.5 border border-slate-300 rounded-xl outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10" placeholder="Kode Akses / Password" /></div>
-                <button type="submit" disabled={isLoggingIn || admins.length===0} className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white py-3.5 rounded-xl font-bold flex justify-center shadow-md">{isLoggingIn ? <Icons.Spin size={20} /> : "Masuk ke Sistem"}</button>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400"><UserIcon size={20} /></div>
+                  <input required value={loginInput.username} onChange={(e) => setLoginInput({...loginInput, username: e.target.value})} className="pl-12 w-full px-4 py-3.5 border border-slate-300 rounded-xl outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition" placeholder="Email / Username" />
+                </div>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400"><Key size={20} /></div>
+                  <input required type="password" value={loginInput.password} onChange={(e) => setLoginInput({...loginInput, password: e.target.value})} className="pl-12 w-full px-4 py-3.5 border border-slate-300 rounded-xl outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition" placeholder="Kode Akses / Password" />
+                </div>
+                <button type="submit" disabled={isLoggingIn || admins.length===0} className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white py-3.5 rounded-xl font-bold flex justify-center transition items-center shadow-md hover:shadow-lg mt-2">
+                  {isLoggingIn ? <Loader2 size={20} className="animate-spin" /> : "Masuk ke Sistem"}
+                </button>
               </form>
+              
+              <div className="mt-6 p-3 bg-slate-50 border border-slate-200 rounded-lg text-[11px] text-slate-600 text-center font-mono space-y-1">
+                <p><b>Super Admin:</b> senrima / Sandy236</p>
+              </div>
             </div>
           </div>
         );
       }
 
+      // --- SCREEN 1.5: SUPER ADMIN DASHBOARD ---
       if (appMode === 'super_dashboard') {
         const regularAdmins = admins.filter(a => !a.isSuper);
         const filteredAdmins = regularAdmins.filter(a => a.name?.toLowerCase().includes(searchInst.toLowerCase()) || a.username?.toLowerCase().includes(searchInst.toLowerCase()));
         const filteredCourses = courses.filter(c => c.title?.toLowerCase().includes(searchCourse.toLowerCase()) || c.code?.toLowerCase().includes(searchCourse.toLowerCase()));
-        const allEnrs = enrollments.map(enr => { const p = participants.find(x => x.id === enr.participantId); const c = courses.find(x => x.id === enr.courseId); return { ...enr, pName: p?.name||'', pEmail: p?.email||'', cTitle: c?.title||'', prog: calcProgress(enr,c) }; });
+        
+        const allEnrs = enrollments.map(enr => { 
+            const p = participants.find(x => x.id === enr.participantId); 
+            const c = courses.find(x => x.id === enr.courseId); 
+            return { ...enr, pName: p?.name||'', pEmail: p?.email||'', cTitle: c?.title||'', prog: calcProgress(enr,c) }; 
+        });
         const filteredEnrs = allEnrs.filter(e => e.pName?.toLowerCase().includes(searchPart.toLowerCase()) || e.cTitle?.toLowerCase().includes(searchPart.toLowerCase()));
 
         return (
           <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800">
-            <ConfirmModal />{toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-fade-in-up"><Icons.Check size={20}/><span>{toast}</span></div>}
+            <ConfirmModal />
+            {toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-fade-in-up"><CheckCircle2 size={20}/><span>{toast}</span></div>}
+            
             <header className="bg-slate-900 text-white px-6 py-4 flex flex-col lg:flex-row items-center justify-between z-20 gap-4 shadow-md">
-              <div className="flex items-center space-x-3"><Icons.Shield size={32} className="text-amber-400" /><div className="flex items-center gap-2"><h1 className="text-xl font-bold">EduLearn by SenTools</h1><span className="text-[10px] px-2.5 py-1 rounded-md font-bold uppercase border bg-amber-500/20 text-amber-400">Super Admin</span></div></div>
-              <div className="flex space-x-2 bg-slate-800 p-1.5 rounded-xl overflow-x-auto w-full lg:w-auto"><button onClick={() => setSuperTab('instructors')} className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center ${superTab==='instructors'?'bg-amber-500 text-slate-900 shadow':'text-slate-300'}`}><Icons.Users size={18} className="mr-1.5"/> Instruktur</button><button onClick={() => setSuperTab('courses')} className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center ${superTab==='courses'?'bg-amber-500 text-slate-900 shadow':'text-slate-300'}`}><Icons.Book size={18} className="mr-1.5"/> Semua Kursus</button><button onClick={() => setSuperTab('participants')} className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center ${superTab==='participants'?'bg-amber-500 text-slate-900 shadow':'text-slate-300'}`}><Icons.Grad size={18} className="mr-1.5"/> Pantau Peserta</button></div>
-              <div className="flex items-center space-x-4"><span className="text-sm font-bold text-amber-400">{session?.data?.name}</span><button onClick={handleLogout} className="p-2 hover:bg-red-500 rounded-lg text-red-400"><Icons.Out size={20} /></button></div>
+              <div className="flex items-center space-x-3">
+                <ShieldCheck size={28} className="text-amber-400 shrink-0" />
+                <div className="flex items-center space-x-2">
+                  <h1 className="text-xl font-bold tracking-tight text-white select-none">EduLearn by SenTools</h1>
+                  <span className="h-5 w-px bg-slate-700 hidden sm:block"></span>
+                  <span className="bg-amber-500 text-slate-900 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md tracking-wider border border-amber-600 shadow-inner">Super Admin</span>
+                </div>
+              </div>
+              <div className="flex space-x-2 bg-slate-800 p-1.5 rounded-xl overflow-x-auto w-full lg:w-auto shadow-inner">
+                <button onClick={() => setSuperTab('instructors')} className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center whitespace-nowrap transition ${superTab==='instructors'?'bg-amber-500 text-slate-900 shadow':'text-slate-300 hover:bg-slate-700'}`}><Users size={18} className="mr-1.5"/> Instruktur</button>
+                <button onClick={() => setSuperTab('courses')} className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center whitespace-nowrap transition ${superTab==='courses'?'bg-amber-500 text-slate-900 shadow':'text-slate-300 hover:bg-slate-700'}`}><BookOpen size={18} className="mr-1.5"/> Semua Kursus</button>
+                <button onClick={() => setSuperTab('participants')} className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center whitespace-nowrap transition ${superTab==='participants'?'bg-amber-500 text-slate-900 shadow':'text-slate-300 hover:bg-slate-700'}`}><GraduationCap size={18} className="mr-1.5"/> Pantau Peserta</button>
+              </div>
+              <div className="flex items-center space-x-4">
+                 <span className="text-sm font-bold text-amber-400 bg-amber-400/10 px-3 py-1.5 rounded-full border border-amber-400/20">{session?.data?.name}</span>
+                 <button onClick={handleLogout} className="p-2 hover:bg-red-500 hover:text-white rounded-lg text-red-400 transition" title="Logout"><LogOut size={20} /></button>
+              </div>
             </header>
+
             <div className="flex-1 p-4 lg:p-8 max-w-6xl mx-auto w-full">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fade-in-up"><div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center space-x-4"><div className="p-4 bg-indigo-50 text-indigo-600 rounded-2xl"><Icons.Users size={32}/></div><div><p className="text-slate-500 text-sm font-bold">Total Instruktur</p><h3 className="text-3xl font-black">{regularAdmins.length}</h3></div></div><div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center space-x-4"><div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl"><Icons.Book size={32}/></div><div><p className="text-slate-500 text-sm font-bold">Kursus Aktif</p><h3 className="text-3xl font-black">{courses.length}</h3></div></div><div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center space-x-4"><div className="p-4 bg-blue-50 text-blue-600 rounded-2xl"><Icons.Grad size={32}/></div><div><p className="text-slate-500 text-sm font-bold">Peserta Terdaftar</p><h3 className="text-3xl font-black">{participants.length}</h3></div></div></div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fade-in-up">
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center space-x-4"><div className="p-4 bg-indigo-50 text-indigo-600 rounded-2xl"><Users size={32}/></div><div><p className="text-slate-500 text-sm font-bold uppercase tracking-wider">Total Instruktur</p><h3 className="text-3xl font-black text-slate-800">{regularAdmins.length}</h3></div></div>
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center space-x-4"><div className="p-4 bg-emerald-50 text-emerald-600 rounded-2xl"><BookOpen size={32}/></div><div><p className="text-slate-500 text-sm font-bold uppercase tracking-wider">Kursus Aktif</p><h3 className="text-3xl font-black text-slate-800">{courses.length}</h3></div></div>
+                  <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center space-x-4"><div className="p-4 bg-blue-50 text-blue-600 rounded-2xl"><GraduationCap size={32}/></div><div><p className="text-slate-500 text-sm font-bold uppercase tracking-wider">Peserta Terdaftar</p><h3 className="text-3xl font-black text-slate-800">{participants.length}</h3></div></div>
+              </div>
+
               {superTab === 'instructors' && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up">
-                  <div className="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border h-fit"><h2 className="font-bold text-slate-800 mb-5 flex items-center"><Icons.Plus size={20} className="mr-2 text-indigo-600" /> Tambah Instruktur</h2><form onSubmit={handleRegisterAdmin} className="space-y-3"><input name="name" required className="w-full p-3 text-sm border rounded-xl" placeholder="Nama Lengkap"/><input name="username" required className="w-full p-3 text-sm border rounded-xl" placeholder="Username"/><input name="password" required className="w-full p-3 text-sm border rounded-xl" defaultValue="GURU123"/><button type="submit" className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-bold">Daftarkan Instruktur</button></form></div>
-                  <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border"><div className="flex justify-between items-center mb-6"><h2 className="font-bold text-slate-800"><Icons.Users size={20} className="inline mr-2 text-indigo-600" /> Daftar Instruktur Aktif</h2><input type="text" placeholder="Cari nama/username..." value={searchInst} onChange={e=>setSearchInst(e.target.value)} className="p-2 text-sm border rounded-xl"/></div><div className="overflow-x-auto"><table className="w-full text-left text-sm whitespace-nowrap"><thead className="bg-slate-50 text-slate-600 border-b"><tr><th className="p-4">Nama Lengkap</th><th className="p-4">Username</th><th className="p-4">Kinerja</th><th className="p-4 text-right">Aksi</th></tr></thead><tbody className="divide-y divide-slate-100">{filteredAdmins.map(adm => (<tr key={adm.id} className="hover:bg-slate-50"><td className="p-4 font-bold">{adm.name}</td><td className="p-4 font-mono text-xs text-indigo-600">{adm.username}</td><td className="p-4"><span className="bg-indigo-100 text-indigo-800 px-3 py-1.5 rounded-lg text-xs font-bold">{courses.filter(c => c.authorId === adm.id).length} Kursus</span></td><td className="p-4 text-right"><button onClick={()=>handleDeleteAdmin(adm.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Icons.Trash size={20}/></button></td></tr>))}</tbody></table></div></div>
+                  <div className="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
+                    <h2 className="font-bold text-slate-800 mb-5 flex items-center text-lg"><PlusCircle size={20} className="mr-2 text-indigo-600" /> Tambah Instruktur</h2>
+                    <form onSubmit={handleRegisterAdmin} className="space-y-4">
+                      <div><label className="text-xs font-bold text-slate-500 mb-1.5 block uppercase tracking-wide">Nama Lengkap</label><input name="name" required className="w-full p-3 text-sm border border-slate-300 rounded-xl bg-slate-50 outline-none focus:border-amber-500 focus:bg-white transition"/></div>
+                      <div><label className="text-xs font-bold text-slate-500 mb-1.5 block uppercase tracking-wide">Username (Login)</label><input name="username" required className="w-full p-3 text-sm border border-slate-300 rounded-xl bg-slate-50 outline-none focus:border-amber-500 focus:bg-white transition"/></div>
+                      <div><label className="text-xs font-bold text-slate-500 mb-1.5 block uppercase tracking-wide">Password Default</label><input name="password" required className="w-full p-3 text-sm border border-slate-300 rounded-xl bg-slate-50 outline-none focus:border-amber-500 focus:bg-white transition" defaultValue="GURU123"/></div>
+                      <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl text-sm font-bold mt-4 transition shadow-md">Daftarkan Instruktur</button>
+                    </form>
+                  </div>
+
+                  <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+                        <h2 className="font-bold text-slate-800 flex items-center text-lg"><Users size={20} className="mr-2 text-indigo-600" /> Daftar Instruktur Aktif</h2>
+                        <div className="relative w-full sm:w-auto"><MagnifyingGlass size={18} className="absolute left-3 top-2.5 text-slate-400"/><input type="text" placeholder="Cari nama/username..." value={searchInst} onChange={e=>setSearchInst(e.target.value)} className="w-full pl-10 p-2 text-sm border border-slate-300 rounded-xl outline-none focus:border-amber-500 transition"/></div>
+                    </div>
+                    <div className="overflow-x-auto rounded-xl border border-slate-100">
+                        <table className="w-full text-left text-sm whitespace-nowrap">
+                            <thead className="bg-slate-50 text-slate-600 border-b border-slate-200"><tr><th className="p-4 font-bold">Nama Lengkap</th><th className="p-4 font-bold">Username</th><th className="p-4 font-bold">Kinerja</th><th className="p-4 text-right font-bold">Aksi</th></tr></thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {filteredAdmins.length === 0 ? <tr><td colSpan="4" className="p-8 text-center text-slate-500 font-medium">Tidak ada instruktur ditemukan.</td></tr> : filteredAdmins.map(adm => {
+                                const courseCount = courses.filter(c => c.authorId === adm.id).length;
+                                return (
+                                  <tr key={adm.id} className="hover:bg-slate-50 transition">
+                                    <td className="p-4 font-bold text-slate-800">{adm.name}</td>
+                                    <td className="p-4 font-mono text-xs text-indigo-600 bg-indigo-50/50 rounded">{adm.username}</td>
+                                    <td className="p-4"><span className="bg-indigo-100 text-indigo-800 px-3 py-1.5 rounded-lg text-xs font-bold border border-indigo-200">{courseCount} Kursus</span></td>
+                                    <td className="p-4 text-right">
+                                      <button onClick={()=>handleDeleteAdmin(adm.id)} className="p-2 text-red-500 hover:bg-red-50 hover:text-red-700 rounded-lg transition" title="Hapus Instruktur"><Trash2 size={20}/></button>
+                                    </td>
+                                  </tr>
+                                )
+                              })}
+                            </tbody>
+                        </table>
+                    </div>
+                  </div>
                 </div>
               )}
+
               {superTab === 'courses' && (
-                <div className="bg-white p-6 rounded-2xl shadow-sm border animate-fade-in-up"><div className="flex justify-between items-center mb-6"><h2 className="font-bold text-slate-800"><Icons.Book size={20} className="inline mr-2 text-indigo-600" /> Semua Kursus</h2><input type="text" placeholder="Cari..." value={searchCourse} onChange={e=>setSearchCourse(e.target.value)} className="p-2 text-sm border rounded-xl"/></div><div className="overflow-x-auto"><table className="w-full text-left text-sm whitespace-nowrap"><thead className="bg-slate-50 text-slate-600 border-b"><tr><th className="p-4">Kode</th><th className="p-4">Nama Kursus</th><th className="p-4">Instruktur</th><th className="p-4">Total Materi</th><th className="p-4 text-right">Aksi Sistem</th></tr></thead><tbody className="divide-y divide-slate-100">{filteredCourses.map(crs => (<tr key={crs.id} className="hover:bg-slate-50"><td className="p-4 font-mono text-xs font-bold text-slate-500">{crs.code}</td><td className="p-4 font-bold">{crs.title}</td><td className="p-4 text-slate-600">{crs.instructor}</td><td className="p-4 text-slate-600">{crs.modules?.length||0} Materi</td><td className="p-4 text-right space-x-2"><button onClick={() => jumpToClassroom(crs.id)} className="text-xs bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold">Masuk</button><button onClick={() => handleDeleteCourseSuper(crs.id)} className="text-xs bg-red-100 text-red-700 px-4 py-2 rounded-lg font-bold">Hapus Paksa</button></td></tr>))}</tbody></table></div></div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 animate-fade-in-up">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+                        <h2 className="font-bold text-slate-800 flex items-center text-lg"><BookOpen size={20} className="mr-2 text-indigo-600" /> Pengawasan Seluruh Kursus</h2>
+                        <div className="relative w-full sm:w-auto"><MagnifyingGlass size={18} className="absolute left-3 top-2.5 text-slate-400"/><input type="text" placeholder="Cari Kode/Judul..." value={searchCourse} onChange={e=>setSearchCourse(e.target.value)} className="w-full pl-10 p-2 text-sm border border-slate-300 rounded-xl outline-none focus:border-amber-500 transition"/></div>
+                  </div>
+                  <div className="overflow-x-auto rounded-xl border border-slate-100">
+                    <table className="w-full text-left text-sm whitespace-nowrap">
+                        <thead className="bg-slate-50 text-slate-600 border-b border-slate-200"><tr><th className="p-4 font-bold">Kode</th><th className="p-4 font-bold">Nama Kursus</th><th className="p-4 font-bold">Instruktur</th><th className="p-4 font-bold">Total Materi</th><th className="p-4 text-right font-bold">Aksi Sistem</th></tr></thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {filteredCourses.length === 0 ? <tr><td colSpan="5" className="p-8 text-center text-slate-500 font-medium">Tidak ada kursus yang dibuat.</td></tr> : filteredCourses.map(crs => (
+                            <tr key={crs.id} className="hover:bg-slate-50 transition">
+                              <td className="p-4 font-mono text-xs font-bold text-slate-500">{crs.code}</td>
+                              <td className="p-4 font-bold text-slate-800">{crs.title}</td>
+                              <td className="p-4 text-slate-600 font-medium"><UserIcon size={14} className="inline mr-1 text-slate-400"/>{crs.instructor}</td>
+                              <td className="p-4 text-slate-600 font-medium">{crs.modules?.length||0} Materi</td>
+                              <td className="p-4 text-right space-x-2">
+                                <button onClick={() => jumpToClassroom(crs.id)} className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-sm">Masuk Kelas</button>
+                                <button onClick={() => handleDeleteCourseSuper(crs.id)} className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg font-bold transition-colors">Hapus Paksa</button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                    </table>
+                  </div>
+                </div>
               )}
+
               {superTab === 'participants' && (
-                <div className="bg-white p-6 rounded-2xl shadow-sm border animate-fade-in-up"><div className="flex justify-between items-center mb-6"><h2 className="font-bold text-slate-800"><Icons.Grad size={20} className="inline mr-2 text-indigo-600" /> Pantau Progress Global</h2><input type="text" placeholder="Cari..." value={searchPart} onChange={e=>setSearchPart(e.target.value)} className="p-2 text-sm border rounded-xl"/></div><div className="overflow-x-auto"><table className="w-full text-left text-sm whitespace-nowrap"><thead className="bg-slate-50 text-slate-600 border-b"><tr><th className="p-4">Peserta</th><th className="p-4">Kode Akses</th><th className="p-4">Kelas</th><th className="p-4">Progress</th><th className="p-4">Nilai</th><th className="p-4">Status</th></tr></thead><tbody className="divide-y divide-slate-100">{filteredEnrs.map((enr, i) => (<tr key={i} className="hover:bg-slate-50"><td className="p-4"><p className="font-bold">{enr.pName}</p><p className="text-xs text-slate-500">{enr.pEmail}</p></td><td className="p-4 font-mono font-bold text-slate-500">{participants.find(p=>p.id===enr.participantId)?.accessCode || '-'}</td><td className="p-4 text-indigo-700 font-bold">{enr.cTitle}</td><td className="p-4"><div className="flex items-center space-x-3"><div className="w-24 bg-slate-200 rounded-full h-2.5"><div className="bg-indigo-500 h-2.5 rounded-full" style={{width: `${enr.prog}%`}}></div></div><span className="text-xs font-bold text-slate-600">{enr.prog}%</span></div></td><td className="p-4 font-mono font-black">{enr.examScore ?? '-'}</td><td className="p-4">{enr.certDownloaded ? <span className="text-[10px] bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-lg font-bold">Sertifikat Diunduh</span> : enr.isGraduated ? <span className="text-[10px] bg-amber-100 text-amber-800 px-3 py-1.5 rounded-lg font-bold">Lulus Ujian</span> : <span className="text-[10px] bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg font-bold">Berproses</span>}</td></tr>))}</tbody></table></div></div>
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 animate-fade-in-up">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+                        <h2 className="font-bold text-slate-800 flex items-center text-lg"><GraduationCap size={20} className="mr-2 text-indigo-600" /> Pantau Progress Lintas Kelas</h2>
+                        <div className="relative w-full sm:w-auto"><MagnifyingGlass size={18} className="absolute left-3 top-2.5 text-slate-400"/><input type="text" placeholder="Cari Nama/Kursus..." value={searchPart} onChange={e=>setSearchPart(e.target.value)} className="w-full pl-10 py-2 text-sm border border-slate-300 rounded-xl outline-none focus:border-amber-500 transition"/></div>
+                  </div>
+                  <div className="overflow-x-auto rounded-xl border border-slate-100">
+                    <table className="w-full text-left text-sm whitespace-nowrap">
+                        <thead className="bg-slate-50 text-slate-600 border-b border-slate-200"><tr><th className="p-4 font-bold">Peserta</th><th className="p-4 font-bold">Kode Akses</th><th className="p-4 font-bold">Kelas/Kursus</th><th className="p-4 font-bold">Progress</th><th className="p-4 font-bold">Nilai Akhir</th><th className="p-4 font-bold">Status</th></tr></thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {filteredEnrs.length === 0 ? <tr><td colSpan="6" className="p-8 text-center text-slate-500 font-medium">Tidak ada data pendaftaran ditemukan.</td></tr> : filteredEnrs.map((enr, i) => (
+                            <tr key={i} className="hover:bg-slate-50 transition">
+                              <td className="p-4"><p className="font-bold text-slate-800">{enr.pName}</p><p className="text-xs text-slate-500 mt-0.5">{enr.pEmail}</p></td>
+                              <td className="p-4 font-mono font-bold text-slate-500"><Key size={14} className="inline mr-1 text-slate-400"/>{participants.find(p=>p.id===enr.participantId)?.accessCode || '-'}</td>
+                              <td className="p-4 text-indigo-700 font-bold">{enr.cTitle}</td>
+                              <td className="p-4">
+                                <div className="flex items-center space-x-3"><div className="w-24 bg-slate-200 rounded-full h-2.5 overflow-hidden"><div className="bg-indigo-500 h-2.5 rounded-full transition-all" style={{width: `${enr.prog}%`}}></div></div><span className="text-xs font-bold text-slate-600">{enr.prog}%</span></div>
+                              </td>
+                              <td className="p-4 font-mono font-black text-slate-800">{enr.examScore !== null ? enr.examScore : '-'}</td>
+                              <td className="p-4">
+                                  {enr.certDownloaded ? <span className="text-[10px] bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-lg font-bold border border-emerald-200">Sertifikat Diunduh</span> : enr.isGraduated ? <span className="text-[10px] bg-amber-100 text-amber-800 px-3 py-1.5 rounded-lg font-bold border border-amber-200">Lulus Ujian</span> : <span className="text-[10px] bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg font-bold border border-slate-200">Dalam Proses</span>}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                    </table>
+                  </div>
+                </div>
               )}
             </div>
           </div>
         );
       }
 
+      // --- SCREEN 2: ADMIN (INSTRUKTUR) DASHBOARD ---
       if (appMode === 'admin_dashboard') {
         const myCourses = courses.filter(c => c.authorId === session.data.id);
         const myNotifs = notifications.filter(n => n.adminId === session.data.id);
@@ -631,59 +1030,102 @@
 
         return (
           <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-800">
-            <ConfirmModal /><ManageExamModal />{toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-fade-in-up"><Icons.Check size={20}/><span>{toast}</span></div>}
+            <ConfirmModal />
+            <ManageExamModal />
+            {toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-fade-in-up"><CheckCircle2 size={20}/><span>{toast}</span></div>}
             
             <header className="bg-slate-900 text-white px-6 py-4 flex flex-col lg:flex-row items-center justify-between z-20 gap-4 shadow-md">
-              <div className="flex items-center space-x-3"><Icons.Database size={32} className="text-indigo-400" /><div className="flex items-center flex-wrap gap-2"><h1 className="text-xl font-bold">EduLearn by SenTools</h1><span className="text-[10px] px-2.5 py-1 rounded-md font-bold uppercase border border-indigo-500/50 bg-indigo-500/20 text-indigo-300">Instruktur</span></div></div>
-              <div className="flex space-x-2 bg-slate-800 p-1.5 rounded-xl overflow-x-auto w-full lg:w-auto shadow-inner">
-                <button onClick={() => setAdminTab('courses')} className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center transition ${adminTab==='courses'?'bg-indigo-600 text-white shadow':'text-slate-300 hover:bg-slate-700'}`}><Icons.Book size={18} className="mr-1.5"/> Kursusku</button>
-                <button onClick={() => setAdminTab('participants')} className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center transition ${adminTab==='participants'?'bg-indigo-600 text-white shadow':'text-slate-300 hover:bg-slate-700'}`}><Icons.Users size={18} className="mr-1.5"/> Data Peserta</button>
-                <button onClick={() => { setAdminTab('notifications'); const unreadNotifs = myNotifs.filter(n => !n.isRead); if(unreadNotifs.length > 0) execDbAction(null, null); }} className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center relative transition ${adminTab==='notifications'?'bg-indigo-600 text-white shadow':'text-slate-300 hover:bg-slate-700'}`}><Icons.Bell size={18} className="mr-1.5"/> Kotak Masuk {unread > 0 && <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-slate-800">{unread}</span>}</button>
-                <button onClick={() => setAdminTab('profile')} className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center transition ${adminTab==='profile'?'bg-indigo-600 text-white shadow':'text-slate-300 hover:bg-slate-700'}`}><Icons.User size={18} className="mr-1.5"/> Profil & Apresiasi</button>
+              <div className="flex items-center space-x-2">
+                <Database size={28} className="text-indigo-400 shrink-0" />
+                <div className="flex items-center space-x-2">
+                  <h1 className="text-xl font-bold tracking-tight text-white select-none">EduLearn by SenTools</h1>
+                  <span className="h-5 w-px bg-slate-700 hidden sm:block"></span>
+                  <span className="bg-indigo-600 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md tracking-wider border border-indigo-500 shadow-inner">Admin</span>
+                </div>
               </div>
-              <div className="flex items-center space-x-4"><span className="text-sm font-bold text-indigo-200">{session?.data?.name}</span><button onClick={handleLogout} className="p-2 hover:bg-red-500 hover:text-white rounded-lg text-red-400 transition"><Icons.Out size={20} /></button></div>
+              <div className="flex space-x-2 bg-slate-800 p-1.5 rounded-xl overflow-x-auto w-full lg:w-auto shadow-inner">
+                <button onClick={() => setAdminTab('courses')} className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center whitespace-nowrap transition ${adminTab==='courses'?'bg-indigo-600 text-white shadow':'text-slate-300 hover:bg-slate-700'}`}><BookOpen size={18} className="mr-1.5"/> Kursusku</button>
+                <button onClick={() => setAdminTab('participants')} className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center whitespace-nowrap transition ${adminTab==='participants'?'bg-indigo-600 text-white shadow':'text-slate-300 hover:bg-slate-700'}`}><Users size={18} className="mr-1.5"/> Data Peserta</button>
+                <button onClick={() => { 
+                    setAdminTab('notifications'); 
+                    const unreadNotifs = myNotifs.filter(n => !n.isRead);
+                    if(unreadNotifs.length > 0) {
+                        saveToGAS(null, null, null, null, notifications.map(n => n.adminId === session.data.id ? { ...n, isRead: true } : n));
+                    }
+                  }} 
+                  className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center whitespace-nowrap relative transition ${adminTab==='notifications'?'bg-indigo-600 text-white shadow':'text-slate-300 hover:bg-slate-700'}`}
+                >
+                  <Bell size={18} className="mr-1.5"/> Kotak Masuk
+                  {unread > 0 && <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-slate-800">{unread}</span>}
+                </button>
+                <button onClick={() => setAdminTab('profile')} className={`px-4 py-2 rounded-lg text-sm font-bold flex items-center whitespace-nowrap transition ${adminTab==='profile'?'bg-indigo-600 text-white shadow':'text-slate-300 hover:bg-slate-700'}`}><UserIcon size={18} className="mr-1.5"/> Profil & Apresiasi</button>
+              </div>
+              <div className="flex items-center space-x-4">
+                <span className="text-sm font-bold text-indigo-200 bg-indigo-500/10 px-3 py-1.5 rounded-full border border-indigo-500/20">{session?.data?.name}</span>
+                <button onClick={handleLogout} className="p-2 hover:bg-red-500 hover:text-white rounded-lg text-red-400 transition" title="Logout"><LogOut size={20} /></button>
+              </div>
             </header>
 
             <div className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full">
+              {/* TAB: KURSUS */}
               {adminTab === 'courses' && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up">
                   <div className="lg:col-span-1 space-y-6">
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                      <h2 className="font-bold text-slate-800 mb-5 flex items-center"><Icons.Plus size={20} className="mr-2 text-indigo-600" /> Buat Kelas Baru</h2>
+                      <h2 className="font-bold text-slate-800 mb-5 flex items-center text-lg"><PlusCircle size={20} className="mr-2 text-indigo-600" /> Buat Kelas Baru</h2>
                       <form onSubmit={handleCreateCourse} className="space-y-4">
-                        <div className="flex gap-2"><input name="code" id="crscode" required maxLength={10} className="w-full p-3 text-sm border rounded-xl" placeholder="Kode Unik (Max 10)"/><button type="button" onClick={()=>document.getElementById('crscode').value = generateRandomCode()} className="bg-slate-100 hover:bg-slate-200 border text-slate-700 px-3.5 rounded-xl"><Icons.Sync size={16}/></button></div>
-                        <input name="title" required maxLength={60} className="w-full p-3 text-sm border rounded-xl" placeholder="Nama Kursus (Maks 60)"/>
-                        <input name="inst" defaultValue={session?.data?.name} required className="w-full p-3 text-sm border rounded-xl" placeholder="Nama Instruktur"/>
-                        <button type="submit" className="w-full bg-slate-900 text-white py-3.5 rounded-xl text-sm font-bold mt-2">Simpan Kelas Baru</button>
+                        <div className="flex gap-2">
+                          <input name="code" id="crscode" required maxLength={10} className="w-full p-3 text-sm border border-slate-300 rounded-xl outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition" placeholder="Kode Unik (Max 10)"/>
+                          <button type="button" onClick={()=>document.getElementById('crscode').value = generateRandomCode("CR")} className="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 px-3.5 rounded-xl text-xs font-bold flex items-center transition" title="Auto Generate"><RefreshCw size={16}/></button>
+                        </div>
+                        <input name="title" required maxLength={60} className="w-full p-3 text-sm border border-slate-300 rounded-xl outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition" placeholder="Nama Kursus/Kelas (Maks 60 Karakter)"/>
+                        <input name="inst" defaultValue={session?.data?.name} required className="w-full p-3 text-sm border border-slate-300 rounded-xl outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition" placeholder="Nama Instruktur Ditampilkan"/>
+                        <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl text-sm font-bold mt-2 transition shadow-md">Simpan Kelas Baru</button>
                       </form>
                     </div>
+                    
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                      <h2 className="font-bold text-slate-800 mb-5 flex items-center"><Icons.Video size={20} className="mr-2 text-indigo-600" /> Tambah Video Materi</h2>
+                      <h2 className="font-bold text-slate-800 mb-5 flex items-center text-lg"><Video size={20} className="mr-2 text-indigo-600" /> Tambah Video Materi</h2>
                       <form onSubmit={handleCreateModule} className="space-y-4">
-                        <select name="courseId" required className="w-full p-3 text-sm border rounded-xl bg-white" defaultValue=""><option value="" disabled>-- Pilih Kelas Tujuan --</option>{myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
-                        <input name="title" required maxLength={60} className="w-full p-3 text-sm border rounded-xl" placeholder="Judul Materi"/>
-                        <input name="vidUrl" required type="url" className="w-full p-3 text-sm border rounded-xl" placeholder="URL YouTube Embed (Wajib)"/>
-                        <textarea name="desc" required maxLength={300} className="w-full p-3 text-sm border rounded-xl resize-none h-24" placeholder="Deskripsi Singkat (Maks 300)"/>
-                        <button type="submit" className="w-full bg-indigo-600 text-white py-3.5 rounded-xl text-sm font-bold mt-2">Tambahkan Ke Kelas</button>
+                        <select name="courseId" required className="w-full p-3 text-sm border border-slate-300 rounded-xl bg-white outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition" defaultValue="">
+                          <option value="" disabled>-- Pilih Kelas Tujuan --</option>
+                          {myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                        </select>
+                        <input name="title" required maxLength={60} className="w-full p-3 text-sm border border-slate-300 rounded-xl outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition" placeholder="Judul Materi Pembelajaran"/>
+                        <input name="vidUrl" required type="url" className="w-full p-3 text-sm border border-slate-300 rounded-xl outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition" placeholder="URL YouTube Embed (Wajib)"/>
+                        <textarea name="desc" required maxLength={300} className="w-full p-3 text-sm border border-slate-300 rounded-xl resize-none outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition h-24" placeholder="Deskripsi Singkat (Maks 300 Huruf)..."/>
+                        <button type="submit" className="w-full bg-indigo-600 text-white py-3.5 rounded-xl text-sm font-bold mt-2 transition shadow-md">Tambahkan Ke Kelas</button>
                       </form>
                     </div>
                   </div>
+                  
                   <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                    <h2 className="font-bold text-slate-800 mb-6 flex items-center"><Icons.Book size={20} className="mr-2 text-indigo-600" /> Katalog Kelas Anda</h2>
-                    {myCourses.length === 0 ? (<div className="text-center py-16 bg-slate-50 rounded-xl border border-dashed"><Icons.Book size={64} className="mx-auto text-slate-300 mb-4" /><h3 className="font-bold text-slate-700 text-lg">Belum Ada Kelas</h3></div>) : myCourses.map(course => (
+                    <h2 className="font-bold text-slate-800 mb-6 flex items-center text-lg"><BookOpen size={20} className="mr-2 text-indigo-600" /> Katalog Kelas Pembelajaran Anda</h2>
+                    {myCourses.length === 0 ? (
+                      <div className="text-center py-16 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                        <BookOpen size={64} className="mx-auto text-slate-300 mb-4" />
+                        <h3 className="font-bold text-slate-700 text-lg">Belum Ada Kelas</h3>
+                        <p className="text-slate-500 font-medium">Anda belum membuat kelas satupun. Mulai buat di sebelah kiri.</p>
+                      </div>
+                    ) : myCourses.map(course => (
                       <div key={course.id} className="mb-6 border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition">
                         <div className="bg-slate-50 p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b">
-                          <div className="flex items-center space-x-3"><span className="font-mono text-xs bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-md font-bold">{course.code}</span><h3 className="font-bold text-slate-900 text-lg">{course.title}</h3></div>
+                          <div className="flex items-center space-x-3">
+                            <span className="font-mono text-xs bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-md font-bold border border-indigo-200">{course.code}</span>
+                            <h3 className="font-bold text-slate-900 text-lg leading-tight">{course.title}</h3>
+                          </div>
                           <div className="flex space-x-2 w-full sm:w-auto">
-                              <button onClick={() => openExamBuilder(course.id)} className="text-xs bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-2.5 rounded-xl font-bold flex items-center"><Icons.Exam size={16} className="mr-1.5"/> Setup Ujian</button>
-                              <button onClick={() => handleSafeDeleteCourse(course.id)} className="text-xs bg-white border border-slate-200 hover:bg-red-50 text-red-600 px-3 py-2.5 rounded-xl font-bold"><Icons.Trash size={18}/></button>
-                              <button onClick={() => jumpToClassroom(course.id)} className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center shadow-md">Masuk Kelas <Icons.Right size={14} className="ml-1"/></button>
+                              <button onClick={() => openExamBuilder(course.id)} className="flex-1 sm:flex-none text-xs bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-2.5 rounded-xl font-bold flex items-center justify-center transition shadow-sm"><CheckSquareOffset size={16} className="mr-1.5"/> Setup Ujian</button>
+                              <button onClick={() => handleSafeDeleteCourse(course.id)} className="text-xs bg-white hover:bg-red-50 border border-slate-200 hover:border-red-200 text-red-600 px-3 py-2.5 rounded-xl font-bold transition flex items-center justify-center shadow-sm" title="Hapus Kelas"><Trash2 size={18}/></button>
+                              <button onClick={() => jumpToClassroom(course.id)} className="flex-1 sm:flex-none text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold flex items-center justify-center transition shadow-md hover:shadow-lg">Masuk Kelas <ChevronRight size={14} className="ml-1"/></button>
                           </div>
                         </div>
                         <div className="p-2 bg-white space-y-1">
-                          {(course.modules?.length === 0 || !course.modules) ? (<p className="text-sm text-slate-400 italic py-4 text-center bg-slate-50 rounded-xl m-2">Belum ada video materi yang ditambahkan.</p>) : course.modules?.map((m, i) => (
+                          {(course.modules?.length === 0 || !course.modules) ? (
+                            <p className="text-sm text-slate-400 italic py-4 text-center bg-slate-50 rounded-xl m-2">Belum ada video materi yang ditambahkan.</p>
+                          ) : course.modules?.map((m, i) => (
                             <div key={m.id} className="flex justify-between items-center text-sm border-b border-slate-100 py-3 last:border-0 hover:bg-slate-50 rounded-xl px-4 transition group">
-                              <span className="flex items-center font-bold text-slate-700"><Icons.Play size={18} className="mr-3 text-indigo-400"/> {i+1}. {m.title}</span><button onClick={()=>handleDeleteModule(course.id, m.id)} className="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition"><Icons.Trash size={16}/></button>
+                              <span className="flex items-center font-bold text-slate-700"><PlayCircle size={18} className="mr-3 text-indigo-400"/> {i+1}. {m.title}</span><button onClick={()=>handleDeleteModule(course.id, m.id)} className="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition"><Trash2 size={16}/></button>
                             </div>
                           ))}
                         </div>
@@ -697,54 +1139,121 @@
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 animate-fade-in-up">
                   <div className="lg:col-span-1 space-y-6">
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                      <h2 className="font-bold text-slate-800 mb-5 flex items-center"><Icons.Plus size={20} className="mr-2 text-emerald-600" /> Daftarkan Siswa Baru</h2>
+                      <h2 className="font-bold text-slate-800 mb-5 flex items-center text-lg"><PlusCircle size={20} className="mr-2 text-emerald-600" /> Daftarkan Siswa Baru</h2>
                       <form onSubmit={handleRegisterParticipant} className="space-y-4">
-                        <input name="name" required className="w-full p-3 text-sm border rounded-xl" placeholder="Nama Lengkap"/>
-                        <input name="email" required type="email" className="w-full p-3 text-sm border rounded-xl" placeholder="Email Aktif (Unik)"/>
-                        <div className="flex gap-2"><input name="code" id="ptcode" required className="w-full p-3 text-sm border rounded-xl font-mono font-bold" placeholder="Kode Akses"/><button type="button" onClick={()=>document.getElementById('ptcode').value = generateRandomCode()} className="bg-slate-100 px-3.5 rounded-xl"><Icons.Sync size={16}/></button></div>
-                        <select name="courseId" required className="w-full p-3 text-sm border rounded-xl bg-white" defaultValue=""><option value="" disabled>-- Pilih Kelas --</option>{myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
+                        <div><label className="text-xs font-bold text-slate-500 mb-1.5 block uppercase tracking-wide">Nama Peserta</label><input name="name" required className="w-full p-3 text-sm border border-slate-300 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition"/></div>
+                        <div><label className="text-xs font-bold text-slate-500 mb-1.5 block uppercase tracking-wide">Email (Global Unik)</label><input name="email" required type="email" className="w-full p-3 text-sm border border-slate-300 rounded-xl outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition"/></div>
+                        <div>
+                            <label className="text-xs font-bold text-slate-500 mb-1.5 block uppercase tracking-wide">Kode Akses / Sandi</label>
+                            <div className="flex gap-2">
+                                <input name="code" id="ptcode" required className="w-full p-3 text-sm border border-slate-300 rounded-xl font-mono font-bold text-slate-700 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition"/>
+                                <button type="button" onClick={()=>document.getElementById('ptcode').value = generateRandomCode()} className="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 px-3.5 rounded-xl text-xs font-bold flex items-center transition" title="Auto Generate"><RefreshCw size={16}/></button>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-slate-500 mb-1.5 block uppercase tracking-wide">Pilih Kelas</label>
+                            <select name="courseId" required className="w-full p-3 text-sm border border-slate-300 rounded-xl bg-white outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition" defaultValue="">
+                            <option value="" disabled>-- Daftarkan ke Kelas --</option>
+                            {myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                            </select>
+                        </div>
                         <button type="submit" className="w-full bg-emerald-600 text-white py-3.5 rounded-xl text-sm font-bold mt-2">Daftar & Berikan Akses</button>
                       </form>
                     </div>
+                    
                     <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 border-t-4 border-t-indigo-500">
-                      <h2 className="font-bold text-slate-800 mb-2 flex items-center"><Icons.Users size={20} className="mr-2 text-indigo-600" /> Masukkan Siswa Lama</h2>
-                      <p className="text-xs text-slate-500 mb-5">Tambahkan akses kelas ke akun yang sudah terdaftar.</p>
+                      <h2 className="font-bold text-slate-800 mb-2 flex items-center text-lg"><Users size={20} className="mr-2 text-indigo-600" /> Masukkan Siswa Lama</h2>
+                      <p className="text-xs text-slate-500 mb-5 leading-relaxed">Tambahkan akses kelas Anda kepada peserta yang emailnya sudah terdaftar di EduLearn.</p>
                       <form onSubmit={handleEnrollExisting} className="space-y-4">
-                        <input name="email" required type="email" className="w-full p-3 text-sm border rounded-xl" placeholder="Ketik Email Siswa Aktif..." />
-                        <select name="cId" required className="w-full p-3 text-sm border rounded-xl bg-white" defaultValue=""><option value="" disabled>-- Pilih Kelas Anda --</option>{myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
+                        <input name="email" required type="email" className="w-full p-3 text-sm border border-slate-300 rounded-xl outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition" placeholder="Ketik Email Siswa Aktif..." />
+                        <select name="cId" required className="w-full p-3 text-sm border border-slate-300 rounded-xl bg-white outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition" defaultValue="">
+                          <option value="" disabled>-- Pilih Kelas Anda --</option>
+                          {myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                        </select>
                         <button type="submit" className="w-full bg-indigo-600 text-white py-3.5 rounded-xl text-sm font-bold mt-2">Tambahkan Akses Kelas</button>
                       </form>
                     </div>
                   </div>
+                  
                   <div className="lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
-                    <h2 className="font-bold text-slate-800 mb-6 flex items-center"><Icons.Grad size={20} className="mr-2 text-indigo-600" /> Laporan Progress & Nilai Siswa</h2>
-                    <div className="border border-slate-100 rounded-xl overflow-hidden"><table className="w-full text-left text-sm whitespace-nowrap"><thead className="bg-slate-50 text-slate-600 border-b"><tr><th className="p-4 font-bold">Siswa</th><th className="p-4 font-bold">Akses Akun</th><th className="p-4 font-bold">Mengambil Kelas</th><th className="p-4 font-bold">Progress</th><th className="p-4 font-bold">Nilai Akhir</th><th className="p-4 font-bold">Status</th></tr></thead><tbody className="divide-y divide-slate-100">
-                        {myEnrollments.length === 0 ? (<tr><td colSpan="6" className="p-10 text-center text-slate-500">Belum ada siswa yang mendaftar.</td></tr>) : myEnrollments.map(enr => {
-                          const part = participants.find(p => p.id === enr.participantId); const crs = myCourses.find(c => c.id === enr.courseId); const prog = calcProgress(enr, crs); if(!part || !crs) return null;
-                          return (<tr key={enr.id} className="hover:bg-slate-50 transition"><td className="p-4"><p className="font-bold text-slate-800">{part.name}</p><p className="text-xs text-slate-500 mt-0.5">{part.email}</p></td><td className="p-4 font-mono text-xs font-bold text-slate-600 bg-slate-100/50 rounded"><Icons.Key size={12} className="inline mr-1"/>{part.accessCode}</td><td className="p-4 text-indigo-700 font-bold">{crs.title}</td><td className="p-4"><div className="flex items-center space-x-3"><div className="w-24 bg-slate-200 rounded-full h-2.5 overflow-hidden"><div className="bg-indigo-500 h-2.5 rounded-full" style={{width: `${prog}%`}}></div></div><span className="text-xs font-bold text-slate-600">{prog}%</span></div></td><td className="p-4 font-mono font-black text-slate-800 text-base">{enr.examScore !== null ? enr.examScore : '-'}</td><td className="p-4">{enr.certDownloaded ? <span className="text-[10px] bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-lg font-bold">Telah Diunduh</span> : enr.isGraduated ? <span className="text-[10px] bg-amber-100 text-amber-800 px-3 py-1.5 rounded-lg font-bold">Lulus Ujian</span> : <span className="text-[10px] bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg font-bold">Dalam Proses</span>}</td></tr>)
-                        })}
-                    </tbody></table></div>
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+                        <h2 className="font-bold text-slate-800 flex items-center text-lg"><GraduationCap size={20} className="mr-2 text-indigo-600" /> Laporan Progress & Nilai Siswa</h2>
+                    </div>
+                    <div className="border border-slate-100 rounded-xl overflow-hidden">
+                        <table className="w-full text-left text-sm whitespace-nowrap font-sans">
+                        <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+                            <tr><th className="p-4 font-bold">Siswa</th><th className="p-4 font-bold">Akses Akun</th><th className="p-4 font-bold">Mengambil Kelas</th><th className="p-4 font-bold">Progress</th><th className="p-4 font-bold">Nilai Akhir</th><th className="p-4 font-bold">Status Kelulusan</th></tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {myEnrollments.length === 0 ? (
+                            <tr><td colSpan="6" className="p-10 text-center text-slate-500">Belum ada siswa yang mendaftar di kelas Anda.</td></tr>
+                            ) : myEnrollments.map(enr => {
+                            const part = participants.find(p => p.id === enr.participantId); 
+                            const crs = myCourses.find(c => c.id === enr.courseId); 
+                            const prog = calcProgress(enr, crs); 
+                            if(!part || !crs) return null;
+                            return (
+                                <tr key={enr.id} className="hover:bg-slate-50 transition">
+                                <td className="p-4"><p className="font-bold text-slate-800">{part.name}</p><p className="text-xs text-slate-500 mt-0.5">{part.email}</p></td>
+                                <td className="p-4 font-mono text-xs font-bold text-slate-600 bg-slate-100/50 rounded"><Key size={12} className="inline mr-1"/>{part.accessCode}</td>
+                                <td className="p-4 text-indigo-700 font-bold">{crs.title}</td>
+                                <td className="p-4">
+                                    <div className="flex items-center space-x-3"><div className="w-24 bg-slate-200 rounded-full h-2.5 overflow-hidden"><div className="bg-indigo-500 h-2.5 rounded-full transition-all" style={{width: `${prog}%`}}></div></div><span className="text-xs font-bold text-slate-600">{prog}%</span></div>
+                                </td>
+                                <td className="p-4 font-mono font-black text-slate-800 text-base">{enr.examScore !== null ? enr.examScore : '-'}</td>
+                                <td className="p-4">
+                                    {enr.certDownloaded ? <span className="text-[10px] bg-emerald-100 text-emerald-800 px-3 py-1.5 rounded-lg font-bold border border-emerald-200">Telah Diunduh</span> : enr.isGraduated ? <span className="text-[10px] bg-amber-100 text-amber-800 px-3 py-1.5 rounded-lg font-bold border border-amber-200">Lulus Ujian</span> : <span className="text-[10px] bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg font-bold border border-slate-200">Dalam Proses</span>}
+                                </td>
+                                </tr>
+                            )
+                            })}
+                        </tbody>
+                        </table>
+                    </div>
                   </div>
                 </div>
               )}
 
+              {/* TAB: PROFILE */}
               {adminTab === 'profile' && (
                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-xl mx-auto mt-6 animate-fade-in-up">
-                  <div className="flex justify-center mb-6"><div className="w-24 h-24 bg-amber-50 border-4 border-amber-100 text-amber-500 rounded-full flex items-center justify-center"><Icons.Coffee size={48} weight="fill"/></div></div>
+                  <div className="flex justify-center mb-6"><div className="w-24 h-24 bg-amber-50 border-4 border-amber-100 text-amber-500 rounded-full flex items-center justify-center shadow-inner"><Coffee size={48} weight="fill"/></div></div>
                   <h2 className="font-bold text-slate-900 mb-2 text-center text-2xl">Apresiasi Instruktur (Donasi)</h2>
-                  <p className="text-sm text-slate-600 mb-8 text-center leading-relaxed px-4">Tambahkan link donasi seperti Trakteer/Saweria. Tombol ini akan muncul di layar peserta setelah mereka lulus.</p>
+                  <p className="text-sm text-slate-600 mb-8 text-center leading-relaxed px-4">Tambahkan link donasi seperti Trakteer, Saweria, atau platform lainnya. Tombol donasi ini akan muncul secara elegan di layar peserta tepat setelah mereka berhasil lulus ujian akhir Anda.</p>
                   <form onSubmit={handleUpdateProfile} className="space-y-6">
-                      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200"><label className="block text-sm font-bold text-slate-800 mb-3">URL Link Donasi / Dukungan</label><input type="url" value={profileForm.donationLink} onChange={e=>setProfileForm({donationLink: e.target.value})} className="w-full p-4 border rounded-xl outline-none focus:border-amber-500 font-medium" placeholder="https://trakteer.id/..." /><p className="text-xs text-slate-500 mt-3 flex items-center"><Icons.Alert size={14} className="mr-1 text-amber-500"/> Kosongkan jika tidak ingin menampilkan tombol apresiasi.</p></div>
-                      <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 py-4 rounded-xl font-bold shadow-lg text-lg">Simpan Pengaturan Profil</button>
+                      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                        <label className="block text-sm font-bold text-slate-800 mb-3">URL Link Donasi / Dukungan</label>
+                        <input type="url" value={profileForm.donationLink} onChange={e=>setProfileForm({donationLink: e.target.value})} className="w-full p-4 border border-slate-300 rounded-xl outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/20 transition-all text-slate-700 font-medium" placeholder="Contoh: https://saweria.co/username_anda" />
+                        <p className="text-xs text-slate-500 mt-3 flex items-center"><AlertCircle size={14} className="mr-1 text-amber-500"/> Kosongkan jika tidak ingin menampilkan tombol apresiasi.</p>
+                      </div>
+                      <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 transition-all text-slate-900 py-4 rounded-xl font-bold shadow-lg text-lg">Simpan Pengaturan Profil</button>
                   </form>
                 </div>
               )}
 
+              {/* TAB: NOTIFIKASI */}
               {adminTab === 'notifications' && (
                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 max-w-3xl mx-auto animate-fade-in-up">
-                  <h2 className="font-bold text-slate-900 mb-8 flex items-center text-2xl border-b border-slate-100 pb-4"><Icons.Bell size={28} className="mr-3 text-indigo-600" /> Kotak Masuk Pertanyaan Siswa</h2>
+                  <h2 className="font-bold text-slate-900 mb-8 flex items-center text-2xl border-b border-slate-100 pb-4"><Bell size={28} className="mr-3 text-indigo-600" /> Kotak Masuk Pertanyaan Siswa</h2>
                   <div className="space-y-4">
-                    {myNotifs.length === 0 ? (<div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed"><Icons.Chat size={56} className="mx-auto text-slate-300 mb-4" /><h3 className="font-bold text-slate-700 text-lg">Belum Ada Pesan</h3><p className="text-slate-500 text-sm mt-1">Belum ada pertanyaan baru dari siswa Anda.</p></div>) : myNotifs.map(n => (<div key={n.id} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 rounded-2xl border gap-5 ${n.isRead ? 'bg-slate-50' : 'bg-white border-indigo-200 shadow-md ring-1 ring-indigo-500/10'}`}><div className="flex items-start space-x-4"><div className={`mt-1 p-3 rounded-full ${n.isRead ? 'bg-slate-200 text-slate-500' : 'bg-indigo-100 text-indigo-600'}`}><Icons.Chat size={24} /></div><div><p className={`text-base ${n.isRead ? 'text-slate-700' : 'font-bold text-slate-900'}`}>{n.text}</p><p className="text-xs text-slate-500 mt-2 flex items-center font-medium bg-slate-100 w-fit px-2.5 py-1 rounded-md"><Icons.Bell size={12} className="mr-1.5 text-slate-400"/> {n.time}</p></div></div>{n.courseId && <button onClick={() => jumpToClassroom(n.courseId, n.moduleId)} className="w-full sm:w-auto text-sm bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-md transition flex justify-center items-center">Balas di Kelas <Icons.Right size={16} className="ml-1"/></button>}</div>))}
+                    {myNotifs.length === 0 ? (
+                        <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-300">
+                            <MessageSquare size={56} className="mx-auto text-slate-300 mb-4" />
+                            <h3 className="font-bold text-slate-700 text-lg">Belum Ada Pesan</h3>
+                            <p className="text-slate-500 text-sm mt-1">Belum ada diskusi atau pertanyaan baru dari siswa Anda.</p>
+                        </div>
+                    ) : myNotifs.map(n => (
+                      <div key={n.id} className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 rounded-2xl border gap-5 ${n.isRead ? 'bg-slate-50 border-slate-200' : 'bg-white border-indigo-200 shadow-md ring-1 ring-indigo-500/10'}`}>
+                        <div className="flex items-start space-x-4">
+                            <div className={`mt-1 p-3 rounded-full ${n.isRead ? 'bg-slate-200 text-slate-500' : 'bg-indigo-100 text-indigo-600'}`}><MessageSquare size={24} /></div>
+                            <div>
+                                <p className={`text-base ${n.isRead ? 'text-slate-700' : 'font-bold text-slate-900'}`}>{n.text}</p>
+                                <p className="text-xs text-slate-500 mt-2 flex items-center font-medium bg-slate-100 w-fit px-2.5 py-1 rounded-md"><Bell size={12} className="mr-1.5 text-slate-400"/> {n.time}</p>
+                            </div>
+                        </div>
+                        {n.courseId && <button onClick={() => jumpToClassroom(n.courseId, n.moduleId)} className="w-full sm:w-auto text-sm bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow-md transition flex justify-center items-center">Balas di Kelas <ChevronRight size={16} className="ml-1"/></button>}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -753,26 +1262,77 @@
         );
       }
 
+      // ==========================================
+      // RENDER: PARTICIPANT DASHBOARD
+      // ==========================================
       if (appMode === 'part_dashboard') {
         const myEnrs = enrollments.filter(e => e.participantId === session.data.id);
+        
         return (
           <div className="min-h-screen bg-slate-50 font-sans text-slate-800 flex flex-col">
             <ConfirmModal />
             <header className="bg-white border-b border-slate-200 px-4 lg:px-8 py-4 flex items-center justify-between shadow-sm sticky top-0 z-30">
-              <div className="flex items-center space-x-2 text-indigo-600"><Icons.Book size={28} /><h1 className="text-xl lg:text-2xl font-bold tracking-tight">EduLearn<span className="hidden sm:inline font-normal text-slate-400"> Portal</span></h1></div>
-              <div className="flex items-center space-x-3 lg:space-x-5"><div className="text-right hidden sm:block"><p className="text-sm font-bold text-slate-800">{session?.data?.name}</p><p className="text-xs text-slate-500 font-mono flex items-center justify-end"><Icons.Key size={12} className="mr-1"/> {session?.data?.accessCode}</p></div><div className="w-px h-8 bg-slate-200 hidden sm:block"></div><button onClick={handleLogout} className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition" title="Keluar"><Icons.Out size={22} /></button></div>
+              <div className="flex items-center space-x-2 text-indigo-600">
+                <BookOpen size={28} />
+                <h1 className="text-xl lg:text-2xl font-bold tracking-tight">EduLearn<span className="hidden sm:inline font-normal text-slate-400"> Portal</span></h1>
+              </div>
+              <div className="flex items-center space-x-3 lg:space-x-5">
+                <div className="text-right hidden sm:block">
+                    <p className="text-sm font-bold text-slate-800">{session?.data?.name}</p>
+                    <p className="text-xs text-slate-500 font-mono flex items-center justify-end"><Key size={12} className="mr-1"/> {session?.data?.accessCode}</p>
+                </div>
+                <div className="w-px h-8 bg-slate-200 hidden sm:block"></div>
+                <button onClick={handleLogout} className="p-2 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition" title="Keluar">
+                    <LogOut size={22} />
+                </button>
+              </div>
             </header>
+
             <main className="flex-1 p-4 lg:p-10 max-w-6xl mx-auto w-full animate-fade-in-up">
-              <div className="mb-8"><h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-2 tracking-tight">Halo, {session?.data?.name?.split(' ')[0]} 👋</h2><p className="text-slate-600 text-lg">Lanjutkan progres belajar Anda hari ini. Anda terdaftar di <b>{myEnrs.length} kelas</b>.</p></div>
+              <div className="mb-8">
+                  <h2 className="text-3xl sm:text-4xl font-black text-slate-900 mb-2 tracking-tight">Halo, {session?.data?.name?.split(' ')[0]} 👋</h2>
+                  <p className="text-slate-600 text-lg">Lanjutkan progres belajar Anda hari ini. Anda terdaftar di <b>{myEnrs.length} kelas</b>.</p>
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {myEnrs.length === 0 ? (<div className="col-span-full py-20 text-center bg-white rounded-3xl border border-dashed border-slate-300 shadow-sm"><Icons.Grad size={72} className="mx-auto text-slate-300 mb-5" /><h3 className="text-xl font-bold text-slate-800 mb-2">Belum Ada Kelas</h3><p className="text-slate-500">Anda belum didaftarkan ke kelas manapun oleh instruktur. Mintalah kode akses dari instruktur Anda.</p></div>) : myEnrs.map(enr => {
-                  const course = courses.find(c => c.id === enr.courseId); if (!course) return null; const prog = calcProgress(enr, course); const isDone = enr.isGraduated;
+                {myEnrs.length === 0 ? (
+                    <div className="col-span-full py-20 text-center bg-white rounded-3xl border border-dashed border-slate-300 shadow-sm">
+                        <GraduationCap size={72} className="mx-auto text-slate-300 mb-5" />
+                        <h3 className="text-xl font-bold text-slate-800 mb-2">Belum Ada Kelas</h3>
+                        <p className="text-slate-500">Anda belum didaftarkan ke kelas manapun oleh instruktur. Mintalah kode akses dari instruktur Anda.</p>
+                    </div>
+                ) : myEnrs.map(enr => {
+                  const course = courses.find(c => c.id === enr.courseId); 
+                  if (!course) return null; 
+                  const prog = calcProgress(enr, course);
+                  const isDone = enr.isGraduated;
+                  
                   return (
-                    <div key={enr.id} className={`bg-white rounded-3xl shadow-sm border p-6 flex flex-col group transition-all hover:-translate-y-1.5 hover:shadow-xl ${isDone ? 'border-emerald-200' : 'border-slate-200 hover:border-indigo-300'}`}>
-                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-inner ${isDone ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>{isDone ? <Icons.Award size={32} /> : <Icons.Video size={32} />}</div>
-                      <div className="flex-1"><span className="text-[10px] font-bold text-slate-400 uppercase mb-1.5 block">Kode Kelas: {course.code}</span><h3 className="text-xl font-bold mb-2 text-slate-900 leading-snug">{course.title}</h3><p className="text-sm text-slate-500 flex items-center font-medium"><Icons.User size={16} className="mr-2 text-slate-400"/> {course.instructor}</p></div>
-                      <div className="mt-8 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-100"><div className="flex justify-between text-xs font-bold mb-3 text-slate-700"><span className="uppercase tracking-wider">{isDone ? 'Status: Lulus' : 'Progres Belajar'}</span><span className={`text-sm ${isDone ? 'text-emerald-600' : 'text-indigo-600'}`}>{prog}%</span></div><div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden"><div className={`h-2.5 rounded-full transition-all duration-1000 ${isDone ? 'bg-emerald-500' : 'bg-indigo-500'}`} style={{ width: `${prog}%` }}></div></div></div>
-                      <button onClick={() => jumpToClassroom(course.id)} className={`w-full py-4 rounded-xl font-bold flex items-center justify-center space-x-2 shadow-md text-base ${isDone ? 'bg-emerald-50 text-emerald-700 border-2 border-emerald-200 hover:bg-emerald-100' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}>{isDone ? <Icons.Award size={20} weight="fill"/> : <Icons.Play size={20} weight={prog > 0 ? "fill" : "regular"}/>} <span>{isDone ? 'Lihat Sertifikat' : prog > 0 ? 'Lanjutkan Belajar' : 'Mulai Belajar'}</span></button>
+                    <div key={enr.id} className={`bg-white rounded-3xl shadow-sm border p-6 flex flex-col group transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl ${isDone ? 'border-emerald-200 hover:shadow-emerald-100' : 'border-slate-200 hover:border-indigo-300 hover:shadow-indigo-100'}`}>
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-inner transition-transform group-hover:scale-110 ${isDone ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                        {isDone ? <Award size={32} /> : <Video size={32} />}
+                      </div>
+                      
+                      <div className="flex-1">
+                          <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase mb-1.5 block">Kode Kelas: {course.code}</span>
+                          <h3 className="text-xl font-bold mb-2 text-slate-900 leading-snug group-hover:text-indigo-700 transition-colors">{course.title}</h3>
+                          <p className="text-sm text-slate-500 flex items-center font-medium"><UserIcon size={16} className="mr-2 text-slate-400"/> {course.instructor}</p>
+                      </div>
+
+                      <div className="mt-8 mb-6 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                          <div className="flex justify-between text-xs font-bold mb-3 text-slate-700">
+                              <span className="uppercase tracking-wider">{isDone ? 'Status: Lulus' : 'Progres Belajar'}</span>
+                              <span className={`text-sm ${isDone ? 'text-emerald-600' : 'text-indigo-600'}`}>{prog}%</span>
+                          </div>
+                          <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                              <div className={`h-2.5 rounded-full transition-all duration-1000 ease-out ${isDone ? 'bg-emerald-500' : 'bg-indigo-500'}`} style={{ width: `${prog}%` }}></div>
+                          </div>
+                      </div>
+                      
+                      <button onClick={() => jumpToClassroom(course.id)} className={`w-full py-4 rounded-xl font-bold flex items-center justify-center space-x-2 transition-all shadow-md text-base ${isDone ? 'bg-emerald-50 text-emerald-700 border-2 border-emerald-200 hover:bg-emerald-100' : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-indigo-200'}`}>
+                        {isDone ? <Award size={20} weight="fill"/> : <PlayCircle size={20} weight={prog > 0 ? "fill" : "regular"}/>} 
+                        <span>{isDone ? 'Lihat Sertifikat' : prog > 0 ? 'Lanjutkan Belajar' : 'Mulai Belajar'}</span>
+                      </button>
                     </div>
                   );
                 })}
@@ -782,67 +1342,266 @@
         );
       }
 
+      // ==========================================
+      // RENDER: CLASSROOM (Pembelajaran)
+      // ==========================================
       if (appMode === 'classroom') {
         const isStudent = session?.role === 'participant';
         const myEnr = isStudent ? enrollments.find(e => e.participantId === session.data.id && e.courseId === activeCourse?.id) : null;
         const prog = isStudent ? calcProgress(myEnr, activeCourse) : 0;
         const instructorData = admins.find(a => a.id === activeCourse?.authorId);
+        const instName = instructorData?.name || activeCourse?.instructor || "Instruktur";
 
         return (
           <div className="flex flex-col h-screen bg-slate-50 font-sans text-slate-800">
-            <ConfirmModal />{toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-bounce"><Icons.Check size={20} /><span>{toast}</span></div>}
+            <ConfirmModal />
+            {toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-bounce"><CheckCircle2 size={20} /><span>{toast}</span></div>}
             
+            {/* CLASSROOM HEADER */}
             <header className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shrink-0 shadow-sm z-50">
-              <div className="flex items-center space-x-4"><button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="lg:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg"><Icons.Menu size={24} /></button><div className="flex items-center text-indigo-600"><Icons.Book size={24} className="mr-2 hidden sm:block"/><h1 className="text-lg lg:text-xl font-bold truncate max-w-[200px] lg:max-w-md">{activeCourse?.title}</h1></div></div>
-              <button onClick={handleExitClassroom} className="flex items-center text-sm bg-slate-100 hover:bg-red-50 text-slate-700 hover:text-red-700 px-5 py-2.5 rounded-xl font-bold transition shadow-sm border border-slate-200"><Icons.Left size={16} className="mr-2"/>Keluar <span className="hidden sm:inline">&nbsp;Kelas</span></button>
+              <div className="flex items-center space-x-4">
+                  <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="lg:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg"><Menu size={24} /></button>
+                  <div className="flex items-center text-indigo-600">
+                      <BookOpen size={24} className="mr-2 hidden sm:block"/>
+                      <h1 className="text-lg lg:text-xl font-bold truncate max-w-[200px] lg:max-w-md">{activeCourse?.title}</h1>
+                  </div>
+              </div>
+              <button onClick={handleExitClassroom} className="flex items-center text-sm bg-slate-100 hover:bg-red-50 text-slate-700 hover:text-red-700 hover:border-red-200 px-5 py-2.5 rounded-xl font-bold transition shadow-sm border border-slate-200">
+                  <ArrowLeft size={16} className="mr-2"/>Keluar <span className="hidden sm:inline">&nbsp;Kelas</span>
+              </button>
             </header>
 
             <div className="flex flex-1 overflow-hidden relative">
+              
+              {/* CLASSROOM SIDEBAR (DAFTAR MATERI) */}
               <aside className={`absolute lg:static w-80 bg-white border-r border-slate-200 h-full z-40 flex flex-col transition-transform duration-300 shadow-2xl lg:shadow-none ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
-                <div className="p-5 border-b border-slate-100 bg-slate-50/50"><div className="flex justify-between items-center mb-2"><h2 className="font-bold text-slate-900 text-lg">Daftar Modul</h2>{isSidebarOpen && <button onClick={()=>setIsSidebarOpen(false)} className="lg:hidden p-1.5 text-slate-400 bg-slate-200 rounded-lg"><Icons.X size={18}/></button>}</div>{isStudent ? (<div className="mt-4 bg-white p-3 rounded-xl border border-slate-200 shadow-sm"><div className="flex justify-between text-[10px] mb-2 font-bold text-slate-500 uppercase tracking-wider"><span>Progres Anda</span><span className="text-emerald-600">{prog}%</span></div><div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden"><div className="bg-emerald-500 h-2.5 rounded-full transition-all duration-700" style={{ width: `${prog}%` }}></div></div></div>) : (<span className="inline-block mt-2 text-xs font-bold bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg border border-indigo-200">Mode Pratinjau Instruktur</span>)}</div>
+                <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+                    <div className="flex justify-between items-center mb-2">
+                        <h2 className="font-semibold text-slate-900 text-lg">Daftar Modul</h2>
+                        {isSidebarOpen && <button onClick={()=>setIsSidebarOpen(false)} className="lg:hidden p-1.5 text-slate-400 bg-slate-200 rounded-lg"><X size={18}/></button>}
+                    </div>
+                    {isStudent ? (
+                        <div className="mt-4 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                            <div className="flex justify-between text-[10px] mb-2 font-bold text-slate-500 uppercase tracking-wider"><span>Progres Anda</span><span className="text-emerald-600">{prog}%</span></div>
+                            <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden"><div className="bg-emerald-500 h-2.5 rounded-full transition-all duration-700 ease-out" style={{ width: `${prog}%` }}></div></div>
+                        </div>
+                    ) : (
+                        <span className="inline-block mt-2 text-xs font-bold bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg border border-indigo-200">Mode Pratinjau Instruktur</span>
+                    )}
+                </div>
+                
                 <div className="overflow-y-auto flex-1 p-3 space-y-2">
                   {activeCourse?.modules?.map((mod, index) => {
                     const isComp = isStudent ? (myEnr?.completedModules||[]).includes(mod.id) : false;
                     const isUnlck = !isStudent || index === 0 || (myEnr?.completedModules||[]).includes(activeCourse.modules[index - 1].id);
                     const isActive = activeModule?.id === mod.id && classroomMode === 'video';
-                    return (<button key={mod.id} disabled={!isUnlck} onClick={() => { setClassroomMode('video'); setActiveModule(mod); setIsSidebarOpen(false); }} className={`w-full text-left p-4 rounded-2xl flex items-center space-x-3.5 transition-all duration-200 ${!isUnlck ? 'opacity-50 bg-slate-50 cursor-not-allowed' : isActive ? 'bg-indigo-600 text-white shadow-md translate-x-1' : 'bg-white hover:bg-slate-50 border border-slate-100 hover:border-slate-300'}`}>{!isUnlck ? (<div className="bg-slate-200 p-2 rounded-full shrink-0"><Icons.Lock size={16} className="text-slate-500" /></div>) : isComp ? (<div className={`p-2 rounded-full shrink-0 ${isActive ? 'bg-indigo-500 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}><Icons.Check size={16} weight="fill" /></div>) : (<div className={`p-2 rounded-full shrink-0 ${isActive ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-500'}`}><Icons.Play size={16} weight={isActive ? "fill" : "regular"} /></div>)}<div className="flex-1 min-w-0"><p className={`text-sm font-bold leading-snug truncate ${!isUnlck ? 'text-slate-500' : isActive ? 'text-white' : 'text-slate-800'}`}>{index + 1}. {mod.title}</p>{isActive && <p className="text-[10px] text-indigo-200 font-bold uppercase tracking-wider mt-1">Sedang Diputar</p>}</div></button>);
+                    
+                    return (
+                      <button key={mod.id} disabled={!isUnlck} onClick={() => { setClassroomMode('video'); setActiveModule(mod); setIsSidebarOpen(false); }} 
+                        className={`w-full text-left p-4 rounded-2xl flex items-center space-x-3.5 transition-all duration-200 ${!isUnlck ? 'opacity-50 bg-slate-50 cursor-not-allowed' : isActive ? 'bg-indigo-600 text-white shadow-md translate-x-1' : 'bg-white hover:bg-slate-50 border border-slate-100 hover:border-slate-300'}`}
+                      >
+                        {!isUnlck ? (
+                            <div className="bg-slate-200 p-2 rounded-full shrink-0"><Lock size={16} className="text-slate-500" /></div>
+                        ) : isComp ? (
+                            <div className={`p-2 rounded-full shrink-0 ${isActive ? 'bg-indigo-500 text-emerald-300' : 'bg-emerald-100 text-emerald-600'}`}><CheckCircle2 size={16} weight="fill" /></div>
+                        ) : (
+                            <div className={`p-2 rounded-full shrink-0 ${isActive ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-500'}`}><PlayCircle size={16} weight={isActive ? "fill" : "regular"} /></div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-bold leading-snug truncate ${!isUnlck ? 'text-slate-500' : isActive ? 'text-white' : 'text-slate-800'}`}>{index + 1}. {mod.title}</p>
+                            {isActive && <p className="text-[10px] text-indigo-200 font-bold uppercase tracking-wider mt-1">Sedang Diputar</p>}
+                        </div>
+                      </button>
+                    );
                   })}
+                  
                   {isStudent && prog === 100 && activeCourse?.exam && (
-                      <div className="pt-5 mt-3 border-t border-slate-200"><button onClick={() => { setIsSidebarOpen(false); setClassroomMode(myEnr?.isGraduated ? 'result' : 'exam'); }} className={`w-full text-left p-4 rounded-2xl flex items-center space-x-4 font-bold border-2 transition-all shadow-sm ${myEnr?.isGraduated ? 'bg-emerald-50 border-emerald-300 text-emerald-900 hover:bg-emerald-100' : 'bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100'}`}><div className={`p-3 rounded-full ${myEnr?.isGraduated ? 'bg-emerald-200 text-emerald-700' : 'bg-amber-200 text-amber-600'}`}>{myEnr?.isGraduated ? <Icons.Award size={28} weight="fill"/> : <Icons.Exam size={28} weight="fill"/>}</div><div className="flex flex-col"><span className="text-base">{myEnr?.isGraduated ? 'Sertifikat Kelulusan' : 'Ujian Akhir Kelas'}</span><span className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${myEnr?.isGraduated ? 'text-emerald-600' : 'text-amber-600'}`}>{myEnr?.isGraduated ? 'Telah Terbuka' : 'Wajib Dikerjakan'}</span></div></button></div>
+                      <div className="pt-5 mt-3 border-t border-slate-200">
+                        <button onClick={() => { setIsSidebarOpen(false); setClassroomMode(myEnr?.isGraduated ? 'result' : 'exam'); }} 
+                          className={`w-full text-left p-4 rounded-2xl flex items-center space-x-4 font-bold border-2 transition-all shadow-sm ${myEnr?.isGraduated ? 'bg-emerald-50 border-emerald-300 text-emerald-900 hover:bg-emerald-100' : 'bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100 hover:shadow-amber-100'}`}
+                        >
+                            <div className={`p-3 rounded-full ${myEnr?.isGraduated ? 'bg-emerald-200 text-emerald-700' : 'bg-amber-200 text-amber-600'}`}>
+                                {myEnr?.isGraduated ? <Award size={28} weight="fill"/> : <CheckSquareOffset size={28} weight="fill"/>}
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-base">{myEnr?.isGraduated ? 'Sertifikat Kelulusan' : 'Ujian Akhir Kelas'}</span>
+                                <span className={`text-[10px] font-black uppercase tracking-widest mt-0.5 ${myEnr?.isGraduated ? 'text-emerald-600' : 'text-amber-600'}`}>{myEnr?.isGraduated ? 'Telah Terbuka' : 'Wajib Dikerjakan'}</span>
+                            </div>
+                        </button>
+                      </div>
                   )}
                 </div>
               </aside>
 
+              {/* CLASSROOM MAIN CONTENT */}
               <main className="flex-1 overflow-y-auto bg-slate-100 relative z-20 scroll-smooth">
                 <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 pb-32">
+                  
+                  {/* ---> MODE VIDEO <--- */}
                   {classroomMode === 'video' && activeModule && (
                       <div className="animate-fade-in-up">
-                        <div className="relative w-full rounded-3xl overflow-hidden shadow-2xl bg-slate-900 aspect-video mb-8 border border-slate-200/50">{activeModule.videoUrl ? (<iframe src={activeModule.videoUrl} title={activeModule.title} allowFullScreen className="absolute top-0 left-0 w-full h-full border-0"></iframe>) : (<div className="absolute inset-0 flex flex-col items-center justify-center text-slate-600"><Icons.Video size={64} className="mb-4 opacity-30"/><p className="font-medium text-lg">Video materi belum ditambahkan.</p></div>)}</div>
-                        <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200 mb-8 relative overflow-hidden"><div className="absolute top-0 left-0 w-2 h-full bg-indigo-500"></div><div className="pl-4"><h2 className="text-3xl sm:text-4xl font-black mb-4 text-slate-900 leading-tight tracking-tight">{activeModule.title}</h2><p className="text-slate-600 leading-relaxed text-base sm:text-lg">{activeModule.description}</p></div>
-                            {isStudent && (<div className="mt-10 pt-8 flex justify-end border-t border-slate-100"><button onClick={handleCompleteModule} className={`flex items-center justify-center w-full sm:w-auto space-x-3 px-10 py-4 rounded-2xl font-bold transition-all shadow-md text-lg ${myEnr?.completedModules?.includes(activeModule.id) ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300' : 'bg-indigo-600 hover:bg-indigo-700 text-white hover:shadow-indigo-500/30'}`}><span>{myEnr?.completedModules?.includes(activeModule.id) ? 'Lanjut ke Materi Berikutnya' : 'Tandai Selesai & Lanjut'}</span><Icons.Right size={24} weight="bold"/></button></div>)}
+                        {/* Video Player */}
+                        <div className="relative w-full rounded-3xl overflow-hidden shadow-2xl bg-slate-900 aspect-video mb-8 border border-slate-200/50">
+                            {activeModule.videoUrl ? (
+                                <iframe src={activeModule.videoUrl} title={activeModule.title} allowFullScreen className="absolute top-0 left-0 w-full h-full border-0"></iframe>
+                            ) : (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-600">
+                                    <Video size={64} className="mb-4 opacity-30"/>
+                                    <p className="font-medium text-lg">Video materi belum ditambahkan.</p>
+                                </div>
+                            )}
                         </div>
-                        <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200"><h3 className="text-2xl font-bold mb-8 flex items-center text-slate-900 border-b border-slate-100 pb-5"><div className="bg-indigo-100 p-2.5 rounded-xl mr-4 text-indigo-600"><Icons.Chat size={24} weight="fill"/></div> Ruang Diskusi Kelas</h3>
-                            <form onSubmit={handlePostComment} className="mb-10 flex flex-col sm:flex-row gap-4"><div className="flex-1 relative"><input type="text" maxLength={500} value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder={!isStudent ? "Balas atau berikan instruksi kepada peserta..." : "Tulis pertanyaan atau tanggapan Anda di sini (Maks 500 huruf)..."} className="w-full px-6 py-5 rounded-2xl border-2 border-slate-200 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all bg-slate-50 focus:bg-white text-base" /></div><button type="submit" disabled={!commentText.trim()} className="bg-indigo-600 hover:bg-indigo-700 transition-all text-white px-10 py-5 rounded-2xl font-bold disabled:bg-slate-300 disabled:cursor-not-allowed shadow-lg flex justify-center items-center text-lg">Kirim Pesan <Icons.Right size={20} className="ml-2" weight="bold"/></button></form>
-                            <div className="space-y-5">{(!activeModule.comments || activeModule.comments.length === 0) ? (<div className="text-center py-12 bg-slate-50 rounded-3xl border border-dashed border-slate-300"><Icons.Chat size={48} className="mx-auto text-slate-300 mb-3" /><h4 className="text-lg font-bold text-slate-600 mb-1">Belum ada diskusi</h4><p className="text-slate-500 text-sm">Jadilah yang pertama untuk memulai diskusi di materi ini!</p></div>) : activeModule.comments.map(c => (<div key={c.id} className={`p-6 rounded-3xl border transition-all ${c.isAdmin ? 'bg-indigo-50/50 border-indigo-200 ml-4 sm:ml-16 shadow-sm' : 'bg-white border-slate-200 shadow-sm'}`}><div className="flex items-center space-x-4 mb-3"><div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm shadow-inner border-2 border-white ${c.isAdmin ? 'bg-indigo-600 text-white ring-2 ring-indigo-200' : 'bg-slate-200 text-slate-600 ring-2 ring-slate-100'}`}>{c.user.charAt(0).toUpperCase()}</div><div><p className="font-bold text-base text-slate-900 flex items-center">{c.user} {c.isAdmin && <span className="ml-2 text-[10px] bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-md font-bold uppercase border border-indigo-200 tracking-wider">Instruktur</span>}</p><p className="text-xs text-slate-400 mt-0.5">{c.time}</p></div></div><p className="text-base text-slate-700 leading-relaxed pl-14">{c.text}</p></div>))}</div>
+                        
+                        {/* Video Info & Aksi */}
+                        <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200 mb-8 relative overflow-hidden">
+                            <div className="absolute top-0 left-0 w-2 h-full bg-indigo-500"></div>
+                            <div className="pl-4">
+                                <h2 className="text-3xl sm:text-4xl font-black mb-4 text-slate-900 leading-tight tracking-tight">{activeModule.title}</h2>
+                                <p className="text-slate-600 leading-relaxed text-base sm:text-lg">{activeModule.description}</p>
+                            </div>
+                            
+                            {isStudent && (
+                            <div className="mt-10 pt-8 flex justify-end border-t border-slate-100">
+                                <button onClick={handleCompleteModule} className={`flex items-center justify-center w-full sm:w-auto space-x-3 px-10 py-4 rounded-2xl font-bold transition-all shadow-md text-lg ${myEnr?.completedModules?.includes(activeModule.id) ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300' : 'bg-indigo-600 hover:bg-indigo-700 text-white hover:shadow-indigo-500/30'}`}>
+                                    <span>{myEnr?.completedModules?.includes(activeModule.id) ? 'Lanjut ke Materi Berikutnya' : 'Tandai Selesai & Lanjut'}</span>
+                                    <ChevronRight size={24} weight="bold"/>
+                                </button>
+                            </div>
+                            )}
+                        </div>
+
+                        {/* Forum Diskusi */}
+                        <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200">
+                            <h3 className="text-2xl font-bold mb-8 flex items-center text-slate-900 border-b border-slate-100 pb-5">
+                                <div className="bg-indigo-100 p-2.5 rounded-xl mr-4 text-indigo-600"><MessageSquare size={24} weight="fill"/></div> Ruang Diskusi Kelas
+                            </h3>
+                            
+                            <form onSubmit={handlePostComment} className="mb-10 flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1 relative">
+                                    <input type="text" maxLength={500} value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder={!isStudent ? "Balas atau berikan instruksi kepada peserta..." : "Tanya sesuatu (Maks 500 huruf)..."} className="w-full px-6 py-5 rounded-2xl border-2 border-slate-200 outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all bg-slate-50 focus:bg-white text-base" />
+                                </div>
+                                <button type="submit" disabled={!commentText.trim()} className="bg-indigo-600 hover:bg-indigo-700 transition-all text-white px-10 py-5 rounded-2xl font-bold disabled:bg-slate-300 disabled:cursor-not-allowed shadow-lg flex justify-center items-center text-lg">
+                                    Kirim Pesan <ChevronRight size={20} className="ml-2" weight="bold"/>
+                                </button>
+                            </form>
+
+                            <div className="space-y-5">
+                                {(!activeModule.comments || activeModule.comments.length === 0) ? (
+                                    <div className="text-center py-12 bg-slate-50 rounded-3xl border border-dashed border-slate-300">
+                                        <MessageSquare size={48} className="mx-auto text-slate-300 mb-3" />
+                                        <h4 className="text-lg font-bold text-slate-600 mb-1">Belum ada diskusi</h4>
+                                        <p className="text-slate-500 text-sm">Jadilah yang pertama untuk memulai diskusi di materi ini!</p>
+                                    </div>
+                                ) : activeModule.comments.map(c => (
+                                    <div key={c.id} className={`p-6 rounded-3xl border transition-all ${c.isAdmin ? 'bg-indigo-50/50 border-indigo-200 ml-4 sm:ml-16 shadow-sm' : 'bg-white border-slate-200 shadow-sm'}`}>
+                                        <div className="flex items-center space-x-4 mb-3">
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm shadow-inner border-2 border-white ${c.isAdmin ? 'bg-indigo-600 text-white ring-2 ring-indigo-200' : 'bg-slate-200 text-slate-600 ring-2 ring-slate-100'}`}>
+                                                {c.user.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-base text-slate-900 flex items-center">
+                                                    {c.user} 
+                                                    {c.isAdmin && <span className="ml-2 text-[10px] bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-md font-bold uppercase border border-indigo-200 tracking-wider">Instruktur</span>}
+                                                </p>
+                                                <p className="text-xs text-slate-400 mt-0.5">{c.time}</p>
+                                            </div>
+                                        </div>
+                                        <p className="text-base text-slate-700 leading-relaxed pl-14">{c.text}</p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                       </div>
                   )}
+
+                  {/* ---> MODE UJIAN (EXAM) <--- */}
                   {classroomMode === 'exam' && (
                       <div className="bg-white rounded-3xl p-8 sm:p-12 shadow-2xl border border-slate-200 animate-fade-in-up">
-                          <div className="text-center mb-12 border-b border-slate-100 pb-10 relative"><div className="absolute -top-20 left-1/2 transform -translate-x-1/2 w-28 h-28 bg-white rounded-full border-8 border-slate-50 flex items-center justify-center shadow-sm"><div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center"><Icons.Exam size={40} weight="fill"/></div></div><div className="pt-12"><h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">Ujian Akhir Kelas</h2><p className="text-slate-500 text-lg max-w-xl mx-auto leading-relaxed">Pilihlah jawaban yang paling tepat. Anda diwajibkan untuk meraih nilai minimal <b className="text-amber-600 text-xl bg-amber-50 px-3 py-1 rounded-lg border border-amber-200 inline-block mx-1 shadow-sm">{activeCourse?.exam?.minScore || 70}</b> untuk dinyatakan lulus dan mengklaim sertifikat.</p></div></div>
-                          <div className="space-y-10">{activeCourse?.exam?.questions?.map((q, qIdx) => (<div key={qIdx} className="bg-slate-50/50 p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm"><h3 className="font-bold text-xl mb-6 text-slate-900 leading-relaxed flex items-start"><span className="text-indigo-600 mr-3 text-2xl font-black">{qIdx+1}.</span> <span className="pt-1">{q.q}</span></h3><div className="space-y-4 pl-0 sm:pl-9">{q.options?.map((opt, optIdx) => { const isSelected = studentAnswers[qIdx] === optIdx; return (<label key={optIdx} className={`flex items-center p-5 border-2 rounded-2xl cursor-pointer transition-all duration-200 ${isSelected ? 'bg-indigo-50 border-indigo-500 shadow-md transform -translate-y-0.5' : 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-slate-50 shadow-sm'}`}><div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mr-5 shrink-0 transition-colors ${isSelected ? 'border-indigo-600' : 'border-slate-300'}`}>{isSelected && <div className="w-3 h-3 bg-indigo-600 rounded-full"></div>}</div><input type="radio" name={`q_${qIdx}`} value={optIdx} onChange={() => setStudentAnswers({...studentAnswers, [qIdx]: optIdx})} className="hidden" /><span className={`text-base select-none ${isSelected ? 'text-indigo-900 font-bold' : 'text-slate-700 font-medium'}`}>{opt}</span></label>)})}</div></div>))}</div>
-                          <div className="mt-16 flex justify-center pt-10 border-t border-slate-200"><button onClick={submitExam} disabled={Object.keys(studentAnswers).length < (activeCourse?.exam?.questions?.length||0)} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none transition-all text-white px-12 py-5 rounded-2xl font-black text-xl shadow-xl hover:shadow-indigo-500/30 transform hover:-translate-y-1 disabled:transform-none">Kumpulkan & Lihat Hasil Ujian</button></div>
+                          <div className="text-center mb-12 border-b border-slate-100 pb-10 relative">
+                              <div className="absolute -top-20 left-1/2 transform -translate-x-1/2 w-28 h-28 bg-white rounded-full border-8 border-slate-50 flex items-center justify-center shadow-sm">
+                                  <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center"><CheckSquareOffset size={40} weight="fill"/></div>
+                              </div>
+                              <div className="pt-12">
+                                  <h2 className="text-4xl font-black text-slate-900 mb-4 tracking-tight">Ujian Akhir Kelas</h2>
+                                  <p className="text-slate-500 text-lg max-w-xl mx-auto leading-relaxed">Pilihlah jawaban yang paling tepat. Anda diwajibkan untuk meraih nilai minimal <b className="text-amber-600 text-xl bg-amber-50 px-3 py-1 rounded-lg border border-amber-200 inline-block mx-1 shadow-sm">{activeCourse?.exam?.minScore || 70}</b> untuk dinyatakan lulus dan mengklaim sertifikat.</p>
+                              </div>
+                          </div>
+                          
+                          <div className="space-y-10">
+                              {activeCourse?.exam?.questions?.map((q, qIdx) => (
+                                  <div key={qIdx} className="bg-slate-50/50 p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm">
+                                      <h3 className="font-bold text-xl mb-6 text-slate-900 leading-relaxed flex items-start"><span className="text-indigo-600 mr-3 text-2xl font-black">{qIdx+1}.</span> <span className="pt-1">{q.q}</span></h3>
+                                      <div className="space-y-4 pl-0 sm:pl-9">
+                                          {q.options?.map((opt, optIdx) => {
+                                              const isSelected = studentAnswers[qIdx] === optIdx;
+                                              return (
+                                              <label key={optIdx} className={`flex items-center p-5 border-2 rounded-2xl cursor-pointer transition-all duration-200 ${isSelected ? 'bg-indigo-50 border-indigo-500 shadow-md transform -translate-y-0.5' : 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-slate-50 shadow-sm'}`}>
+                                                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center mr-5 shrink-0 transition-colors ${isSelected ? 'border-indigo-600' : 'border-slate-300'}`}>
+                                                      {isSelected && <div className="w-3 h-3 bg-indigo-600 rounded-full"></div>}
+                                                  </div>
+                                                  <input type="radio" name={`q_${qIdx}`} value={optIdx} onChange={() => setStudentAnswers({...studentAnswers, [qIdx]: optIdx})} className="hidden" />
+                                                  <span className={`text-base select-none ${isSelected ? 'text-indigo-900 font-bold' : 'text-slate-700 font-medium'}`}>{opt}</span>
+                                              </label>
+                                          )})}
+                                      </div>
+                                  </div>
+                              ))}
+                          </div>
+                          
+                          <div className="mt-16 flex justify-center pt-10 border-t border-slate-200">
+                              <button onClick={submitExam} disabled={Object.keys(studentAnswers).length < (activeCourse?.exam?.questions?.length||0)} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none transition-all text-white px-12 py-5 rounded-2xl font-black text-xl shadow-xl hover:shadow-indigo-500/30 transform hover:-translate-y-1">
+                                  Kumpulkan & Lihat Hasil Ujian
+                              </button>
+                          </div>
                       </div>
                   )}
+
+                  {/* ---> MODE HASIL KELULUSAN (RESULT & CERT) <--- */}
                   {classroomMode === 'result' && (
                       <div className="bg-white rounded-3xl p-8 sm:p-16 shadow-2xl border border-slate-200 text-center max-w-3xl mx-auto mt-8 relative overflow-hidden animate-fade-in-up">
                           <div className={`absolute top-0 left-0 w-full h-4 ${myEnr?.isGraduated ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
-                          <div className="relative mb-10"><div className={`w-36 h-36 rounded-full flex items-center justify-center mx-auto relative z-10 shadow-inner border-8 ${myEnr?.isGraduated ? 'bg-emerald-100 text-emerald-600 border-emerald-50' : 'bg-red-100 text-red-600 border-red-50'}`}>{myEnr?.isGraduated ? <Icons.Award size={72} weight="fill"/> : <Icons.X size={72} weight="bold"/>}</div></div>
-                          <h2 className="text-4xl sm:text-5xl font-black text-slate-900 mb-4 tracking-tight">{myEnr?.isGraduated ? 'Selamat, Anda Lulus! 🎉' : 'Belum Lulus, Semangat!'}</h2><p className="text-slate-600 mb-10 text-xl px-4 leading-relaxed max-w-xl mx-auto">{myEnr?.isGraduated ? 'Luar biasa! Kerja keras Anda telah membuahkan hasil. Sertifikat profesional Anda telah siap diunduh di bawah ini.' : 'Tidak perlu berkecil hati. Pelajari kembali materi yang belum Anda pahami dan silakan ikuti ujian ulang kapan saja.'}</p>
-                          <div className="bg-slate-50 rounded-3xl p-8 mb-10 border border-slate-200 inline-block w-full sm:w-2/3 shadow-inner"><p className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Nilai Akhir</p><p className={`text-7xl font-black ${myEnr?.isGraduated ? 'text-emerald-600' : 'text-red-600'}`}>{myEnr?.examScore || 0} <span className="text-3xl text-slate-400 font-medium">/ {(activeCourse?.exam?.questions?.length||10) * 10}</span></p></div>
-                          {!myEnr?.isGraduated ? (<button onClick={()=>{setClassroomMode('exam'); setStudentAnswers({});}} className="w-full sm:w-3/4 mx-auto bg-slate-900 hover:bg-slate-800 text-white py-5 rounded-2xl font-bold text-xl transition-all shadow-lg transform hover:-translate-y-1 block">Coba Ujian Ulang Sekarang</button>) : (<div className="space-y-5 max-w-md mx-auto"><button onClick={handleDownloadCertLocal} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-5 rounded-2xl font-bold text-lg shadow-xl hover:shadow-emerald-500/30 flex items-center justify-center transition-all transform hover:-translate-y-1"><Icons.Download size={28} className="mr-3" weight="bold"/> Download Sertifikat PDF</button>{instructorData?.donationLink && (<a href={instructorData.donationLink} target="_blank" rel="noopener noreferrer" className="w-full bg-amber-50 hover:bg-amber-100 text-amber-800 border-2 border-amber-300 py-5 rounded-2xl font-bold text-lg transition-colors flex items-center justify-center group shadow-sm"><div className="bg-amber-200 p-2 rounded-full mr-3 text-amber-700 group-hover:scale-110 transition-transform"><Icons.Coffee size={24} weight="fill"/></div> Traktir Kopi Instruktur</a>)}</div>)}
+                          
+                          <div className="relative mb-10">
+                              <div className={`w-36 h-36 rounded-full flex items-center justify-center mx-auto relative z-10 shadow-inner border-8 ${myEnr?.isGraduated ? 'bg-emerald-100 text-emerald-600 border-emerald-50' : 'bg-red-100 text-red-600 border-red-50'}`}>
+                                  {myEnr?.isGraduated ? <Award size={72} weight="fill"/> : <X size={72} weight="bold"/>}
+                              </div>
+                          </div>
+
+                          <h2 className="text-4xl sm:text-5xl font-black text-slate-900 mb-4 tracking-tight">
+                              {myEnr?.isGraduated ? 'Selamat, Anda Lulus! 🎉' : 'Belum Lulus, Semangat!'}
+                          </h2>
+                          <p className="text-slate-600 mb-10 text-xl px-4 leading-relaxed max-w-xl mx-auto font-medium">
+                              {myEnr?.isGraduated ? 'Luar biasa! Kerja keras Anda telah membuahkan hasil. Sertifikat profesional Anda telah siap diunduh di bawah ini.' : 'Tidak perlu berkecil hati. Pelajari kembali materi yang belum Anda pahami dan silakan ikuti ujian ulang kapan saja.'}
+                          </p>
+                          
+                          <div className="bg-slate-50 rounded-3xl p-8 mb-10 border border-slate-200 inline-block w-full sm:w-2/3 shadow-inner">
+                              <p className="text-sm font-bold text-slate-500 uppercase tracking-widest mb-2">Total Nilai Akhir</p>
+                              <p className={`text-7xl font-black ${myEnr?.isGraduated ? 'text-emerald-600' : 'text-red-600'}`}>
+                                  {myEnr?.examScore || 0} <span className="text-3xl text-slate-400 font-medium">/ {(activeCourse?.exam?.questions?.length||10) * 10}</span>
+                              </p>
+                          </div>
+                          
+                          {!myEnr?.isGraduated ? (
+                              <button onClick={()=>{setClassroomMode('exam'); setStudentAnswers({});}} className="w-full sm:w-3/4 mx-auto bg-slate-900 hover:bg-slate-800 text-white py-5 rounded-2xl font-bold text-xl transition-all shadow-lg transform hover:-translate-y-1 block">
+                                  Coba Ujian Ulang Sekarang
+                              </button>
+                          ) : (
+                              <div className="space-y-5 max-w-md mx-auto">
+                                  <button onClick={handleDownloadCert} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-5 rounded-2xl font-bold text-lg shadow-xl hover:shadow-emerald-500/30 flex items-center justify-center transition-all transform hover:-translate-y-1">
+                                      <Download size={28} className="mr-3" weight="bold"/> Download Sertifikat PDF
+                                  </button>
+                                  
+                                  {instructorData?.donationLink && (
+                                      <a href={instructorData.donationLink} target="_blank" rel="noopener noreferrer" className="w-full bg-amber-50 hover:bg-amber-100 text-amber-800 border-2 border-amber-300 py-5 rounded-2xl font-bold text-lg transition-colors flex items-center justify-center group shadow-sm">
+                                          <div className="bg-amber-200 p-2 rounded-full mr-3 text-amber-700 group-hover:scale-110 transition-transform"><Coffee size={24} weight="fill"/></div> 
+                                          Traktir Kopi Instruktur
+                                      </a>
+                                  )}
+                              </div>
+                          )}
                       </div>
                   )}
+
                 </div>
               </main>
             </div>
