@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduLearn by SenTools - LMS Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot, doc, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    let fbApp = null, fbAuth = null, fbDb = null;
+
+    // URL Google Apps Script Rahasia (Base64 Encoded)
+    const DEFAULT_SHEETS_URL = atob("aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J3YzZYWDlYaXJxLUdwTEtpLTJWaDMyZGsxR0sycHVxVG92VHJYc0dtMHphcmVpcUlHeTFMN0JPODVtV3NzUWFXVFYvZXhlYw==");
+
+    const IconWrapper = ({ name, size = 24, className = "" }) => <i className={`ph ph-${name} ${className}`} style={{ fontSize: size }}></i>;
+    const PlayCircle = (p) => <IconWrapper name="play-circle" {...p} />;
+    const Download = (p) => <IconWrapper name="download" {...p} />;
+    const Menu = (p) => <IconWrapper name="list" {...p} />;
+    const X = (p) => <IconWrapper name="x" {...p} />;
+    const BookOpen = (p) => <IconWrapper name="book-open" {...p} />;
+    const Video = (p) => <IconWrapper name="video" {...p} />;
+    const CheckCircle2 = (p) => <IconWrapper name="check-circle" {...p} />;
+    const ChevronRight = (p) => <IconWrapper name="caret-right" {...p} />;
+    const Loader2 = (p) => <IconWrapper name="spinner" className="animate-spin" {...p} />;
+    const MessageSquare = (p) => <IconWrapper name="chat-circle" {...p} />;
+    const Lock = (p) => <IconWrapper name="lock" {...p} />;
+    const Key = (p) => <IconWrapper name="key" {...p} />;
+    const LogOut = (p) => <IconWrapper name="sign-out" {...p} />;
+    const PlusCircle = (p) => <IconWrapper name="plus-circle" {...p} />;
+    const Database = (p) => <IconWrapper name="database" {...p} />;
+    const Trash2 = (p) => <IconWrapper name="trash" {...p} />;
+    const Award = (p) => <IconWrapper name="medal" {...p} />;
+    const Bell = (p) => <IconWrapper name="bell" {...p} />;
+    const Users = (p) => <IconWrapper name="users" {...p} />;
+    const Book = (p) => <IconWrapper name="book" {...p} />;
+    const GraduationCap = (p) => <IconWrapper name="graduation-cap" {...p} />;
+    const AlertCircle = (p) => <IconWrapper name="warning-circle" {...p} />;
+    const ArrowLeft = (p) => <IconWrapper name="arrow-left" {...p} />;
+    const RefreshCw = (p) => <IconWrapper name="arrows-clockwise" {...p} />;
+    const UserIcon = (p) => <IconWrapper name="user" {...p} />;
+    const Globe = (p) => <IconWrapper name="globe" {...p} />;
+    const HardDrives = (p) => <IconWrapper name="hard-drives" {...p} />;
+    const ShieldCheck = (p) => <IconWrapper name="shield-check" {...p} />;
+    const MagnifyingGlass = (p) => <IconWrapper name="magnifying-glass" {...p} />;
+    const Coffee = (p) => <IconWrapper name="coffee" {...p} />;
+    const CheckSquareOffset = (p) => <IconWrapper name="check-square-offset" {...p} />;
+
+    const initialAdmins = [
+      { id: 'adm_super', username: 'super_admin', password: 'SUPER123', name: 'Master System', isSuper: true, donationLink: '' },
+      { id: 'adm_1', username: 'budi_admin', password: 'ADMIN123', name: 'Budi Santoso', isSuper: false, donationLink: 'https://saweria.co/budi' }
+    ];
+    
+    const emptyExam = {
+      minScore: 70,
+      questions: Array.from({length: 10}, () => ({ q: '', options: ['','','',''], answer: 0 }))
+    };
+
+    const initialCourses = [
+      { 
+        id: 'c_1', authorId: 'adm_1', code: 'WEB2026', title: "Mastering Web Development", instructor: "Budi Santoso", 
+        exam: {
+          minScore: 80,
+          questions: [
+            { q: "Apa kepanjangan dari HTML?", options: ["Hyper Text Markup Language", "Hyperlinks Text", "Home Tool", "Hyper Tool"], answer: 0 },
+            { q: "Tag untuk paragraf?", options: ["<p>", "<para>", "<pg>", "<text>"], answer: 0 },
+            { q: "Sifat CSS untuk warna teks?", options: ["bg-color", "color", "text-color", "font-color"], answer: 1 },
+            { q: "Simbol ID di CSS?", options: [".", "#", "*", "&"], answer: 1 },
+            { q: "Fungsi JavaScript?", options: ["Styling", "Struktur", "Interaktivitas", "Database"], answer: 2 },
+            { q: "Deklarasi variabel JS modern?", options: ["var & let", "let & const", "int & float", "dim & str"], answer: 1 },
+            { q: "Tag file CSS eksternal?", options: ["<body>", "<head>", "<footer>", "<header>"], answer: 1 },
+            { q: "Tipe data [1, 2, 3]?", options: ["Object", "String", "Number", "Array"], answer: 3 },
+            { q: "Fungsi console.log()?", options: ["Alert", "Cetak pesan", "Hapus data", "Buat fungsi"], answer: 1 },
+            { q: "Framework CSS terpopuler?", options: ["Tailwind", "Bootstrap", "Foundation", "Semua benar"], answer: 3 }
+          ]
+        },
+        modules: [ 
+          { id: 'm_1', title: "Pengantar HTML & CSS Modern", videoUrl: "https://www.youtube.com/embed/pQN-pnXPaVg", description: "Dasar web", comments: [] }, 
+          { id: 'm_2', title: "Fundamental JavaScript", videoUrl: "https://www.youtube.com/embed/PkZNo7MFOUg", description: "JS Dasar", comments: [] } 
+        ] 
+      }
+    ];
+    
+    const initialParticipants = [{ id: 'p_1', name: "Andi Wijaya", email: "andi@mail.com", accessCode: "P9X2A1" }];
+    const initialEnrollments = [{ id: 'e_1', participantId: 'p_1', courseId: 'c_1', completedModules: ['m_1'], isGraduated: false, certDownloaded: false, examScore: null, graduatedAt: null }];
+
+    function App() {
+      const [dbMode, setDbMode] = React.useState(() => localStorage.getItem('edu_db_mode') || 'sheets');
+      const [dbReady, setDbReady] = React.useState(false);
+      const [setupError, setSetupError] = React.useState("");
+      const [fbConfigInput, setFbConfigInput] = React.useState("");
+      const [sheetsUrlInput, setSheetsUrlInput] = React.useState(() => localStorage.getItem('edu_sheets_url') || DEFAULT_SHEETS_URL);
+      
+      const [admins, setAdmins] = React.useState([]);
+      const [courses, setCourses] = React.useState([]);
+      const [participants, setParticipants] = React.useState([]);
+      const [enrollments, setEnrollments] = React.useState([]);
+      const [notifications, setNotifications] = React.useState([]);
+
+      const [session, setSession] = React.useState(() => JSON.parse(sessionStorage.getItem('edu_session')) || null);
+      const [loginInput, setLoginInput] = React.useState({ username: "", password: "" });
+      const [loginError, setLoginError] = React.useState("");
+      const [isLoggingIn, setIsLoggingIn] = React.useState(false);
+      
+      const getInitialAppMode = () => {
+        if (!session) return 'auth';
+        if (session.role === 'super_admin') return 'super_dashboard';
+        if (session.role === 'admin') return 'admin_dashboard';
+        return 'part_dashboard';
+      };
+
+      const [appMode, setAppMode] = React.useState(getInitialAppMode()); 
+      const [adminTab, setAdminTab] = React.useState("courses"); 
+      const [superTab, setSuperTab] = React.useState("instructors"); 
+      
+      const [searchInst, setSearchInst] = React.useState("");
+      const [searchCourse, setSearchCourse] = React.useState("");
+      const [searchPart, setSearchPart] = React.useState("");
+      
+      const [activeCourse, setActiveCourse] = React.useState(null);
+      const [activeModule, setActiveModule] = React.useState(null);
+      const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+      const [commentText, setCommentText] = React.useState("");
+      
+      const [classroomMode, setClassroomMode] = React.useState('video');
+      const [studentAnswers, setStudentAnswers] = React.useState({});
+      
+      const [toast, setToast] = React.useState(null);
+      const [confirmDialog, setConfirmDialog] = React.useState({ isOpen: false, message: "", onConfirm: null });
+      
+      const [examModalOpen, setExamModalOpen] = React.useState(false);
+      const [examCourseId, setExamCourseId] = React.useState(null);
+      const [examForm, setExamForm] = React.useState(emptyExam);
+
+      const [profileForm, setProfileForm] = React.useState({ donationLink: "" });
+      const [feedbackForm, setFeedbackForm] = React.useState({ email: "", message: "" });
+
+      React.useEffect(() => {
+        if (appMode === 'setup_db') return;
+        if (dbMode === 'local') {
+          setAdmins(JSON.parse(localStorage.getItem('edu_admins')) || initialAdmins);
+          setCourses(JSON.parse(localStorage.getItem('edu_courses')) || initialCourses);
+          setParticipants(JSON.parse(localStorage.getItem('edu_participants')) || initialParticipants);
+          setEnrollments(JSON.parse(localStorage.getItem('edu_enrollments')) || initialEnrollments);
+          setNotifications(JSON.parse(localStorage.getItem('edu_notifications')) || []);
+          setDbReady(true);
+        } else if (dbMode === 'firebase') {
+          try {
+            const configStr = localStorage.getItem('edu_fb_config');
+            if (!configStr) throw new Error("No Config");
+            fbApp = initializeApp(JSON.parse(configStr)); fbAuth = getAuth(fbApp); fbDb = getFirestore(fbApp);
+            signInAnonymously(fbAuth).then(() => {
+              const getRef = (colName) => collection(fbDb, colName);
+              onSnapshot(getRef('admins'), snap => setAdmins(snap.docs.map(d => ({id: d.id, ...d.data()}))) );
+              onSnapshot(getRef('courses'), snap => setCourses(snap.docs.map(d => ({id: d.id, ...d.data()}))) );
+              onSnapshot(getRef('participants'), snap => setParticipants(snap.docs.map(d => ({id: d.id, ...d.data()}))) );
+              onSnapshot(getRef('enrollments'), snap => setEnrollments(snap.docs.map(d => ({id: d.id, ...d.data()}))) );
+              onSnapshot(getRef('notifications'), snap => setNotifications(snap.docs.map(d => ({id: d.id, ...d.data()}))) );
+              setDbReady(true);
+            }).catch(e => { setSetupError("Gagal login Firebase anonim."); setAppMode('setup_db'); });
+          } catch (e) { setSetupError("Config Firebase salah."); setAppMode('setup_db'); }
+        } else if (dbMode === 'sheets') {
+          const url = localStorage.getItem('edu_sheets_url') || DEFAULT_SHEETS_URL;
+          if(!url) { setAppMode('setup_db'); return; }
+          
+          fetch(url)
+            .then(res => {
+              if(!res.ok) throw new Error("Network error");
+              return res.json();
+            })
+            .then(data => {
+                if(data.admins) setAdmins(data.admins); 
+                if(data.courses) setCourses(data.courses);
+                if(data.participants) setParticipants(data.participants); 
+                if(data.enrollments) setEnrollments(data.enrollments);
+                if(data.notifications) setNotifications(data.notifications); 
+                setDbReady(true);
+            })
+            .catch(e => { 
+                console.error("Gagal sync, mereset URL", e);
+                localStorage.setItem('edu_sheets_url', DEFAULT_SHEETS_URL);
+                setSheetsUrlInput(DEFAULT_SHEETS_URL);
+                setSetupError("Gagal sync Spreadsheet. Mereset ke konfigurasi awal..."); 
+                setAppMode('setup_db'); 
+            });
+        }
+      }, [dbMode, appMode]);
+
+      const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
+      const generateRandomCode = (prefix = "", length = 6) => prefix + Math.random().toString(36).substring(2, 2+length).toUpperCase();
+      const calcProgress = (enr, crs) => {
+        if (!crs || crs.modules.length === 0 || !enr) return 0;
+        return Math.round((enr.completedModules.length / crs.modules.length) * 100);
+      };
+
+      const execDbAction = async (localAction, firebaseAction) => {
+        try {
+          if (dbMode === 'firebase') { await firebaseAction(); } 
+          else if (dbMode === 'sheets') {
+              localAction(); 
+              const url = localStorage.getItem('edu_sheets_url') || DEFAULT_SHEETS_URL;
+              if (url) {
+                  const payload = {
+                      admins: JSON.parse(localStorage.getItem('edu_admins')) || admins,
+                      courses: JSON.parse(localStorage.getItem('edu_courses')) || courses,
+                      participants: JSON.parse(localStorage.getItem('edu_participants')) || participants,
+                      enrollments: JSON.parse(localStorage.getItem('edu_enrollments')) || enrollments,
+                      notifications: JSON.parse(localStorage.getItem('edu_notifications')) || notifications
+                  };
+                  fetch(url, { method: 'POST', body: JSON.stringify(payload) }).catch(console.error);
+              }
+          } else { localAction(); }
+        } catch (error) { console.error(error); showToast("Gagal menyimpan."); }
+      };
+
+      // FUNGSI TRIGGER EMAIL BACKGROUND KE GOOGLE APPS SCRIPT
+      const triggerEmail = (emailAction) => {
+          const url = localStorage.getItem('edu_sheets_url') || DEFAULT_SHEETS_URL;
+          if (!url) return;
+          fetch(url, { method: 'POST', body: JSON.stringify({ emailAction }) }).catch(console.error);
+      };
+
+      // FUNGSI PINTAR: Mengubah URL YouTube/Drive mentah menjadi format Embed yang benar
+      const formatVideoUrl = (rawUrl) => {
+        if (!rawUrl) return "";
+        let url = rawUrl.trim();
+        try {
+          if (url.includes('youtu.be/')) {
+            const videoId = url.split('youtu.be/')[1].split('?')[0].split('&')[0];
+            return `https://www.youtube.com/embed/${videoId}`;
+          }
+          if (url.includes('youtube.com/watch')) {
+            const urlObj = new URL(url);
+            const videoId = urlObj.searchParams.get('v');
+            if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+          }
+          if (url.includes('youtube.com/shorts/')) {
+            const videoId = url.split('shorts/')[1].split('?')[0].split('&')[0];
+            return `https://www.youtube.com/embed/${videoId}`;
+          }
+          if (url.includes('drive.google.com/file/d/')) {
+            const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+            if (match && match[1]) {
+                return `https://drive.google.com/file/d/${match[1]}/preview`;
+            }
+          }
+        } catch (e) { console.error("URL Parsing Error", e); }
+        return url;
+      };
+
+      const handleSeedDatabase = async () => {
+        setIsLoggingIn(true);
+        await execDbAction(
+          () => {
+            localStorage.setItem('edu_admins', JSON.stringify(initialAdmins)); setAdmins(initialAdmins);
+            localStorage.setItem('edu_courses', JSON.stringify(initialCourses)); setCourses(initialCourses);
+            localStorage.setItem('edu_participants', JSON.stringify(initialParticipants)); setParticipants(initialParticipants);
+            localStorage.setItem('edu_enrollments', JSON.stringify(initialEnrollments)); setEnrollments(initialEnrollments);
+            showToast("Database Terinisialisasi!");
+          },
+          async () => {
+            for(let adm of initialAdmins) await setDoc(doc(fbDb, 'admins', adm.id), adm);
+            for(let crs of initialCourses) await setDoc(doc(fbDb, 'courses', crs.id), crs);
+            for(let prt of initialParticipants) await setDoc(doc(fbDb, 'participants', prt.id), prt);
+            for(let enr of initialEnrollments) await setDoc(doc(fbDb, 'enrollments', enr.id), enr);
+          }
+        );
+        setIsLoggingIn(false);
+      };
+
+      const handleLogin = (e) => {
+        e.preventDefault(); setIsLoggingIn(true); setLoginError("");
+        setTimeout(() => {
+          const { username, password } = loginInput;
+          const adminFound = admins.find(a => a.username === username && a.password === password);
+          if (adminFound) {
+            const sessData = { role: adminFound.isSuper ? 'super_admin' : 'admin', data: adminFound };
+            setSession(sessData); sessionStorage.setItem('edu_session', JSON.stringify(sessData));
+            if(!adminFound.isSuper) setProfileForm({ donationLink: adminFound.donationLink || "" });
+            setAppMode(adminFound.isSuper ? 'super_dashboard' : 'admin_dashboard'); setIsLoggingIn(false); return;
+          }
+          const partFound = participants.find(p => p.email === username && p.accessCode === password);
+          if (partFound) {
+            const sessData = { role: 'participant', data: partFound };
+            setSession(sessData); sessionStorage.setItem('edu_session', JSON.stringify(sessData));
+            setAppMode('part_dashboard'); setIsLoggingIn(false); return;
+          }
+          setLoginError("Kredensial salah!"); setIsLoggingIn(false);
+        }, 600);
+      };
+
+      const handleLogout = () => {
+        setSession(null); sessionStorage.removeItem('edu_session');
+        setAppMode('auth'); setLoginInput({ username: "", password: "" });
+        setClassroomMode('video'); setStudentAnswers({}); setExamModalOpen(false);
+      };
+
+      const handleRegisterAdmin = async (e) => {
+        e.preventDefault(); const fd = new FormData(e.target); const username = fd.get('username');
+        if (admins.some(a => a.username === username)) return showToast("Username terpakai!");
+        const newAdminData = { name: fd.get('name'), username, password: fd.get('password'), isSuper: false, donationLink: '' };
+        await execDbAction(
+          () => {
+            const updatedA = [...admins, { id: `adm_${Date.now()}`, ...newAdminData }];
+            setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
+          },
+          async () => await setDoc(doc(collection(fbDb, 'admins')), newAdminData)
+        );
+        e.target.reset(); showToast("Instruktur Ditambahkan!");
+      };
+
+      const handleDeleteAdmin = (id) => {
+        setConfirmDialog({
+            isOpen: true, message: "Hapus instruktur ini? (Kursusnya akan tetap ada tanpa pembuat).",
+            onConfirm: async () => {
+                setConfirmDialog({ isOpen: false });
+                await execDbAction(
+                    () => {
+                        const updatedA = admins.filter(a => a.id !== id);
+                        setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
+                    },
+                    async () => await deleteDoc(doc(fbDb, 'admins', id))
+                );
+                showToast("Admin dihapus.");
+            }
+        });
+      };
+
+      const executeDeleteCourse = async (courseId) => {
+        await execDbAction(
+            () => {
+                const updatedC = courses.filter(c => c.id !== courseId);
+                setCourses(updatedC); localStorage.setItem('edu_courses', JSON.stringify(updatedC));
+            },
+            async () => await deleteDoc(doc(fbDb, 'courses', courseId))
+        );
+        showToast("Kursus dihapus.");
+      };
+
+      const handleDeleteCourseSuper = (courseId) => {
+        setConfirmDialog({
+            isOpen: true, message: "Peringatan Super Admin: Hapus kursus secara permanen?",
+            onConfirm: () => { setConfirmDialog({ isOpen: false }); executeDeleteCourse(courseId); }
+        });
+      };
+
+      const handleSafeDeleteCourse = (courseId) => {
+        const hasEnrolled = enrollments.some(e => e.courseId === courseId);
+        if (hasEnrolled) return showToast("Gagal: Kursus ini sudah ada peserta.");
+        setConfirmDialog({
+            isOpen: true, message: "Kursus kosong. Yakin ingin menghapus?",
+            onConfirm: () => { setConfirmDialog({ isOpen: false }); executeDeleteCourse(courseId); }
+        });
+      };
+
+      const handleCreateCourse = async (e) => {
+        e.preventDefault(); const fd = new FormData(e.target); const code = fd.get('code');
+        if (courses.some(c => c.code === code)) return showToast("Kode sudah ada!");
+        const courseData = { authorId: session.data.id, code, title: fd.get('title'), instructor: fd.get('inst'), modules: [], exam: emptyExam };
+        await execDbAction(
+          () => {
+            const updated = [...courses, { id: `c_${Date.now()}`, ...courseData }];
+            setCourses(updated); localStorage.setItem('edu_courses', JSON.stringify(updated));
+          },
+          async () => await setDoc(doc(collection(fbDb, 'courses')), courseData)
+        );
+        e.target.reset(); showToast("Kursus dibuat!");
+      };
+
+      const handleCreateModule = async (e) => {
+        e.preventDefault(); const fd = new FormData(e.target); const courseId = fd.get('courseId');
+        const course = courses.find(c => c.id === courseId);
+        
+        // Gunakan fungsi pintar sebelum menyimpan
+        const rawVideoUrl = fd.get('vidUrl');
+        const finalVideoUrl = formatVideoUrl(rawVideoUrl);
+
+        const newModule = { id: `m_${Date.now()}`, title: fd.get('title'), videoUrl: finalVideoUrl, description: fd.get('desc'), comments: [] };
+        await execDbAction(
+          () => {
+            const updated = courses.map(c => c.id === courseId ? { ...c, modules: [...c.modules, newModule] } : c);
+            setCourses(updated); localStorage.setItem('edu_courses', JSON.stringify(updated));
+          },
+          async () => await updateDoc(doc(fbDb, 'courses', courseId), { modules: [...course.modules, newModule] })
+        );
+        e.target.reset(); showToast("Materi ditambah!");
+      };
+
+      const handleDeleteModule = (courseId, moduleId) => {
+        setConfirmDialog({
+            isOpen: true, message: "Hapus materi video ini?",
+            onConfirm: async () => {
+                setConfirmDialog({ isOpen: false }); const course = courses.find(c => c.id === courseId);
+                await execDbAction(
+                    () => {
+                        const updated = courses.map(c => c.id === courseId ? { ...c, modules: c.modules.filter(m => m.id !== moduleId) } : c);
+                        setCourses(updated); localStorage.setItem('edu_courses', JSON.stringify(updated));
+                    },
+                    async () => await updateDoc(doc(fbDb, 'courses', courseId), { modules: course.modules.filter(m => m.id !== moduleId) })
+                );
+                showToast("Materi dihapus.");
+            }
+        });
+      };
+
+      const handleUpdateProfile = async (e) => {
+        e.preventDefault();
+        await execDbAction(
+          () => {
+            const updatedA = admins.map(a => a.id === session.data.id ? { ...a, donationLink: profileForm.donationLink } : a);
+            setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
+          },
+          async () => await updateDoc(doc(fbDb, 'admins', session.data.id), { donationLink: profileForm.donationLink })
+        );
+        showToast("Profil diperbarui!");
+      };
+
+      const openExamBuilder = (courseId) => {
+        const course = courses.find(c => c.id === courseId);
+        setExamCourseId(courseId); setExamForm(course.exam || emptyExam); setExamModalOpen(true);
+      };
+
+      const handleSaveExam = async () => {
+        await execDbAction(
+          () => {
+            const updated = courses.map(c => c.id === examCourseId ? { ...c, exam: examForm } : c);
+            setCourses(updated); localStorage.setItem('edu_courses', JSON.stringify(updated));
+          },
+          async () => await updateDoc(doc(fbDb, 'courses', examCourseId), { exam: examForm })
+        );
+        setExamModalOpen(false); showToast("Ujian disimpan!");
+      };
+
+      const handleRegisterParticipant = async (e) => {
+        e.preventDefault(); const fd = new FormData(e.target); const email = fd.get('email');
+        if (participants.some(p => p.email === email)) return showToast("Email sudah terdaftar!");
+        const partData = { name: fd.get('name'), email, accessCode: fd.get('code') };
+        const enrData = { courseId: fd.get('courseId'), completedModules: [], isGraduated: false, certDownloaded: false, examScore: null, graduatedAt: null };
+        const courseObj = courses.find(c => c.id === fd.get('courseId'));
+        await execDbAction(
+          () => {
+            const newPart = { id: `p_${Date.now()}`, ...partData };
+            const newEnr = { id: `e_${Date.now()}`, participantId: newPart.id, ...enrData };
+            const updatedP = [...participants, newPart]; const updatedE = [...enrollments, newEnr];
+            setParticipants(updatedP); localStorage.setItem('edu_participants', JSON.stringify(updatedP));
+            setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE));
+          },
+          async () => {
+            const pRef = doc(collection(fbDb, 'participants')); await setDoc(pRef, partData);
+            const eRef = doc(collection(fbDb, 'enrollments')); await setDoc(eRef, { ...enrData, participantId: pRef.id });
+          }
+        );
+        e.target.reset(); showToast("Peserta terdaftar!");
+        
+        // --- TRIGGER EMAIL NOTIFIKASI PENDAFTARAN ---
+        triggerEmail({
+            tujuan: email,
+            subjek: "Pendaftaran Kelas EduLearn Berhasil",
+            namaPengguna: partData.name,
+            isiPesanInti: `Selamat, Anda telah terdaftar di kelas <b>${courseObj ? courseObj.title : 'Baru'}</b>.<br><br>Gunakan detail berikut untuk masuk ke sistem:<br><b>Email:</b> ${email}<br><b>Kode Akses:</b> ${partData.accessCode}<br><br>Selamat belajar!`
+        });
+      };
+
+      const handleEnrollExisting = async (e) => {
+        e.preventDefault(); const fd = new FormData(e.target); const email = fd.get('email'); const cId = fd.get('cId');
+        const participant = participants.find(p => p.email === email);
+        if (!participant) return showToast("Peserta tidak ditemukan!");
+        const pId = participant.id;
+        const courseObj = courses.find(c => c.id === cId);
+        if(enrollments.some(en => en.participantId === pId && en.courseId === cId)) return showToast("Sudah terdaftar di kursus ini!");
+        const enrData = { participantId: pId, courseId: cId, completedModules: [], isGraduated: false, certDownloaded: false, examScore: null, graduatedAt: null };
+        await execDbAction(
+          () => {
+            const updatedE = [...enrollments, { id: `e_${Date.now()}`, ...enrData }];
+            setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE));
+          },
+          async () => await setDoc(doc(collection(fbDb, 'enrollments')), enrData)
+        );
+        showToast("Ditambahkan ke kursus!");
+
+        // --- TRIGGER EMAIL NOTIFIKASI KELAS BARU ---
+        triggerEmail({
+            tujuan: email,
+            subjek: "Akses Kelas Baru EduLearn",
+            namaPengguna: participant.name,
+            isiPesanInti: `Anda baru saja ditambahkan ke kelas <b>${courseObj ? courseObj.title : 'Baru'}</b>.<br><br>Silakan login menggunakan email dan kode akses lama Anda untuk mulai belajar di kelas ini.`
+        });
+      };
+
+      const jumpToClassroom = (courseId, targetModuleId = null) => {
+        const course = courses.find(c => c.id === courseId);
+        let modToOpen = course.modules[0] || null; setClassroomMode('video');
+        if ((session.role === 'admin' || session.role === 'super_admin') && targetModuleId) {
+          modToOpen = course.modules.find(m => m.id === targetModuleId) || modToOpen;
+        } else if (session.role === 'participant') {
+          const myEnr = enrollments.find(e => e.participantId === session.data.id && e.courseId === courseId);
+          if (myEnr) {
+            if(myEnr.isGraduated) setClassroomMode('result');
+            else modToOpen = course.modules.find(m => !myEnr.completedModules.includes(m.id)) || course.modules[course.modules.length - 1];
+          }
+        }
+        if(!modToOpen && classroomMode === 'video') return showToast("Belum ada materi!"); 
+        setActiveCourse(course); setActiveModule(modToOpen); setAppMode('classroom');
+      };
+
+      const handlePostComment = async (e) => {
+        e.preventDefault(); if (!commentText.trim()) return;
+        const isAdmin = session.role === 'admin' || session.role === 'super_admin';
+        const authorName = session.role === 'super_admin' ? `${session.data.name} (Super Admin)` : isAdmin ? `${session.data.name} (Instruktur)` : session.data.name;
+        const newComment = { id: `cmt_${Date.now()}`, user: authorName, text: commentText, isAdmin, time: "Baru saja" };
+        const updatedMods = activeCourse.modules.map(m => m.id === activeModule.id ? { ...m, comments: [...m.comments, newComment] } : m);
+        await execDbAction(
+          () => {
+            const updatedC = courses.map(c => c.id === activeCourse.id ? { ...c, modules: updatedMods } : c);
+            setCourses(updatedC); localStorage.setItem('edu_courses', JSON.stringify(updatedC));
+            if (!isAdmin) {
+              const updatedN = [{ id: `n_${Date.now()}`, adminId: activeCourse.authorId, text: `${authorName} bertanya di "${activeCourse.title}"`, isRead: false, time: "Baru saja", courseId: activeCourse.id, moduleId: activeModule.id }, ...notifications];
+              setNotifications(updatedN); localStorage.setItem('edu_notifications', JSON.stringify(updatedN));
+            }
+          },
+          async () => {
+            await updateDoc(doc(fbDb, 'courses', activeCourse.id), { modules: updatedMods });
+            if (!isAdmin) await setDoc(doc(collection(fbDb, 'notifications')), { adminId: activeCourse.authorId, text: `${authorName} bertanya di "${activeCourse.title}"`, isRead: false, time: "Baru saja", courseId: activeCourse.id, moduleId: activeModule.id });
+          }
+        );
+        setActiveModule(prev => ({ ...prev, comments: [...prev.comments, newComment] }));
+        setCommentText(""); showToast("Komentar terkirim!");
+      };
+
+      const handleCompleteModule = async () => {
+        if (session.role === 'admin' || session.role === 'super_admin') return; 
+        const cMods = activeCourse.modules; const cIdx = cMods.findIndex(m => m.id === activeModule.id); const isLast = cIdx === cMods.length - 1;
+        const myEnr = enrollments.find(e => e.participantId === session.data.id && e.courseId === activeCourse.id);
+        if (!myEnr.completedModules.includes(activeModule.id)) {
+          const newComps = [...myEnr.completedModules, activeModule.id];
+          await execDbAction(
+            () => {
+              const updatedE = enrollments.map(en => en.id === myEnr.id ? { ...en, completedModules: newComps } : en);
+              setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE));
+            },
+            async () => await updateDoc(doc(fbDb, 'enrollments', myEnr.id), { completedModules: newComps })
+          );
+          if (!isLast) { setActiveModule(cMods[cIdx + 1]); showToast("Lanjut materi."); } else setClassroomMode('exam');
+        } else {
+          if (!isLast) setActiveModule(cMods[cIdx + 1]); else setClassroomMode('exam');
+        }
+      };
+
+      const submitExam = async () => {
+        let correct = 0;
+        activeCourse.exam.questions.forEach((q, i) => { if(studentAnswers[i] === q.answer) correct++; });
+        const finalScore = correct * 10; const isPassed = finalScore >= activeCourse.exam.minScore;
+        const myEnr = enrollments.find(e => e.participantId === session.data.id && e.courseId === activeCourse.id);
+        const todayDateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        
+        await execDbAction(
+            () => {
+                const updatedE = enrollments.map(en => en.id === myEnr.id ? { ...en, examScore: finalScore, isGraduated: isPassed, graduatedAt: isPassed ? todayDateStr : en.graduatedAt } : en);
+                setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE));
+            },
+            async () => await updateDoc(doc(fbDb, 'enrollments', myEnr.id), { examScore: finalScore, isGraduated: isPassed, graduatedAt: isPassed ? todayDateStr : (myEnr.graduatedAt || null) })
+        );
+        setClassroomMode('result');
+        if(isPassed) {
+            showToast(`Lulus! Nilai ${finalScore}`);
+            
+            // --- TRIGGER EMAIL NOTIFIKASI KELULUSAN ---
+            triggerEmail({
+                tujuan: session.data.email,
+                subjek: "Kelulusan Kelas & Sertifikat EduLearn",
+                namaPengguna: session.data.name,
+                isiPesanInti: `Selamat! Anda telah lulus dari kelas <b>${activeCourse.title}</b> dengan nilai <b>${finalScore}</b>.<br><br>Sertifikat kelulusan digital Anda kini sudah tersedia dan dapat diunduh langsung melalui dashboard kelas Anda.`
+            });
+        } else {
+            showToast(`Nilai ${finalScore}. Minimal ${activeCourse.exam.minScore}.`);
+        }
+      };
+
+      const handleDownloadCert = async () => {
+        const myEnr = enrollments.find(e => e.participantId === session.data.id && e.courseId === activeCourse.id);
+        const instructorData = admins.find(a => a.id === activeCourse.authorId);
+        
+        await execDbAction(
+          () => {
+            const updatedE = enrollments.map(en => en.id === myEnr.id ? { ...en, certDownloaded: true } : en);
+            setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE));
+          },
+          async () => await updateDoc(doc(fbDb, 'enrollments', myEnr.id), { certDownloaded: true })
+        );
+
+        const certContent = `<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Sertifikat Kelulusan - ${activeCourse.title}</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+body { font-family: 'Playfair Display', serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background-color: #f1f5f9; padding: 20px; box-sizing: border-box; }
+.cert-container { background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); max-width: 900px; width: 100%; position: relative; }
+.cert-border { border: 4px double #0f172a; padding: 40px 60px; text-align: center; position: relative; background-image: radial-gradient(#f8fafc 20%, transparent 20%), radial-gradient(#f8fafc 20%, transparent 20%); background-color: #ffffff; background-position: 0 0, 10px 10px; background-size: 20px 20px; min-height: 480px;}
+.header-logo { color: #0f172a; font-size: 16px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 40px; }
+.title { color: #0f172a; font-size: 48px; font-weight: 700; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 4px; }
+.subtitle { color: #475569; font-size: 18px; margin-bottom: 20px; font-style: italic; }
+.name { font-size: 42px; color: #1d4ed8; font-weight: 700; margin: 10px 0; border-bottom: 2px solid #cbd5e1; display: inline-block; padding: 0 40px 10px; }
+.course-label { color: #475569; font-size: 18px; margin: 30px 0 10px; font-style: italic; }
+.course-name { font-size: 32px; color: #0f172a; font-weight: 700; line-height: 1.3; margin-bottom: 20px; }
+.date-issued { color: #64748b; font-size: 16px; margin-bottom: 40px; font-style: italic; }
+.footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 50px; padding-bottom: 30px; }
+.signature-block { width: 250px; text-align: center; }
+.signature { font-family: 'Great Vibes', cursive; font-size: 36px; color: #0f172a; border-bottom: 1px solid #94a3b8; margin-bottom: 5px; padding-bottom: 5px; }
+.instructor-name { font-size: 16px; font-weight: bold; color: #0f172a; }
+.instructor-title { font-size: 14px; color: #64748b; }
+.website { position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; color: #64748b; font-family: sans-serif; font-size: 12px; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div class="cert-container">
+  <div class="cert-border">
+    <div class="header-logo">EduLearn by SenTools</div>
+    <div class="title">Sertifikat Kelulusan</div>
+    <div class="subtitle">Diberikan dengan bangga kepada:</div>
+    <div class="name">${session.data.name}</div>
+    <div class="course-label">Atas keberhasilannya menyelesaikan kursus:</div>
+    <div class="course-name">${activeCourse.title}</div>
+    <div class="date-issued">Diberikan pada: ${myEnr.graduatedAt || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+    <div class="footer">
+      <div class="signature-block">
+        <div class="signature">${instructorData?.name || activeCourse.instructor}</div>
+        <div class="instructor-name">${instructorData?.name || activeCourse.instructor}</div>
+        <div class="instructor-title">Instruktur Utama</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature">SenTools</div>
+        <div class="instructor-name">Sistem Manajemen</div>
+        <div class="instructor-title">EduLearn by SenTools</div>
+      </div>
+    </div>
+    <div class="website">https://s-tools.id/edu/</div>
+  </div>
+</div>
+</body>
+</html>`;
+        
+        const blob = new Blob([certContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a'); link.href = url; link.download = `Sertifikat-${activeCourse.title.replace(/\s+/g, '-')}.html`;
+        document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+        showToast("Sertifikat berhasil diunduh!");
+      };
+
+      const markNotifsRead = async () => {
+        await execDbAction(
+          () => {
+            const updatedN = notifications.map(n => n.adminId === session.data.id ? { ...n, isRead: true } : n);
+            setNotifications(updatedN); localStorage.setItem('edu_notifications', JSON.stringify(updatedN));
+          },
+          async () => {
+            const myNotifs = notifications.filter(n => n.adminId === session.data.id && !n.isRead);
+            for(let n of myNotifs) await updateDoc(doc(fbDb, 'notifications', n.id), { isRead: true });
+          }
+        );
+      };
+
+      const dismissNotif = async (notifId) => {
+        await execDbAction(
+            () => {
+                const updatedN = notifications.map(n => n.id === notifId ? { ...n, isRead: true } : n);
+                setNotifications(updatedN); localStorage.setItem('edu_notifications', JSON.stringify(updatedN));
+            },
+            async () => await updateDoc(doc(fbDb, 'notifications', notifId), { isRead: true })
+        );
+      };
+
+      const handleSendFeedback = (e) => {
+        e.preventDefault();
+        triggerEmail({
+            tujuan: "me@mail.s-tools.id",
+            subjek: "Aspirasi Pengguna EduLearn - " + feedbackForm.email,
+            namaPengguna: "Admin S-Tools",
+            isiPesanInti: `Anda menerima pesan aspirasi baru dari pengguna:<br><br><b>Email Pengirim:</b> ${feedbackForm.email}<br><b>Pesan:</b><br>${feedbackForm.message}`
+        });
+        showToast("Terima kasih! Pesan Anda telah terkirim ke sistem.");
+        setFeedbackForm({ email: "", message: "" });
+        setAppMode('auth');
+      };
+
+      const handleBroadcast = async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const msg = fd.get('message');
+        const target = fd.get('target');
+
+        let targetIds = [];
+        if (target === 'instructors' || target === 'all') targetIds.push(...admins.filter(a => !a.isSuper).map(a => a.id));
+        if (target === 'participants' || target === 'all') targetIds.push(...participants.map(p => p.id));
+
+        if (targetIds.length === 0) return showToast("Tidak ada target pengguna.");
+
+        const timeNow = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+        const newNotifs = targetIds.map((id, idx) => ({ id: `n_bc_${Date.now()}_${idx}`, adminId: id, text: `[PENGUMUMAN] ${msg}`, isRead: false, time: timeNow, courseId: null, moduleId: null }));
+
+        await execDbAction(
+            () => {
+                const updatedN = [...newNotifs, ...notifications];
+                setNotifications(updatedN);
+                localStorage.setItem('edu_notifications', JSON.stringify(updatedN));
+            },
+            async () => {
+                for(let n of newNotifs) await setDoc(doc(collection(fbDb, 'notifications'), n.id), n);
+            }
+        );
+        e.target.reset(); showToast("Pengumuman berhasil dikirim ke " + targetIds.length + " pengguna!");
+      };
+
+      const handleSaveFirebaseConfig = () => {
+        try {
+          let str = fbConfigInput.trim();
+          if (str.includes('firebaseConfig')) str = str.substring(str.indexOf('{'), str.lastIndexOf('}') + 1);
+          const configObj = new Function("return " + str)();
+          if (!configObj.apiKey || !configObj.projectId) throw new Error("Missing keys");
+          localStorage.setItem('edu_fb_config', JSON.stringify(configObj)); localStorage.setItem('edu_db_mode', 'firebase'); window.location.reload(); 
+        } catch (e) { setSetupError("Format tidak valid."); }
+      };
+
+      const handleSaveSheetsConfig = () => {
+        if(!sheetsUrlInput.includes("script.google.com")) return setSetupError("URL tidak valid!");
+        localStorage.setItem('edu_sheets_url', sheetsUrlInput.trim()); localStorage.setItem('edu_db_mode', 'sheets'); window.location.reload(); 
+      };
+
+      const handleSwitchToLocal = () => { localStorage.setItem('edu_db_mode', 'local'); window.location.reload(); };
+
+      const handleDownloadSpreadsheetTemplate = () => {
+         const tables = { 'Admins': 'id,username,password,name,isSuper,donationLink', 'Courses': 'id,authorId,code,title,instructor,modules_json,exam_json', 'Participants': 'id,name,email,accessCode', 'Enrollments': 'id,participantId,courseId,completedModules_json,isGraduated,certDownloaded,examScore', 'Notifications': 'id,adminId,text,isRead,time,courseId,moduleId' };
+         Object.keys(tables).forEach((name, i) => {
+            setTimeout(() => {
+                const blob = new Blob([tables[name]], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob);
+                const link = document.createElement('a'); link.href = url; link.download = `Template_${name}.csv`;
+                document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+            }, i * 500); 
+         });
+         showToast("5 File Template diunduh!");
+      };
+
+      if (!dbReady && appMode !== 'setup_db') return <div className="flex flex-col items-center justify-center h-screen bg-slate-50"><Loader2 size={48} className="animate-spin text-indigo-600 mb-4" /><h2 className="text-xl font-bold text-slate-800">Menyiapkan Aplikasi...</h2></div>;
+
+      const ConfirmModal = () => {
+        if (!confirmDialog.isOpen) return null;
+        return (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-600 mx-auto mb-4"><AlertCircle size={32} /></div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Konfirmasi Tindakan</h3><p className="text-sm text-slate-600 mb-6">{confirmDialog.message}</p>
+              <div className="flex space-x-3"><button onClick={() => setConfirmDialog({ isOpen: false })} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl font-medium">Batal</button><button onClick={confirmDialog.onConfirm} className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl font-medium">Ya, Lanjutkan</button></div>
+            </div>
+          </div>
+        );
+      };
+
+      const ManageExamModal = () => {
+        if (!examModalOpen) return null;
+        return (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl flex flex-col max-h-[90vh]">
+                <div className="p-6 border-b flex justify-between items-center bg-slate-50 rounded-t-2xl">
+                    <div><h2 className="text-xl font-bold text-slate-800">Pembuat Ujian Kelulusan</h2><p className="text-sm text-slate-500">Buat 10 Soal Pilihan Ganda & Nilai Target</p></div>
+                    <button onClick={()=>setExamModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={24}/></button>
+                </div>
+                <div className="p-6 overflow-y-auto flex-1 space-y-8">
+                    <div className="bg-amber-50 p-4 rounded-xl border border-amber-200">
+                        <label className="font-bold text-amber-900 block mb-2">Target Minimal Kelulusan (Min. Score)</label>
+                        <input type="number" min="0" max="100" value={examForm.minScore} onChange={e=>setExamForm({...examForm, minScore: parseInt(e.target.value)})} className="w-32 p-2 border border-amber-300 rounded outline-none font-bold text-amber-900 bg-white" />
+                        <span className="ml-3 text-sm text-amber-700">Tiap soal bernilai 10 Poin.</span>
+                    </div>
+                    {examForm.questions.map((q, idx) => (
+                        <div key={idx} className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <label className="font-bold text-slate-800 block mb-2">Soal {idx+1}</label>
+                            <input type="text" maxLength={200} value={q.q} onChange={e=>{const newQ = [...examForm.questions]; newQ[idx].q = e.target.value; setExamForm({...examForm, questions: newQ});}} className="w-full p-2 mb-3 border rounded outline-none focus:border-indigo-500" placeholder="Pertanyaan..." required />
+                            <div className="grid grid-cols-2 gap-2 mb-3">
+                                {q.options.map((opt, optIdx) => (
+                                    <input key={optIdx} type="text" maxLength={100} value={opt} onChange={e=>{const newQ = [...examForm.questions]; newQ[idx].options[optIdx] = e.target.value; setExamForm({...examForm, questions: newQ});}} className="w-full p-2 border rounded outline-none focus:border-indigo-500 text-sm" placeholder={`Opsi Jawaban ${optIdx+1}`} required />
+                                ))}
+                            </div>
+                            <label className="text-sm font-medium text-slate-600 mr-2">Jawaban Benar:</label>
+                            <select value={q.answer} onChange={e=>{const newQ = [...examForm.questions]; newQ[idx].answer = parseInt(e.target.value); setExamForm({...examForm, questions: newQ});}} className="p-1 border rounded text-sm outline-none focus:border-indigo-500 bg-white">
+                                {q.options.map((_, optIdx) => <option key={optIdx} value={optIdx}>Opsi {optIdx+1}</option>)}
+                            </select>
+                        </div>
+                    ))}
+                </div>
+                <div className="p-6 border-t bg-white rounded-b-2xl flex justify-end gap-3"><button onClick={()=>setExamModalOpen(false)} className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium">Batal</button><button onClick={handleSaveExam} className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium">Simpan Soal Ujian</button></div>
+            </div>
+          </div>
+        )
+      };
+
+      if (appMode === 'feedback') {
+        const superAdmin = admins.find(a => a.isSuper) || { donationLink: 'https://saweria.co' };
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 p-4 sm:p-8">
+               <ConfirmModal />{toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"><CheckCircle2 size={20}/><span>{toast}</span></div>}
+               <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
+                   <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center">
+                       <button onClick={() => setAppMode('auth')} className="self-start mb-8 text-slate-500 hover:text-indigo-600 flex items-center font-medium transition"><ArrowLeft size={20} className="mr-2"/> Kembali ke Login</button>
+                       <h2 className="text-3xl font-bold text-slate-900 mb-2">Suara Anda Berharga</h2>
+                       <p className="text-slate-500 mb-8">Kirimkan kritik, saran, atau masukan langsung ke tim pengembang kami.</p>
+                       <form onSubmit={handleSendFeedback} className="space-y-5">
+                           <div>
+                               <label className="block text-sm font-semibold text-slate-700 mb-2">Alamat Email Anda</label>
+                               <input type="email" required value={feedbackForm.email} onChange={e=>setFeedbackForm({...feedbackForm, email: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition" placeholder="email@contoh.com" />
+                           </div>
+                           <div>
+                               <label className="block text-sm font-semibold text-slate-700 mb-2">Pesan & Aspirasi</label>
+                               <textarea required rows="4" value={feedbackForm.message} onChange={e=>setFeedbackForm({...feedbackForm, message: e.target.value})} className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-600 focus:border-transparent outline-none transition resize-none" placeholder="Tuliskan pesan Anda di sini..."></textarea>
+                           </div>
+                           <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl font-bold text-lg transition shadow-lg shadow-indigo-200">Kirim Pesan</button>
+                       </form>
+                   </div>
+                   <div className="w-full md:w-1/2 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-8 md:p-12 flex flex-col items-center justify-center text-center text-white relative overflow-hidden">
+                       <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
+                       <div className="relative z-10 flex flex-col items-center">
+                           <div className="w-24 h-24 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mb-6 shadow-2xl border border-white/30 text-pink-300 animate-pulse">
+                               <Coffee size={48} weight="fill" />
+                           </div>
+                           <h2 className="text-4xl font-extrabold mb-4 leading-tight text-white drop-shadow-lg">Dukung Kami <br/>Terus Berkembang</h2>
+                           <p className="text-indigo-100 mb-8 text-lg font-medium">Apresiasi Anda adalah bahan bakar utama kami untuk terus menyempurnakan platform EduLearn menjadi lebih baik setiap harinya.</p>
+                           <a href={superAdmin.donationLink || "#"} target={superAdmin.donationLink ? "_blank" : "_self"} rel="noopener noreferrer" className="inline-block bg-white text-indigo-600 hover:bg-indigo-50 px-8 py-4 rounded-full font-bold text-lg transition shadow-[0_0_40px_rgba(255,255,255,0.4)] hover:shadow-[0_0_60px_rgba(255,255,255,0.6)] transform hover:-translate-y-1">
+                               💖 Berikan Dukungan
+                           </a>
+                       </div>
+                   </div>
+               </div>
+            </div>
+        );
+      }
+
+      if (appMode === 'setup_db') {
+        return (
+          <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4">
+            <ConfirmModal />{toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"><CheckCircle2 size={20}/><span>{toast}</span></div>}
+            <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-xl border border-slate-100">
+              <div className="flex flex-col items-center mb-6 text-center"><div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-4"><Globe size={32} /></div><h1 className="text-2xl font-bold text-slate-900">EduLearn by SenTools Database</h1><p className="text-slate-500 mt-2 text-sm">Aplikasi ini mendukung penyimpanan Cloud menggunakan Firebase.</p></div>
+              {setupError && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">{setupError}</div>}
+              <div className="space-y-4">
+                <textarea value={fbConfigInput} onChange={e => setFbConfigInput(e.target.value)} className="w-full h-32 p-4 border border-slate-300 rounded-xl outline-none focus:border-blue-500 font-mono text-sm bg-slate-50" placeholder="Paste Firebase Config Object di sini..."></textarea>
+                <button onClick={handleSaveFirebaseConfig} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium shadow-md">Hubungkan ke Firebase</button>
+                <div className="relative flex py-2 items-center"><div className="flex-grow border-t border-slate-200"></div><span className="mx-4 text-slate-400 text-xs">ATAU</span><div className="flex-grow border-t border-slate-200"></div></div>
+                <div className="bg-emerald-50 p-5 rounded-xl border border-emerald-200">
+                  <h3 className="font-bold text-emerald-800 mb-2 flex items-center"><Database size={18} className="mr-2"/> Opsi Spreadsheet</h3>
+                  <input type="url" value={sheetsUrlInput} onChange={e => setSheetsUrlInput(e.target.value)} className="w-full p-3 mb-3 border border-emerald-300 rounded-lg text-sm outline-none focus:border-emerald-500 bg-white" placeholder="URL Apps Script Exec..." />
+                  <div className="flex gap-2"><button onClick={handleSaveSheetsConfig} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-lg font-medium text-sm">Hubungkan</button><button onClick={handleDownloadSpreadsheetTemplate} className="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-4 py-2.5 rounded-lg" title="Download Template CSV"><Download size={18}/></button></div>
+                </div>
+                <div className="relative flex py-2 items-center"><div className="flex-grow border-t border-slate-200"></div><span className="mx-4 text-slate-400 text-xs">ATAU</span><div className="flex-grow border-t border-slate-200"></div></div>
+                <button onClick={handleSwitchToLocal} className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-medium flex items-center justify-center space-x-2"><HardDrives size={20} /><span>Lanjutkan Offline (Local Storage)</span></button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      if (appMode === 'auth') {
+        return (
+          <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4">
+            <ConfirmModal />
+            <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100">
+              <div className="flex flex-col items-center mb-6"><div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 mb-4"><Lock size={32} /></div><h1 className="text-2xl font-bold text-slate-900">EduLearn by SenTools</h1><p className="text-slate-500 text-center mt-2 text-sm">Masuk untuk melanjutkan ke dashboard.</p></div>
+              {admins.length === 0 && (<div className="mb-4 bg-amber-50 border border-amber-200 p-4 rounded-xl text-center"><p className="text-sm text-amber-800 mb-3 font-medium">Database kosong.</p><button onClick={handleSeedDatabase} disabled={isLoggingIn} className="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold w-full shadow-sm">Inisialisasi Database Bawaan</button></div>)}
+              {loginError && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg text-center">{loginError}</div>}
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="relative"><div className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><UserIcon size={18} /></div><input required value={loginInput.username} onChange={(e) => setLoginInput({...loginInput, username: e.target.value})} className="pl-10 w-full px-4 py-2 border rounded-xl outline-none focus:border-indigo-500" placeholder="Email / Username" /></div>
+                <div className="relative"><div className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><Key size={18} /></div><input required type="password" value={loginInput.password} onChange={(e) => setLoginInput({...loginInput, password: e.target.value})} className="pl-10 w-full px-4 py-2 border rounded-xl outline-none focus:border-indigo-500" placeholder="Kode Akses / Password" /></div>
+                <button type="submit" disabled={isLoggingIn || admins.length === 0} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-medium flex justify-center">{isLoggingIn ? <Loader2 size={20} className="animate-spin" /> : "Masuk ke Sistem"}</button>
+              </form>
+              <div className="mt-6 border-t border-slate-100 pt-6 text-center">
+                 <button onClick={() => setAppMode('feedback')} className="text-sm font-bold text-indigo-600 hover:text-indigo-700 transition flex items-center justify-center w-full bg-indigo-50 hover:bg-indigo-100 py-3 rounded-xl">
+                     <MessageSquare size={18} className="mr-2" /> Kirimkan Suara / Aspirasi Anda
+                 </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      if (appMode === 'super_dashboard') {
+        const regularAdmins = admins.filter(a => !a.isSuper);
+        const filteredAdmins = regularAdmins.filter(a => a.name.toLowerCase().includes(searchInst.toLowerCase()) || a.username.toLowerCase().includes(searchInst.toLowerCase()));
+        const filteredCourses = courses.filter(c => c.title.toLowerCase().includes(searchCourse.toLowerCase()) || c.code.toLowerCase().includes(searchCourse.toLowerCase()) || c.instructor.toLowerCase().includes(searchCourse.toLowerCase()));
+        const allEnrs = enrollments.map(enr => { const p = participants.find(x => x.id === enr.participantId); const c = courses.find(x => x.id === enr.courseId); return { ...enr, pName: p?.name||'', pEmail: p?.email||'', cTitle: c?.title||'', prog: calcProgress(enr,c) }; });
+        const filteredEnrs = allEnrs.filter(e => e.pName.toLowerCase().includes(searchPart.toLowerCase()) || e.cTitle.toLowerCase().includes(searchPart.toLowerCase()));
+
+        return (
+          <div className="min-h-screen bg-slate-50 flex flex-col">
+            <ConfirmModal />{toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"><CheckCircle2 size={20}/><span>{toast}</span></div>}
+            <header className="bg-slate-900 text-white px-6 py-4 flex flex-col sm:flex-row items-center justify-between z-20 gap-4">
+              <div className="flex items-center space-x-3">
+                <ShieldCheck size={28} className="text-amber-400" />
+                <div className="flex items-center flex-wrap gap-2"><h1 className="text-xl font-bold">EduLearn by SenTools</h1><span className="bg-slate-800 text-amber-400 text-xs px-2.5 py-1 rounded-md font-bold tracking-wider uppercase border border-slate-700">Super Admin</span></div>
+              </div>
+              <div className="flex space-x-2 bg-slate-800 p-1 rounded-lg">
+                <button onClick={() => setSuperTab('instructors')} className={`px-4 py-2 rounded-md text-sm font-medium flex items-center ${superTab==='instructors'?'bg-amber-500 text-slate-900':'text-slate-300'}`}><Users size={16} className="mr-1"/> Instruktur</button>
+                <button onClick={() => setSuperTab('courses')} className={`px-4 py-2 rounded-md text-sm font-medium flex items-center ${superTab==='courses'?'bg-amber-500 text-slate-900':'text-slate-300'}`}><BookOpen size={16} className="mr-1"/> Kursus</button>
+                <button onClick={() => setSuperTab('participants')} className={`px-4 py-2 rounded-md text-sm font-medium flex items-center ${superTab==='participants'?'bg-amber-500 text-slate-900':'text-slate-300'}`}><GraduationCap size={16} className="mr-1"/> Peserta</button>
+                <button onClick={() => setSuperTab('broadcast')} className={`px-4 py-2 rounded-md text-sm font-medium flex items-center ${superTab==='broadcast'?'bg-amber-500 text-slate-900':'text-slate-300'}`}><Bell size={16} className="mr-1"/> Pengumuman</button>
+              </div>
+              <div className="flex items-center space-x-4">
+                  <button onClick={() => setAppMode('setup_db')} className="flex items-center space-x-2 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg shadow-sm text-xs font-medium text-slate-300 hover:bg-slate-700 transition" title="Pengaturan Database">
+                      <span className={`w-2 h-2 rounded-full ${dbMode === 'local' ? 'bg-slate-500' : 'bg-green-500'}`}></span>
+                      <span className="hidden sm:inline">{dbMode === 'local' ? 'Offline' : 'Online'} - Set DB</span>
+                  </button>
+                  <span className="text-sm font-bold text-amber-400">{session.data.name}</span>
+                  <button onClick={handleLogout} className="p-2 hover:bg-red-500/20 rounded-lg text-red-400"><LogOut size={20} /></button>
+              </div>
+            </header>
+            <div className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full">
+              {superTab === 'instructors' && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-fit">
+                    <h2 className="font-bold text-slate-800 mb-4"><PlusCircle size={18} className="inline mr-2 text-indigo-600" />Tambah Instruktur</h2>
+                    <form onSubmit={handleRegisterAdmin} className="space-y-3">
+                      <input name="name" required className="w-full p-2 text-sm border rounded outline-none focus:border-indigo-500" placeholder="Nama Lengkap"/>
+                      <input name="username" required className="w-full p-2 text-sm border rounded outline-none focus:border-indigo-500" placeholder="Username"/>
+                      <input name="password" required className="w-full p-2 text-sm border rounded outline-none focus:border-indigo-500" defaultValue="GURU123" placeholder="Password"/>
+                      <button type="submit" className="w-full bg-slate-900 text-white py-2 rounded font-medium">Buat Akun</button>
+                    </form>
+                  </div>
+                  <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <div className="flex justify-between items-center mb-4"><h2 className="font-bold text-slate-800">Daftar Instruktur</h2><input type="text" placeholder="Cari..." value={searchInst} onChange={e=>setSearchInst(e.target.value)} className="p-1.5 text-sm border rounded-lg outline-none focus:border-indigo-500"/></div>
+                    <table className="w-full text-left text-sm whitespace-nowrap"><thead className="bg-slate-100 text-slate-600"><tr><th className="p-3">Nama</th><th className="p-3">Username</th><th className="p-3 text-right">Aksi</th></tr></thead><tbody className="divide-y divide-slate-100">
+                          {filteredAdmins.map(adm => (<tr key={adm.id} className="hover:bg-slate-50"><td className="p-3">{adm.name}</td><td className="p-3 font-mono">{adm.username}</td><td className="p-3 text-right"><button onClick={()=>handleDeleteAdmin(adm.id)} className="text-red-500 hover:bg-red-50 p-2 rounded"><Trash2 size={18}/></button></td></tr>))}
+                    </tbody></table>
+                  </div>
+                </div>
+              )}
+              {superTab === 'courses' && (
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                  <div className="flex justify-between items-center mb-4"><h2 className="font-bold text-slate-800">Semua Kursus</h2><input type="text" placeholder="Cari Kursus..." value={searchCourse} onChange={e=>setSearchCourse(e.target.value)} className="p-1.5 text-sm border rounded-lg outline-none"/></div>
+                  <div className="overflow-x-auto"><table className="w-full text-left text-sm whitespace-nowrap"><thead className="bg-slate-100 text-slate-600"><tr><th className="p-3">Kode</th><th className="p-3">Nama</th><th className="p-3">Instruktur</th><th className="p-3 text-right">Aksi</th></tr></thead><tbody className="divide-y divide-slate-100">
+                          {filteredCourses.map(crs => (<tr key={crs.id} className="hover:bg-slate-50"><td className="p-3 font-mono">{crs.code}</td><td className="p-3 font-medium">{crs.title}</td><td className="p-3">{crs.instructor}</td><td className="p-3 text-right"><button onClick={() => jumpToClassroom(crs.id)} className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded mr-2">Masuk</button><button onClick={() => handleDeleteCourseSuper(crs.id)} className="text-xs bg-red-100 text-red-600 px-3 py-1.5 rounded">Hapus</button></td></tr>))}
+                  </tbody></table></div>
+                </div>
+              )}
+              {superTab === 'participants' && (
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                  <div className="flex justify-between items-center mb-4"><h2 className="font-bold text-slate-800">Progress Global</h2><input type="text" placeholder="Cari Peserta..." value={searchPart} onChange={e=>setSearchPart(e.target.value)} className="p-1.5 text-sm border rounded-lg outline-none"/></div>
+                  <div className="overflow-x-auto"><table className="w-full text-left text-sm whitespace-nowrap"><thead className="bg-slate-100 text-slate-600"><tr><th className="p-3">Nama</th><th className="p-3">Kursus</th><th className="p-3">Progress</th><th className="p-3">Nilai</th><th className="p-3">Status</th></tr></thead><tbody className="divide-y divide-slate-100">
+                          {filteredEnrs.map((enr, i) => (<tr key={i} className="hover:bg-slate-50"><td className="p-3">{enr.pName}</td><td className="p-3 font-medium">{enr.cTitle}</td><td className="p-3">{enr.prog}%</td><td className="p-3 font-bold">{enr.examScore ?? '-'}</td><td className="p-3">{enr.isGraduated ? 'Lulus' : 'Belajar'}</td></tr>))}
+                  </tbody></table></div>
+                </div>
+              )}
+              {superTab === 'broadcast' && (
+                <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200 max-w-3xl mx-auto">
+                    <div className="flex items-center space-x-4 mb-6 pb-6 border-b border-slate-100">
+                        <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center"><Bell size={24} weight="fill"/></div>
+                        <div><h2 className="text-2xl font-bold text-slate-800">Pengumuman Global</h2><p className="text-slate-500 text-sm">Kirim pesan notifikasi ke dashboard peserta maupun instruktur.</p></div>
+                    </div>
+                    <form onSubmit={handleBroadcast} className="space-y-5">
+                        <div>
+                            <label className="block font-bold text-slate-700 mb-2">Pilih Penerima Pengumuman</label>
+                            <select name="target" required className="w-full p-3 border border-slate-300 rounded-xl outline-none focus:border-amber-500 bg-slate-50">
+                                <option value="all">Semua Pengguna (Instruktur & Peserta)</option>
+                                <option value="instructors">Hanya Instruktur</option>
+                                <option value="participants">Hanya Peserta</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block font-bold text-slate-700 mb-2">Isi Pesan / Pengumuman</label>
+                            <textarea name="message" required rows="5" className="w-full p-3 border border-slate-300 rounded-xl outline-none focus:border-amber-500 resize-none" placeholder="Tuliskan pesan yang ingin disampaikan secara massal..."></textarea>
+                        </div>
+                        <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl font-bold text-lg transition shadow-md">Kirim Pengumuman Sekarang</button>
+                    </form>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      if (appMode === 'admin_dashboard') {
+        const myCourses = courses.filter(c => c.authorId === session.data.id);
+        const myNotifs = notifications.filter(n => n.adminId === session.data.id);
+        const unread = myNotifs.filter(n => !n.isRead).length;
+        const myEnrollments = enrollments.filter(e => myCourses.some(c=>c.id === e.courseId));
+
+        return (
+          <div className="min-h-screen flex flex-col bg-slate-50">
+            <ConfirmModal /><ManageExamModal />{toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"><CheckCircle2 size={20}/><span>{toast}</span></div>}
+            <header className="bg-slate-900 text-white px-6 py-4 flex flex-col sm:flex-row items-center justify-between z-20 gap-4">
+              <div className="flex items-center space-x-2">
+                <Database size={28} className="text-indigo-400" />
+                <div className="flex items-center flex-wrap gap-2"><h1 className="text-xl font-bold">EduLearn by SenTools</h1><span className="bg-slate-800 text-indigo-400 text-xs px-2.5 py-1 rounded-md font-bold tracking-wider uppercase border border-slate-700">Admin</span></div>
+              </div>
+              <div className="flex space-x-2 bg-slate-800 p-1 rounded-lg overflow-x-auto max-w-full">
+                <button onClick={() => setAdminTab('courses')} className={`px-4 py-2 rounded-md text-sm font-medium flex items-center ${adminTab==='courses'?'bg-indigo-600':'text-slate-300'}`}><Book size={16} className="mr-1"/> Kursus</button>
+                <button onClick={() => setAdminTab('participants')} className={`px-4 py-2 rounded-md text-sm font-medium flex items-center ${adminTab==='participants'?'bg-indigo-600':'text-slate-300'}`}><Users size={16} className="mr-1"/> Peserta</button>
+                <button onClick={() => { setAdminTab('notifications'); markNotifsRead(); }} className={`px-4 py-2 rounded-md text-sm font-medium flex items-center relative ${adminTab==='notifications'?'bg-indigo-600':'text-slate-300'}`}><Bell size={16} className="mr-1"/> Pesan {unread > 0 && <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">{unread}</span>}</button>
+                <button onClick={() => setAdminTab('profile')} className={`px-4 py-2 rounded-md text-sm font-medium flex items-center ${adminTab==='profile'?'bg-indigo-600':'text-slate-300'}`}><UserIcon size={16} className="mr-1"/> Profil</button>
+              </div>
+              <div className="flex items-center space-x-4"><span className="text-sm font-bold text-slate-300">{session.data.name}</span><button onClick={handleLogout} className="p-2 hover:bg-red-500/20 rounded-lg text-red-400"><LogOut size={20} /></button></div>
+            </header>
+
+            <div className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full">
+              {adminTab === 'courses' && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-1 space-y-6">
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                      <h2 className="font-bold text-slate-800 mb-4"><PlusCircle size={18} className="inline mr-2 text-indigo-600" />Buat Kursus</h2>
+                      <form onSubmit={handleCreateCourse} className="space-y-3">
+                        <div className="flex gap-2"><input name="code" id="crscode" required maxLength={10} className="w-full p-2 text-sm border rounded outline-none focus:border-indigo-500" placeholder="Kode Unik"/><button type="button" onClick={()=>document.getElementById('crscode').value = generateRandomCode("CR")} className="bg-slate-200 px-2 rounded"><RefreshCw size={14}/></button></div>
+                        <input name="title" required maxLength={60} className="w-full p-2 text-sm border rounded outline-none focus:border-indigo-500" placeholder="Nama Kursus (Maks 60 Karakter)"/>
+                        <input name="inst" defaultValue={session.data.name} required className="w-full p-2 text-sm border rounded outline-none focus:border-indigo-500" placeholder="Nama Instruktur"/>
+                        <button type="submit" className="w-full bg-slate-900 text-white py-2 rounded font-medium">Buat Kursus</button>
+                      </form>
+                    </div>
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                      <h2 className="font-bold text-slate-800 mb-4"><Video size={18} className="inline mr-2 text-indigo-600" />Tambah Materi</h2>
+                      <form onSubmit={handleCreateModule} className="space-y-3">
+                        <select name="courseId" required className="w-full p-2 text-sm border rounded bg-white" defaultValue=""><option value="" disabled>-- Pilih Kursus --</option>{myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
+                        <input name="title" required maxLength={60} className="w-full p-2 text-sm border rounded" placeholder="Judul Materi"/>
+                        <input name="vidUrl" required type="url" className="w-full p-2 text-sm border rounded" placeholder="URL YouTube Embed"/>
+                        <textarea name="desc" required maxLength={300} className="w-full p-2 text-sm border rounded resize-none" placeholder="Deskripsi (Maks 300)"/>
+                        <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded font-medium">Simpan Video</button>
+                      </form>
+                    </div>
+                  </div>
+                  <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h2 className="font-bold text-slate-800 mb-4"><BookOpen size={18} className="inline mr-2 text-indigo-600" />Katalog Kursus</h2>
+                    {myCourses.map(course => (
+                      <div key={course.id} className="mb-6 border border-slate-200 rounded-xl overflow-hidden">
+                        <div className="bg-slate-100 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                          <div><span className="font-mono text-xs bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded mr-2">{course.code}</span><h3 className="font-bold inline">{course.title}</h3></div>
+                          <div className="flex space-x-2 w-full sm:w-auto">
+                              <button onClick={() => openExamBuilder(course.id)} className="text-xs bg-amber-500 px-3 py-2 rounded-lg font-bold"><CheckSquareOffset size={14} className="inline mr-1"/> Ujian</button>
+                              <button onClick={() => handleSafeDeleteCourse(course.id)} className="text-xs bg-red-100 text-red-600 px-3 py-2 rounded-lg"><Trash2 size={14}/></button>
+                              <button onClick={() => jumpToClassroom(course.id)} className="text-xs bg-indigo-600 text-white px-3 py-2 rounded-lg font-bold">Masuk Kelas</button>
+                          </div>
+                        </div>
+                        <div className="p-4 space-y-2">
+                          {course.modules.length === 0 ? <p className="text-sm text-slate-400 italic">Belum ada materi.</p> : course.modules.map((m, i) => (
+                            <div key={m.id} className="flex justify-between items-center text-sm border-b pb-2"><span className="flex items-center"><PlayCircle size={14} className="mr-2 text-slate-400"/> {i+1}. {m.title}</span><button onClick={()=>handleDeleteModule(course.id, m.id)} className="text-red-500 p-1 hover:bg-red-50 rounded"><Trash2 size={14}/></button></div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {adminTab === 'participants' && (
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                  <div className="lg:col-span-1 space-y-6">
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                      <h2 className="font-bold text-slate-800 mb-4"><PlusCircle size={18} className="inline mr-2 text-emerald-600" />Daftar Peserta Baru</h2>
+                      <form onSubmit={handleRegisterParticipant} className="space-y-3">
+                        <input name="name" required className="w-full p-2 text-sm border rounded" placeholder="Nama Lengkap"/>
+                        <input name="email" required type="email" className="w-full p-2 text-sm border rounded" placeholder="Email"/>
+                        <div className="flex gap-2"><input name="code" id="ptcode" required className="w-full p-2 text-sm border rounded font-mono" placeholder="Kode"/><button type="button" onClick={()=>document.getElementById('ptcode').value = generateRandomCode()} className="bg-slate-200 px-2 rounded"><RefreshCw size={14}/></button></div>
+                        <select name="courseId" required className="w-full p-2 text-sm border rounded bg-white" defaultValue=""><option value="" disabled>-- Pilih Kursus --</option>{myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
+                        <button type="submit" className="w-full bg-emerald-600 text-white py-2 rounded">Buat Akun</button>
+                      </form>
+                    </div>
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-indigo-500">
+                      <h2 className="font-bold text-slate-800 mb-4"><Users size={18} className="inline mr-2 text-indigo-600" />Peserta Lama</h2>
+                      <form onSubmit={handleEnrollExisting} className="space-y-3">
+                        <input name="email" required type="email" className="w-full p-2 text-sm border rounded" placeholder="Email Peserta" />
+                        <select name="cId" required className="w-full p-2 text-sm border rounded bg-white" defaultValue=""><option value="" disabled>-- Pilih Kursus --</option>{myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
+                        <button type="submit" className="w-full bg-indigo-600 text-white py-2 rounded">Tambahkan</button>
+                      </form>
+                    </div>
+                  </div>
+                  <div className="lg:col-span-3 bg-white p-6 rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+                    <h2 className="font-bold text-slate-800 mb-4"><GraduationCap size={18} className="inline mr-2 text-indigo-600" />Progress Kelas Anda</h2>
+                    <table className="w-full text-left text-sm whitespace-nowrap"><thead className="bg-slate-100 text-slate-600"><tr><th className="p-3">Peserta</th><th className="p-3">Kode</th><th className="p-3">Kursus</th><th className="p-3">Progress</th><th className="p-3">Nilai</th><th className="p-3">Status</th></tr></thead><tbody className="divide-y divide-slate-100">
+                        {myEnrollments.map(enr => {
+                          const part = participants.find(p => p.id === enr.participantId); const crs = courses.find(c => c.id === enr.courseId); const prog = calcProgress(enr, crs); if(!part || !crs) return null;
+                          return (<tr key={enr.id} className="hover:bg-slate-50"><td className="p-3 font-medium text-slate-800">{part.name}</td><td className="p-3 font-mono">{part.accessCode}</td><td className="p-3">{crs.title}</td><td className="p-3">{prog}%</td><td className="p-3 font-bold">{enr.examScore ?? '-'}</td><td className="p-3">{enr.certDownloaded ? 'Lulus/Diunduh' : enr.isGraduated ? 'Lulus' : 'Berproses'}</td></tr>)
+                        })}
+                    </tbody></table>
+                  </div>
+                </div>
+              )}
+
+              {adminTab === 'profile' && (
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-lg mx-auto">
+                  <h2 className="font-bold text-slate-800 mb-4"><Coffee size={18} className="inline mr-2 text-amber-600" /> Pengaturan Profil (Apresiasi)</h2>
+                  <p className="text-sm text-slate-600 mb-6">Tambahkan link donasi (Trakteer/Saweria). Tombol akan muncul jika peserta lulus.</p>
+                  <form onSubmit={handleUpdateProfile} className="space-y-4">
+                      <input type="url" value={profileForm.donationLink} onChange={e=>setProfileForm({donationLink: e.target.value})} className="w-full p-3 border rounded-xl" placeholder="https://trakteer.id/..." />
+                      <button type="submit" className="w-full bg-amber-500 text-slate-900 py-3 rounded-xl font-bold">Simpan Profil</button>
+                  </form>
+                </div>
+              )}
+              {adminTab === 'notifications' && (
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-3xl mx-auto">
+                  <h2 className="font-bold text-slate-800 mb-6"><Bell size={18} className="inline mr-2 text-indigo-600" /> Inbox Pesan</h2>
+                  {myNotifs.map(n => (<div key={n.id} className={`flex justify-between p-4 rounded-xl border mb-3 ${n.isRead ? 'bg-slate-50' : 'bg-indigo-50'}`}><div><p className="text-sm font-medium">{n.text}</p><p className="text-xs text-slate-500">{n.time}</p></div>{n.courseId && <button onClick={() => jumpToClassroom(n.courseId, n.moduleId)} className="text-xs bg-indigo-600 text-white px-4 py-2 rounded-lg h-fit">Balas</button>}</div>))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      if (appMode === 'part_dashboard') {
+        const myEnrs = enrollments.filter(e => e.participantId === session.data.id);
+        const myNotifs = notifications.filter(n => n.adminId === session.data.id && !n.isRead);
+        
+        return (
+          <div className="min-h-screen flex flex-col bg-slate-50">
+            <ConfirmModal />
+            <header className="bg-white border-b px-6 py-4 flex justify-between shadow-sm">
+              <div className="flex items-center text-indigo-600"><BookOpen size={28} className="mr-2"/><h1 className="text-2xl font-bold">EduLearn</h1></div>
+              <div className="flex items-center space-x-4"><p className="text-sm font-bold text-slate-800">{session.data.name}</p><button onClick={handleLogout} className="p-2 text-red-500"><LogOut size={20} /></button></div>
+            </header>
+            <main className="flex-1 p-6 lg:p-10 max-w-6xl mx-auto w-full">
+              {myNotifs.length > 0 && (
+                  <div className="mb-8 space-y-3">
+                      {myNotifs.map(n => (
+                          <div key={n.id} className="bg-gradient-to-r from-amber-100 to-amber-50 border border-amber-300 p-4 rounded-xl flex justify-between items-center shadow-sm">
+                              <div className="flex items-center space-x-4">
+                                  <div className="bg-amber-500 p-2 rounded-lg text-white"><Bell size={20} weight="fill" /></div>
+                                  <div><p className="font-bold text-amber-900 leading-tight">{n.text}</p><p className="text-xs text-amber-600 mt-1">{n.time}</p></div>
+                              </div>
+                              <button onClick={() => dismissNotif(n.id)} className="bg-white text-amber-700 hover:bg-amber-200 border border-amber-300 px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition whitespace-nowrap ml-4">Tandai Dibaca</button>
+                          </div>
+                      ))}
+                  </div>
+              )}
+              
+              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-8 mb-10 text-white shadow-xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 opacity-10 transform translate-x-10 -translate-y-10"><BookOpen size={200} /></div>
+                  <div className="relative z-10">
+                      <h2 className="text-3xl font-bold mb-2">Halo, {session.data.name.split(' ')[0]}! 👋</h2>
+                      <p className="text-indigo-100 text-lg">Terus semangat! Setiap modul yang kamu selesaikan membawamu lebih dekat ke sertifikat kelulusan.</p>
+                  </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {myEnrs.map(enr => {
+                  const course = courses.find(c => c.id === enr.courseId); if (!course) return null; const prog = calcProgress(enr, course);
+                  
+                  let statusText = "Mulai Belajar";
+                  if (prog > 0 && prog < 100) statusText = "Lanjutkan Belajar";
+                  if (prog === 100 && !enr.isGraduated) statusText = "Ujian Akhir Kelas";
+                  if (enr.isGraduated) statusText = "Lihat Sertifikat";
+
+                  return (
+                    <div key={enr.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col hover:shadow-md transition">
+                      <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 mb-4"><Video size={24} /></div>
+                      <h3 className="text-lg font-bold mb-1 text-slate-800">{course.title}</h3><p className="text-sm text-slate-500 mb-6 flex-1">Pengajar: {course.instructor}</p>
+                      
+                      <div className="mb-6">
+                        <div className="flex justify-between text-xs mb-2 font-bold text-slate-600">
+                            <span>{prog === 100 ? 'Materi Selesai!' : `${prog}% Selesai`}</span>
+                            <span className="text-indigo-600">{enr.completedModules.length} / {course.modules.length} Modul</span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-2.5"><div className={`h-2.5 rounded-full ${prog === 100 ? 'bg-emerald-500' : 'bg-indigo-500'}`} style={{ width: `${prog}%` }}></div></div>
+                      </div>
+
+                      <button onClick={() => jumpToClassroom(course.id)} className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center space-x-2 transition ${enr.isGraduated ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200' : prog === 100 ? 'bg-amber-500 hover:bg-amber-600 text-slate-900 shadow-lg shadow-amber-200' : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200'}`}>
+                          {enr.isGraduated ? <Award size={20}/> : prog === 100 ? <CheckSquareOffset size={20}/> : <PlayCircle size={20}/>} 
+                          <span>{statusText}</span>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </main>
+          </div>
+        );
+      }
+
+      if (appMode === 'classroom') {
+        const isStudent = session.role === 'participant';
+        const myEnr = isStudent ? enrollments.find(e => e.participantId === session.data.id && e.courseId === activeCourse.id) : null;
+        const prog = isStudent ? calcProgress(myEnr, activeCourse) : 0;
+        const instructorData = admins.find(a => a.id === activeCourse.authorId);
+
+        return (
+          <div className="flex flex-col h-screen bg-slate-50">
+            <ConfirmModal />{toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"><CheckCircle2 size={20} /><span>{toast}</span></div>}
+            <header className="bg-white border-b px-4 py-3 flex items-center justify-between shrink-0 shadow-sm z-50">
+              <div className="flex items-center space-x-4">
+                  <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="lg:hidden text-slate-600"><Menu size={24} /></button>
+                  <h1 className="text-xl font-bold truncate text-indigo-600"><BookOpen size={24} className="inline mr-2"/>{activeCourse.title}</h1>
+              </div>
+              <button onClick={() => { if(!session) return setAppMode('auth'); setAppMode(session.role === 'super_admin' ? 'super_dashboard' : isStudent ? 'part_dashboard' : 'admin_dashboard'); }} className="flex items-center text-sm bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg font-medium">
+                  <ArrowLeft size={16} className="mr-2"/>Keluar
+              </button>
+            </header>
+
+            <div className="flex flex-1 overflow-hidden relative">
+              <aside className={`absolute lg:static w-80 bg-white border-r h-full z-40 flex flex-col transition-transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+                <div className="p-4 border-b"><h2 className="font-semibold text-slate-800">Daftar Materi</h2>{isStudent && <div className="mt-3 w-full bg-slate-200 rounded-full h-2"><div className="bg-emerald-500 h-2 rounded-full" style={{ width: `${prog}%` }}></div></div>}</div>
+                <div className="overflow-y-auto flex-1 p-2">
+                  {activeCourse.modules.map((mod, index) => {
+                    const isComp = isStudent ? myEnr.completedModules.includes(mod.id) : false;
+                    const isUnlck = !isStudent || index === 0 || myEnr.completedModules.includes(activeCourse.modules[index - 1].id);
+                    return (<button key={mod.id} disabled={!isUnlck} onClick={() => { setClassroomMode('video'); setActiveModule(mod); setIsSidebarOpen(false); }} className={`w-full text-left p-3 mb-1 rounded-lg flex items-start space-x-3 ${!isUnlck ? 'opacity-50 bg-slate-50 cursor-not-allowed' : activeModule.id === mod.id && classroomMode==='video' ? 'bg-indigo-50 border border-indigo-100' : 'hover:bg-slate-50'}`}>{!isUnlck ? <Lock size={18} className="text-slate-400 mt-0.5 shrink-0" /> : isComp ? <CheckCircle2 size={18} className="text-emerald-500 mt-0.5 shrink-0" /> : <PlayCircle size={18} className={`mt-0.5 shrink-0 ${activeModule.id === mod.id && classroomMode==='video' ? 'text-indigo-600' : 'text-slate-400'}`} />}<div className="flex-1 min-w-0"><p className={`text-sm font-medium leading-snug truncate ${!isUnlck ? 'text-slate-500' : 'text-slate-700'}`}>{index + 1}. {mod.title}</p></div></button>);
+                  })}
+                  {isStudent && prog === 100 && activeCourse.exam && (
+                      <button onClick={() => { setIsSidebarOpen(false); setClassroomMode(myEnr.isGraduated ? 'result' : 'exam'); }} className={`w-full mt-4 text-left p-3 rounded-lg flex items-center space-x-3 font-bold border-2 ${myEnr.isGraduated ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-amber-50 border-amber-200 text-amber-700'}`}>{myEnr.isGraduated ? <Award size={20} className="shrink-0"/> : <CheckSquareOffset size={20} className="shrink-0"/>}<span className="truncate">{myEnr.isGraduated ? 'Sertifikat Kelulusan' : 'Ujian Akhir Kelas'}</span></button>
+                  )}
+                </div>
+              </aside>
+
+              <main className="flex-1 overflow-y-auto bg-slate-50 relative z-20">
+                <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+                  {classroomMode === 'video' && (
+                      <>
+                        <div className="relative w-full rounded-2xl overflow-hidden shadow-lg bg-black aspect-video mb-6"><iframe src={formatVideoUrl(activeModule.videoUrl)} title={activeModule.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen className="absolute top-0 left-0 w-full h-full border-0"></iframe></div>
+                        <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border">
+                            <h2 className="text-2xl font-bold mb-3 text-slate-800">{activeModule.title}</h2><p className="text-slate-600 leading-relaxed">{activeModule.description}</p>
+                            {isStudent && (<div className="mt-6 pt-6 flex justify-end border-t border-slate-100"><button onClick={handleCompleteModule} className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl font-medium ${myEnr.completedModules.includes(activeModule.id) ? 'bg-slate-100 text-slate-700' : 'bg-indigo-600 text-white'}`}><span>{myEnr.completedModules.includes(activeModule.id) ? 'Lanjut ke Materi Berikutnya' : 'Tandai Selesai & Lanjut'}</span><ChevronRight size={18} /></button></div>)}
+                            <div className="mt-8 pt-8 border-t border-slate-200">
+                            <h3 className="text-xl font-bold mb-4 flex items-center text-slate-800"><MessageSquare className="mr-2 text-indigo-600" /> Forum Diskusi</h3>
+                            <form onSubmit={handlePostComment} className="mb-6 flex gap-3"><input type="text" maxLength={500} value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder={!isStudent ? "Balas komentar..." : "Tanya sesuatu (Maks 500 huruf)..."} className="flex-1 px-4 py-3 rounded-xl border outline-none focus:border-indigo-500" /><button type="submit" disabled={!commentText.trim()} className="bg-indigo-600 text-white px-6 rounded-xl font-medium disabled:bg-slate-300">Kirim</button></form>
+                            <div className="space-y-3">{activeModule.comments.length === 0 ? <p className="text-slate-500 text-sm text-center py-4 bg-slate-50 rounded-xl border border-dashed">Belum ada diskusi.</p> : activeModule.comments.map(c => (<div key={c.id} className={`p-4 rounded-xl border ${c.isAdmin ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50 border-slate-100'}`}><div className="flex items-center space-x-2 mb-1"><p className="font-semibold text-sm text-slate-800">{c.user}</p>{c.isAdmin && <span className="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-full font-bold uppercase">Admin</span>}</div><p className="text-sm text-slate-700">{c.text}</p></div>))}</div>
+                            </div>
+                        </div>
+                      </>
+                  )}
+                  {classroomMode === 'exam' && (
+                      <div className="bg-white rounded-2xl p-8 shadow-xl border border-slate-200">
+                          <div className="text-center mb-8 border-b border-slate-100 pb-6"><div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4"><CheckSquareOffset size={32}/></div><h2 className="text-3xl font-bold text-slate-900 mb-2">Ujian Akhir Kelas</h2><p className="text-slate-500">Nilai kelulusan minimal: <b>{activeCourse.exam.minScore}</b></p></div>
+                          <div className="space-y-8">{activeCourse.exam.questions.map((q, qIdx) => (<div key={qIdx} className="bg-slate-50 p-6 rounded-xl border"><h3 className="font-bold text-lg mb-4 text-slate-800">{qIdx+1}. {q.q}</h3><div className="space-y-3">{q.options.map((opt, optIdx) => (<label key={optIdx} className={`flex items-center p-4 border rounded-xl cursor-pointer ${studentAnswers[qIdx] === optIdx ? 'bg-indigo-50 border-indigo-500 ring-1 ring-indigo-500' : 'bg-white hover:bg-slate-100'}`}><input type="radio" name={`q_${qIdx}`} value={optIdx} onChange={() => setStudentAnswers({...studentAnswers, [qIdx]: optIdx})} checked={studentAnswers[qIdx] === optIdx} className="w-4 h-4 text-indigo-600 cursor-pointer" /><span className="ml-3 font-medium text-slate-700">{opt}</span></label>))}</div></div>))}</div>
+                          <div className="mt-10 flex justify-end pt-6 border-t"><button onClick={submitExam} disabled={Object.keys(studentAnswers).length < activeCourse.exam.questions.length} className="bg-indigo-600 disabled:bg-slate-300 text-white px-8 py-4 rounded-xl font-bold text-lg">Kumpulkan Jawaban</button></div>
+                      </div>
+                  )}
+                  {classroomMode === 'result' && (
+                      <div className="bg-white rounded-2xl p-10 shadow-2xl border text-center max-w-2xl mx-auto mt-10 relative overflow-hidden">
+                          <div className={`absolute top-0 left-0 w-full h-2 ${myEnr.isGraduated ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
+                          <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 ${myEnr.isGraduated ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>{myEnr.isGraduated ? <Award size={48}/> : <X size={48}/>}</div>
+                          <h2 className="text-3xl font-bold text-slate-900 mb-2">{myEnr.isGraduated ? 'Selamat, Anda Lulus!' : 'Maaf, Anda Belum Lulus'}</h2><p className="text-slate-600 mb-8 text-lg">Nilai Akhir: <b className={`text-2xl ml-2 ${myEnr.isGraduated ? 'text-emerald-600' : 'text-red-600'}`}>{myEnr.examScore}</b> / {activeCourse.exam.questions.length * 10}</p>
+                          {!myEnr.isGraduated ? (<button onClick={()=>{setClassroomMode('exam'); setStudentAnswers({});}} className="w-full bg-slate-800 hover:bg-slate-900 text-white py-4 rounded-xl font-bold text-lg">Ulangi Ujian</button>) : (<div className="space-y-4"><button onClick={handleDownloadCert} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold text-lg shadow-md flex items-center justify-center"><Download size={24} className="mr-2"/> Download Sertifikat Digital</button>{instructorData?.donationLink && (<a href={instructorData.donationLink} target="_blank" rel="noopener noreferrer" className="w-full bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 py-4 rounded-xl font-bold transition flex items-center justify-center"><Coffee size={24} className="mr-2"/> Traktir Kopi Instruktur</a>)}</div>)}
+                      </div>
+                  )}
+                </div>
+              </main>
+            </div>
+          </div>
+        );
+      }
+      return null;
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
