@@ -225,8 +225,20 @@
       }, [dbMode, appMode]);
 
       const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
-      const calcProgress = (enr, crs) => { if (!crs || !crs.modules || crs.modules.length === 0 || !enr || !enr.completedModules) return 0; return Math.round((enr.completedModules.length / crs.modules.length) * 100); };
+      const calcProgress = (enr, crs) => { 
+        if (!crs || !crs.modules || crs.modules.length === 0 || !enr) return 0; 
+        
+        let completedArray = [];
+        if (Array.isArray(enr.completedModules)) {
+            completedArray = enr.completedModules;
+        } else if (typeof enr.completedModules === 'string') {
+            try { completedArray = JSON.parse(enr.completedModules); } 
+            catch (e) { completedArray = []; }
+        }
 
+        return Math.round((completedArray.length / crs.modules.length) * 100); 
+      };
+      
       const execDbAction = async (localAction, firebaseAction) => {
         try {
           if (dbMode === 'sheets') {
