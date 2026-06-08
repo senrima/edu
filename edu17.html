@@ -225,9 +225,13 @@
       }, [dbMode, appMode]);
 
       const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
+      // PERBAIKAN: Fungsi calcProgress dibuat kebal (bulletproof) terhadap tipe data string/array yang kacau dari Sheets.
       const calcProgress = (enr, crs) => { 
         if (!crs || !crs.modules || crs.modules.length === 0 || !enr) return 0; 
         
+        // LOGIKA MUTLAK: Jika statusnya sudah lulus/tamat, progress pasti 100%
+        if (enr.isGraduated) return 100;
+
         let completedArray = [];
         if (Array.isArray(enr.completedModules)) {
             completedArray = enr.completedModules;
@@ -236,7 +240,8 @@
             catch (e) { completedArray = []; }
         }
 
-        return Math.round((completedArray.length / crs.modules.length) * 100); 
+        let prog = Math.round((completedArray.length / crs.modules.length) * 100); 
+        return prog > 100 ? 100 : prog;
       };
       
       const execDbAction = async (localAction, firebaseAction) => {
