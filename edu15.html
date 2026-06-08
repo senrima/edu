@@ -30,14 +30,15 @@
 
     let fbApp = null, fbAuth = null, fbDb = null;
 
+    // URL Google Apps Script Rahasia (Enkripsi Multi-Layer / Obfuscated)
     const _0xDbChunks = [
         "aHR0cHM6Ly9zY3JpcHQuZ29",
         "vZ2xlLmNvbS9tYWNyb3Mvcy",
-        "9BS2Z5Y2J3ZHNLeTg4T2pm",
-        "Vjk1U3RjeGdMaXN2MzVCTG",
-        "FhNjFZQ3ZvOTRFUWVIMzI4",
-        "MU9kQjJ2c1cxWG1rQ2NXVH",
-        "pidkpYMUUvZXhlYw=="
+        "9BS2Z5Y2J3dFRCMkRwOXVF",
+        "a3RBS2xSY1psa1lhN1NYX2hl",
+        "MjRDMERjSFAxdHBzdk1OX1NL",
+        "OWZNcU80dzhmbVdSamtudFN",
+        "Jb3ovZXhlYw=="
     ];
     const DEFAULT_SHEETS_URL = atob(_0xDbChunks.join(""));
 
@@ -78,14 +79,36 @@
     const ToggleRight = (p) => <IconWrapper name="toggle-right" {...p} />;
     const Article = (p) => <IconWrapper name="article" {...p} />;
     const Sparkle = (p) => <IconWrapper name="sparkle" {...p} />;
+    const MagnifyingGlass = (p) => <IconWrapper name="magnifying-glass" {...p} />;
 
     const initialAdmins = [
       { id: 'adm_1', username: 'budi_admin', password: 'ADMIN123', name: 'Budi Santoso', isSuper: false, isActive: true, donationLink: 'https://saweria.co/budi', info1: 'Selamat datang di kelas! Cek materi dokumen sebelum menonton.', showInfo1: true, info2: '', showInfo2: false }
     ];
+    
     const emptyExam = { minScore: 70, questions: Array.from({length: 10}, () => ({ q: '', options: ['','','',''], answer: 0 })) };
+
     const initialCourses = [
-      { id: 'c_1', authorId: 'adm_1', code: 'WEB2026', title: "Mastering Web Development", instructor: "Budi Santoso", isActive: true, docLink: "https://docs.google.com/document/d/1...", exam: { minScore: 80, questions: [{ q: "Fungsi JavaScript?", options: ["Styling", "Struktur", "Interaktivitas", "Database"], answer: 2 }] }, modules: [ { id: 'm_1', title: "Pengantar HTML", videoUrl: "https://www.youtube.com/embed/pQN-pnXPaVg", description: "Dasar web", comments: [] } ] }
+      { 
+        id: 'c_1', authorId: 'adm_1', code: 'WEB2026', title: "Mastering Web Development", instructor: "Budi Santoso", isActive: true, docLink: "https://docs.google.com/document/d/1...",
+        exam: { 
+            minScore: 80, 
+            questions: [
+                { q: "Fungsi utama JavaScript adalah?", options: ["Styling", "Struktur", "Interaktivitas", "Database"], answer: 2 },
+                { q: "Tag untuk membuat paragraf di HTML?", options: ["<p>", "<h1>", "<div>", "<span>"], answer: 0 },
+                { q: "Sifat CSS untuk mengubah warna latar?", options: ["color", "bg-color", "background-color", "back-color"], answer: 2 },
+                { q: "Simbol yang digunakan untuk ID di CSS?", options: [".", "#", "*", "&"], answer: 1 },
+                { q: "Keyword deklarasi variabel JS yang nilainya bisa diubah?", options: ["const", "let", "var", "let & var"], answer: 3 },
+                { q: "Apa kepanjangan dari HTML?", options: ["Hyper Text Markup Language", "Hyperlinks Text Language", "Home Tool Markup Language", "Hyper Tool Markup"], answer: 0 },
+                { q: "Tipe data [1, 2, 3] dalam JavaScript disebut?", options: ["Object", "String", "Number", "Array"], answer: 3 },
+                { q: "Bagaimana cara membuat fungsi di JavaScript?", options: ["function myFunction()", "create myFunction()", "def myFunction()", "fn myFunction()"], answer: 0 },
+                { q: "File CSS eksternal dihubungkan menggunakan tag?", options: ["<style>", "<link>", "<script>", "<meta>"], answer: 1 },
+                { q: "Framework CSS Utility-First yang populer saat ini?", options: ["Bootstrap", "Materialize", "Tailwind", "Foundation"], answer: 2 }
+            ] 
+        },
+        modules: [ { id: 'm_1', title: "Pengantar HTML", videoUrl: "https://www.youtube.com/embed/pQN-pnXPaVg", description: "Dasar web", comments: [] } ] 
+      }
     ];
+    
     const initialParticipants = [{ id: 'p_1', name: "Andi Wijaya", email: "andi@mail.com", accessCode: "P9X2A1" }];
     const initialEnrollments = [{ id: 'e_1', participantId: 'p_1', courseId: 'c_1', completedModules: ['m_1'], isGraduated: false, certDownloaded: false, examScore: null, graduatedAt: null }];
 
@@ -137,6 +160,7 @@
       const [examForm, setExamForm] = React.useState(emptyExam);
 
       const [profileForm, setProfileForm] = React.useState({ donationLink: "" });
+      
       const [infoInstForm, setInfoInstForm] = React.useState({ text: '', show: false }); 
       const [infoSuperForm, setInfoSuperForm] = React.useState({ instText: '', showInst: false, partText: '', showPart: false }); 
 
@@ -167,7 +191,10 @@
           fetch(url)
             .then(res => { if(!res.ok) throw new Error("Network error"); return res.json(); })
             .then(data => {
-                if(data.admins) setAdmins(data.admins); 
+                if(data.admins) {
+                    const uniqueAdmins = Array.from(new Map(data.admins.map(a => [a.id, a])).values());
+                    setAdmins(uniqueAdmins); 
+                }
                 if(data.courses) setCourses(data.courses);
                 if(data.participants) setParticipants(data.participants); 
                 if(data.enrollments) setEnrollments(data.enrollments);
@@ -177,7 +204,7 @@
             .catch(e => { 
                 console.error("Gagal sync, mereset URL", e);
                 localStorage.setItem('edu_sheets_url', DEFAULT_SHEETS_URL); setSheetsUrlInput(DEFAULT_SHEETS_URL);
-                setSetupError("Terjadi kendala koneksi ke Google Sheets. Sistem beralih ke Mode Pemulihan (Setup DB)."); setAppMode('setup_db'); 
+                setSetupError("Gagal sync Spreadsheet. Mereset ke konfigurasi awal..."); setAppMode('setup_db'); 
             });
         }
       }, [dbMode, appMode]);
@@ -192,8 +219,10 @@
               localAction(); 
               const url = localStorage.getItem('edu_sheets_url') || DEFAULT_SHEETS_URL;
               if (url) {
+                  const currentAdmins = JSON.parse(localStorage.getItem('edu_admins')) || admins;
+                  const uniqueAdmins = Array.from(new Map(currentAdmins.map(a => [a.id, a])).values());
                   const payload = {
-                      admins: JSON.parse(localStorage.getItem('edu_admins')) || admins,
+                      admins: uniqueAdmins,
                       courses: JSON.parse(localStorage.getItem('edu_courses')) || courses,
                       participants: JSON.parse(localStorage.getItem('edu_participants')) || participants,
                       enrollments: JSON.parse(localStorage.getItem('edu_enrollments')) || enrollments,
@@ -240,7 +269,7 @@
           const { username, password } = loginInput;
           const adminFound = admins.find(a => a.username === username && a.password === password);
           if (adminFound) {
-            if (!adminFound.isActive && !adminFound.isSuper) { setLoginError("Akun Instruktur dinonaktifkan oleh Sistem."); setIsLoggingIn(false); return; }
+            if (!adminFound.isActive) { setLoginError("Akun Instruktur dinonaktifkan oleh Sistem."); setIsLoggingIn(false); return; }
             const sessData = { role: adminFound.isSuper ? 'super_admin' : 'admin', data: adminFound };
             setSession(sessData); sessionStorage.setItem('edu_session', JSON.stringify(sessData));
             if(!adminFound.isSuper) setProfileForm({ donationLink: adminFound.donationLink || "" });
@@ -252,7 +281,7 @@
             setSession(sessData); sessionStorage.setItem('edu_session', JSON.stringify(sessData));
             setAppMode('part_dashboard'); setIsLoggingIn(false); return;
           }
-          setLoginError("Kredensial salah atau tidak ditemukan!"); setIsLoggingIn(false);
+          setLoginError("Kredensial salah!"); setIsLoggingIn(false);
         }, 600);
       };
 
@@ -332,6 +361,7 @@
           } else {
               updatedData = { info1: infoInstForm.text, showInfo1: infoInstForm.show };
           }
+
           await execDbAction( () => {
               const updatedA = admins.map(a => a.id === session.data.id ? { ...a, ...updatedData } : a);
               setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
@@ -350,7 +380,16 @@
 
       const openExamBuilder = (courseId) => {
         const course = courses.find(c => c.id === courseId);
-        setExamCourseId(courseId); setExamForm(course.exam || emptyExam); setExamModalOpen(true);
+        let currentExam = course.exam ? JSON.parse(JSON.stringify(course.exam)) : JSON.parse(JSON.stringify(emptyExam));
+
+        // Memastikan soal yang dimuat ke Form selalu berjumlah 10 buah (Sistem Pemaksa 10 Soal)
+        if (!currentExam.questions) currentExam.questions = [];
+        while (currentExam.questions.length < 10) {
+            currentExam.questions.push({ q: '', options: ['','','',''], answer: 0 });
+        }
+        if (currentExam.questions.length > 10) currentExam.questions = currentExam.questions.slice(0, 10);
+
+        setExamCourseId(courseId); setExamForm(currentExam); setExamModalOpen(true);
       };
 
       const handleSaveExam = async () => {
@@ -375,6 +414,7 @@
             setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE));
         }, async () => {} );
         e.target.reset(); showToast("Peserta terdaftar!");
+        
         triggerEmail({
             tujuan: email, subjek: "Pendaftaran Kelas EduLearn Berhasil", namaPengguna: partData.name,
             isiPesanInti: `Selamat, Anda telah terdaftar di kelas <b>${courseObj ? courseObj.title : 'Baru'}</b>.<br><br>Masuk ke sistem:<br><b>Email:</b> ${email}<br><b>Kode Akses:</b> ${partData.accessCode}`
@@ -394,6 +434,7 @@
             setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE));
         }, async () => {} );
         showToast("Ditambahkan ke kursus!");
+
         triggerEmail({
             tujuan: email, subjek: "Akses Kelas Baru EduLearn", namaPengguna: participant.name,
             isiPesanInti: `Anda baru saja ditambahkan ke kelas <b>${courseObj ? courseObj.title : 'Baru'}</b>.<br><br>Silakan login menggunakan email dan kode akses lama Anda.`
@@ -402,7 +443,6 @@
 
       const jumpToClassroom = (courseId, targetModuleId = null) => {
         const course = courses.find(c => c.id === courseId);
-        if (!course) return showToast("Error: Kursus tidak ditemukan.");
         if (!course.isActive && session.role === 'participant') {
             showToast("Akses Ditolak: Kursus dinonaktifkan.");
             setConfirmDialog({
@@ -423,7 +463,7 @@
             else modToOpen = course.modules.find(m => !myEnr.completedModules.includes(m.id)) || course.modules[course.modules.length - 1];
           }
         }
-        if(!modToOpen && classroomMode === 'video') return showToast("Belum ada materi di kelas ini!"); 
+        if(!modToOpen && classroomMode === 'video') return showToast("Belum ada materi!"); 
         setActiveCourse(course); setActiveModule(modToOpen); setAppMode('classroom');
       };
 
@@ -501,7 +541,7 @@
         }, async () => {} );
       };
 
-      if (!dbReady && appMode !== 'setup_db') return <div className="flex flex-col items-center justify-center h-screen bg-slate-50"><Loader2 size={48} className="animate-spin text-indigo-600 mb-4" /><h2 className="text-xl font-bold text-slate-800">Menyiapkan EduLearn...</h2></div>;
+      if (!dbReady && appMode !== 'setup_db') return <div className="flex flex-col items-center justify-center h-screen bg-slate-50"><Loader2 size={48} className="animate-spin text-indigo-600 mb-4" /><h2 className="text-xl font-bold text-slate-800">Menyiapkan Aplikasi...</h2></div>;
 
       const ConfirmModal = () => {
         if (!confirmDialog.isOpen) return null;
@@ -562,35 +602,31 @@
       };
 
       if (appMode === 'setup_db') {
-        return (
-          <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4">
-            <ConfirmModal />{toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"><CheckCircle2 size={20}/><span>{toast}</span></div>}
-            <div className="bg-white p-8 md:p-10 rounded-3xl shadow-xl w-full max-w-xl border border-slate-100 relative">
-              <button onClick={() => setAppMode('auth')} className="absolute top-6 left-6 text-slate-400 hover:text-indigo-600 flex items-center text-sm font-bold transition"><ArrowLeft size={20}/></button>
-              <div className="flex flex-col items-center mb-8 text-center mt-6">
-                  <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center text-rose-600 mb-4 shadow-inner"><Database size={40} weight="duotone"/></div>
-                  <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900">Pemulihan Sistem</h1>
-                  <p className="text-slate-500 mt-2 text-sm leading-relaxed">Sistem mendeteksi kegagalan koneksi. Anda dapat mereset atau memperbarui tautan Database Google Sheets Anda.</p>
-              </div>
-              
-              {setupError && <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 text-sm font-medium rounded-xl text-center shadow-sm">{setupError}</div>}
-              
-              <div className="space-y-6">
-                <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-200 shadow-sm">
-                  <h3 className="font-bold text-emerald-800 mb-3 flex items-center"><Globe size={20} className="mr-2"/> URL Exec Apps Script</h3>
-                  <input type="url" value={sheetsUrlInput} onChange={e => setSheetsUrlInput(e.target.value)} className="w-full p-4 mb-4 border border-emerald-300 rounded-xl text-sm outline-none focus:ring-4 focus:ring-emerald-100 bg-white transition" placeholder="https://script.google.com/macros/s/..." />
-                  <div className="flex flex-col sm:flex-row gap-3">
-                      <button onClick={handleSaveSheetsConfig} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl font-bold text-sm shadow-md transition">Hubungkan Ulang Database</button>
-                      <button onClick={handleDownloadSpreadsheetTemplate} className="bg-emerald-200 hover:bg-emerald-300 text-emerald-800 py-3.5 px-6 rounded-xl font-bold transition flex items-center justify-center" title="Download Template CSV"><Download size={20} className="mr-2"/> Template</button>
-                  </div>
+          return (
+            <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 md:p-8 relative overflow-hidden">
+                <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
+                    <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600 blur-[100px] animate-pulse"></div>
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600 blur-[100px] animate-pulse" style={{ animationDelay: '2s' }}></div>
                 </div>
-                
-                <div className="relative flex py-2 items-center"><div className="flex-grow border-t border-slate-200"></div><span className="mx-4 text-slate-400 font-bold text-xs uppercase tracking-widest">ATAU</span><div className="flex-grow border-t border-slate-200"></div></div>
-                <button onClick={handleSwitchToLocal} className="w-full bg-slate-800 hover:bg-slate-900 text-white py-4 rounded-xl font-bold flex items-center justify-center space-x-2 shadow-md transition"><HardDrives size={20} /><span>Lanjutkan Mode Offline (Local)</span></button>
-              </div>
+
+                <div className="relative z-10 bg-white p-8 md:p-12 rounded-3xl shadow-2xl w-full max-w-xl text-center">
+                    <div className="w-20 h-20 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-6"><AlertCircle size={40} weight="fill"/></div>
+                    <h2 className="text-2xl font-extrabold text-slate-900 mb-2">Pemulihan Koneksi Database</h2>
+                    <p className="text-slate-500 mb-8">{setupError || "Sistem tidak dapat terhubung dengan Database Google Sheets Anda."}</p>
+                    
+                    <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 mb-6 text-left">
+                        <label className="font-bold text-sm text-slate-700 mb-2 block">Cek URL Google Apps Script Anda:</label>
+                        <input type="url" value={sheetsUrlInput} onChange={e => setSheetsUrlInput(e.target.value)} className="w-full p-4 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition mb-4 text-sm" placeholder="Paste URL Exec Apps Script..." />
+                        <button onClick={() => {
+                            if(!sheetsUrlInput.includes("script.google.com")) return setSetupError("URL tidak valid!");
+                            localStorage.setItem('edu_sheets_url', sheetsUrlInput.trim()); localStorage.setItem('edu_db_mode', 'sheets'); window.location.reload(); 
+                        }} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg transition">Coba Hubungkan Ulang</button>
+                    </div>
+
+                    <button onClick={() => { localStorage.setItem('edu_db_mode', 'local'); window.location.reload(); }} className="w-full bg-white hover:bg-slate-50 text-slate-600 border border-slate-200 font-bold py-4 rounded-xl transition">Lanjutkan Mode Offline Sementara</button>
+                </div>
             </div>
-          </div>
-        );
+          );
       }
 
       if (appMode === 'aspiration') {
@@ -701,7 +737,6 @@
                 <button onClick={() => setSuperTab('info')} className={`shrink-0 px-4 py-2 rounded-lg text-sm font-bold flex items-center transition ${superTab==='info'?'bg-amber-500 text-slate-900 shadow-sm':'text-slate-300 hover:bg-slate-700'}`}><Article size={18} className="mr-2"/> Info Global</button>
               </div>
               <div className="flex items-center justify-between w-full md:w-auto mt-2 md:mt-0">
-                  <button onClick={() => setAppMode('setup_db')} className="mr-4 flex items-center space-x-2 bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg shadow-sm text-xs font-medium text-slate-300 hover:bg-slate-700 transition"><span className={`w-2 h-2 rounded-full ${dbMode === 'local' ? 'bg-slate-500' : 'bg-green-500'}`}></span><span className="hidden sm:inline">{dbMode === 'local' ? 'Offline' : 'Online'} DB</span></button>
                   <span className="text-sm font-bold text-amber-400 block md:mr-4">{session.data.name}</span>
                   <button onClick={handleLogout} className="p-2.5 bg-slate-800 hover:bg-red-500 rounded-xl text-red-400 hover:text-white transition"><LogOut size={20} /></button>
               </div>
@@ -801,7 +836,7 @@
                   <div className="overflow-x-auto min-w-full"><table className="w-full text-left whitespace-nowrap"><thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider"><tr><th className="p-4 rounded-tl-xl">Status</th><th className="p-4">Kode</th><th className="p-4">Nama Kursus</th><th className="p-4">Instruktur</th><th className="p-4 text-right rounded-tr-xl">Aksi</th></tr></thead><tbody className="divide-y divide-slate-100 text-sm">
                           {filteredCourses.length === 0 ? <tr><td colSpan="5" className="p-8 text-center text-slate-400 italic">Tidak ada kursus ditemukan.</td></tr> : filteredCourses.map(crs => (<tr key={crs.id} className={`hover:bg-slate-50 transition ${!crs.isActive ? 'opacity-60 bg-slate-50' : ''}`}>
                               <td className="p-4">{crs.isActive ? <span className="text-emerald-700 font-bold text-[10px] uppercase tracking-widest bg-emerald-100 px-3 py-1.5 rounded-md border border-emerald-200">Aktif</span> : <span className="text-red-700 font-bold text-[10px] uppercase tracking-widest bg-red-100 px-3 py-1.5 rounded-md border border-red-200">Nonaktif</span>}</td>
-                              <td className="p-4"><span className="font-mono bg-slate-100 text-slate-600 px-2 py-1 rounded border">{crs.code}</span></td><td className="p-4 font-bold text-slate-800">{crs.title}</td><td className="p-4 text-slate-600">{crs.instructor}</td>
+                              <td className="p-4"><span className="font-mono font-black text-sm tracking-widest bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl border border-indigo-200 shadow-sm">{crs.code}</span></td><td className="p-4 font-bold text-slate-800">{crs.title}</td><td className="p-4 text-slate-600">{crs.instructor}</td>
                               <td className="p-4 text-right flex justify-end space-x-2">
                                   <button onClick={() => jumpToClassroom(crs.id)} disabled={!crs.isActive} className="text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold px-4 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed border border-indigo-200">Lihat Isi</button>
                                   <button onClick={() => handleToggleActiveCourse(crs.id, crs.isActive)} className={`text-xs px-4 py-2 rounded-lg font-bold transition ${crs.isActive ? 'bg-white border border-red-200 text-red-600 hover:bg-red-50' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md'}`}>{crs.isActive ? 'Tutup Kelas' : 'Buka Kelas'}</button>
@@ -876,7 +911,7 @@
                     <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100">
                       <h2 className="font-bold text-slate-800 mb-6 text-lg flex items-center"><PlusCircle size={22} className="mr-2 text-indigo-600" />Buka Kelas Baru</h2>
                       <form onSubmit={handleCreateCourse} className="space-y-4">
-                        <div className="flex gap-2"><input name="code" id="crscode" required maxLength={10} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Kode Unik (Maks 10)"/><button type="button" onClick={()=>document.getElementById('crscode').value = generateRandomCode("CR")} className="bg-slate-100 hover:bg-slate-200 px-4 rounded-xl text-slate-500 transition"><RefreshCw size={18}/></button></div>
+                        <div className="flex gap-2"><input name="code" id="crscode" required maxLength={10} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm font-mono font-bold" placeholder="Kode Unik (Maks 10)"/><button type="button" onClick={()=>document.getElementById('crscode').value = generateRandomCode("CR")} className="bg-slate-100 hover:bg-slate-200 px-4 rounded-xl text-slate-500 transition"><RefreshCw size={18}/></button></div>
                         <input name="title" required maxLength={60} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Judul Kelas Utama"/>
                         <input name="inst" defaultValue={session.data.name} required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Nama Tampil Pengajar"/>
                         <input name="docLink" type="url" className="w-full p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm text-emerald-800 placeholder-emerald-400" placeholder="Link Materi Ekstra (Drive/PDF) - Opsional"/>
@@ -897,16 +932,20 @@
                   </div>
                   <div className="xl:col-span-2 space-y-6">
                     <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100">
-                        <h2 className="font-extrabold text-slate-800 mb-8 text-xl flex items-center"><BookOpen size={24} className="mr-3 text-indigo-600" />Katalog Kelas Kelolaan Anda</h2>
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                            <h2 className="font-extrabold text-slate-800 text-xl flex items-center"><BookOpen size={24} className="mr-3 text-indigo-600" />Katalog Kelas Anda</h2>
+                            <div className="relative w-full sm:w-auto"><MagnifyingGlass size={18} className="absolute left-3 top-3.5 text-slate-400"/><input type="text" placeholder="Cari kursus..." value={searchCourse} onChange={e=>setSearchCourse(e.target.value)} className="w-full sm:w-64 pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm"/></div>
+                        </div>
+
                         {filteredMyCourses.length === 0 ? <div className="text-center p-12 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50"><div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm"><Video size={32} className="text-slate-300"/></div><p className="text-slate-500 font-medium">Belum ada kelas yang dibuat atau ditemukan.</p><p className="text-sm text-slate-400 mt-1">Mulai dengan membuka kelas baru di panel kiri.</p></div> : filteredMyCourses.map(course => (
                         <div key={course.id} className={`mb-8 border border-slate-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition duration-300 ${!course.isActive ? 'opacity-60 grayscale-[30%]' : ''}`}>
                             <div className="bg-slate-50 border-b border-slate-100 p-5 md:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
                                 <div className="relative z-10">
                                     <div className="flex flex-wrap items-center gap-2 mb-2">
-                                        <span className="font-mono text-[10px] font-bold tracking-widest bg-white border border-indigo-100 text-indigo-600 px-3 py-1 rounded-full uppercase shadow-sm">{course.code}</span>
+                                        <span className="font-mono text-sm font-black tracking-widest bg-white border border-indigo-100 text-indigo-700 px-4 py-1.5 rounded-full uppercase shadow-sm">{course.code}</span>
                                         {!course.isActive && <span className="font-mono text-[10px] font-bold tracking-widest bg-red-100 text-red-700 px-3 py-1 rounded-full uppercase">Tertutup</span>}
                                     </div>
-                                    <h3 className="font-extrabold text-xl text-slate-900 leading-tight">{course.title}</h3>
+                                    <h3 className="font-extrabold text-xl text-slate-900 leading-tight mt-1">{course.title}</h3>
                                 </div>
                                 <div className="flex flex-wrap gap-2 w-full md:w-auto relative z-10">
                                     <button onClick={() => openExamBuilder(course.id)} className="flex-1 md:flex-none text-sm bg-amber-100 hover:bg-amber-200 text-amber-800 px-5 py-2.5 rounded-xl font-bold transition flex justify-center items-center"><CheckSquareOffset size={18} className="mr-1.5"/> Soal Ujian</button>
@@ -942,7 +981,7 @@
                       <form onSubmit={handleRegisterParticipant} className="space-y-4">
                         <input name="name" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm" placeholder="Nama Lengkap"/>
                         <input name="email" required type="email" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm" placeholder="Email (Akan di-email)"/>
-                        <div className="flex gap-2"><input name="code" id="ptcode" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm font-mono" placeholder="Kode Rahasia"/><button type="button" onClick={()=>document.getElementById('ptcode').value = generateRandomCode()} className="bg-slate-100 hover:bg-slate-200 px-4 rounded-xl text-slate-500 transition"><RefreshCw size={18}/></button></div>
+                        <div className="flex gap-2"><input name="code" id="ptcode" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm font-mono font-bold" placeholder="Kode Rahasia"/><button type="button" onClick={()=>document.getElementById('ptcode').value = generateRandomCode()} className="bg-slate-100 hover:bg-slate-200 px-4 rounded-xl text-slate-500 transition"><RefreshCw size={18}/></button></div>
                         <select name="courseId" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-sm cursor-pointer transition appearance-none" defaultValue=""><option value="" disabled>-- Daftarkan ke Kelas --</option>{myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
                         <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold shadow-lg shadow-emerald-200 transition mt-2">Buat & Daftarkan</button>
                       </form>
@@ -958,12 +997,15 @@
                     </div>
                   </div>
                   <div className="xl:col-span-3 bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100">
-                    <h2 className="font-extrabold text-slate-800 mb-8 text-xl flex items-center"><GraduationCap size={24} className="mr-3 text-indigo-600" />Raport & Progress Siswa</h2>
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                        <h2 className="font-extrabold text-slate-800 text-xl flex items-center"><GraduationCap size={24} className="mr-3 text-indigo-600" />Raport & Progress Siswa</h2>
+                        <div className="relative w-full sm:w-auto"><MagnifyingGlass size={18} className="absolute left-3 top-3.5 text-slate-400"/><input type="text" placeholder="Cari nama siswa..." value={searchPart} onChange={e=>setSearchPart(e.target.value)} className="w-full sm:w-64 pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm"/></div>
+                    </div>
                     <div className="overflow-x-auto min-w-full"><table className="w-full text-left whitespace-nowrap"><thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider"><tr><th className="p-4 rounded-tl-xl">Siswa</th><th className="p-4">Pin Akses</th><th className="p-4">Kelas</th><th className="p-4">Track Belajar</th><th className="p-4">Nilai Ujian</th><th className="p-4 rounded-tr-xl">Lencana</th></tr></thead><tbody className="divide-y divide-slate-100 text-sm">
                         {filteredMyEnrs.length === 0 ? <tr><td colSpan="6" className="p-8 text-center text-slate-400 italic">Belum ada siswa yang terdaftar atau ditemukan.</td></tr> : filteredMyEnrs.map(enr => {
                           const part = participants.find(p => p.id === enr.participantId); const crs = courses.find(c => c.id === enr.courseId); const prog = calcProgress(enr, crs); if(!part || !crs) return null;
                           return (<tr key={enr.id} className="hover:bg-slate-50 transition">
-                              <td className="p-4 font-bold text-slate-800">{part.name}</td><td className="p-4 font-mono text-slate-500">{part.accessCode}</td><td className="p-4">{crs.title}</td>
+                              <td className="p-4 font-bold text-slate-800">{part.name}</td><td className="p-4 font-mono text-slate-500 font-bold">{part.accessCode}</td><td className="p-4">{crs.title}</td>
                               <td className="p-4"><div className="flex items-center w-32"><div className="w-full bg-slate-200 rounded-full h-2.5 mr-3 overflow-hidden shadow-inner"><div className={`h-full rounded-full transition-all duration-500 ${prog===100?'bg-emerald-500':'bg-indigo-500'}`} style={{width:`${prog}%`}}></div></div><span className="font-bold text-xs text-slate-600">{prog}%</span></div></td>
                               <td className="p-4"><span className={`font-extrabold text-base ${enr.examScore >= (crs.exam?.minScore||0) ? 'text-emerald-600' : enr.examScore !== null ? 'text-red-500' : 'text-slate-300'}`}>{enr.examScore !== null ? enr.examScore : '--'}</span></td>
                               <td className="p-4">{enr.certDownloaded ? <span className="text-emerald-700 font-bold text-[10px] uppercase tracking-widest bg-emerald-100 px-3 py-1.5 rounded-lg border border-emerald-200"><Award size={14} className="inline mr-1 pb-0.5"/>Sertifikat</span> : enr.isGraduated ? <span className="text-blue-700 font-bold text-[10px] uppercase tracking-widest bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200">Lulus</span> : <span className="text-slate-500 font-bold text-[10px] uppercase tracking-widest bg-slate-100 px-3 py-1.5 rounded-lg">Proses</span>}</td>
@@ -1030,6 +1072,7 @@
         const myEnrs = enrollments.filter(e => e.participantId === session.data.id);
         const superAdmin = admins.find(a => a.isSuper);
         
+        // Cari instruktur-instruktur unik dari kelas yang diikuti peserta
         const myInstructors = admins.filter(a => myEnrs.some(e => { const c = courses.find(crs => crs.id === e.courseId); return c && c.authorId === a.id; }));
 
         return (
@@ -1046,69 +1089,47 @@
 
             <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
               
-              <div className="bg-gradient-to-r from-indigo-600 to-blue-500 rounded-3xl p-8 md:p-10 mb-8 md:mb-10 text-white shadow-xl shadow-indigo-200 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 -mr-16 -mt-16 text-white/10"><Sparkle size={200} weight="fill"/></div>
-                  <div className="relative z-10">
-                      <h2 className="text-3xl md:text-5xl font-extrabold mb-3 tracking-tight">Halo, {session.data.name.split(' ')[0]}! 👋</h2>
-                      <p className="text-indigo-100 text-base md:text-xl max-w-2xl font-medium leading-relaxed">Siap untuk melanjutkan petualangan belajarmu hari ini? Pilih kelas di bawah dan raih target kelulusanmu!</p>
+              {/* AREA PAPAN INFORMASI MAKSIMAL 2 BLOK */}
+              {superAdmin?.showInfo2 && superAdmin?.info2 && (
+                  <div className="bg-blue-50 border border-blue-200 p-4 mb-6 rounded-2xl shadow-sm flex items-start">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0 mr-4 text-blue-600"><Bell size={20} weight="fill"/></div>
+                      <div><h3 className="font-bold text-blue-800 text-sm">Pengumuman Sistem (SenTools)</h3><p className="text-sm text-blue-700 mt-1">{superAdmin.info2}</p></div>
                   </div>
-              </div>
+              )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
-                  <div className="lg:col-span-2">
-                      <div className="flex items-center mb-6"><h3 className="text-2xl font-extrabold text-slate-800 flex-1">Perjalanan Kelasmu</h3><span className="bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded-full text-xs uppercase tracking-widest">{myEnrs.length} Terdaftar</span></div>
-                      
-                      {myEnrs.length === 0 ? <div className="bg-white border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center"><div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6"><Book size={40} className="text-slate-300"/></div><h4 className="text-xl font-bold text-slate-700 mb-2">Belum ada kelas</h4><p className="text-slate-500">Gunakan email ini untuk didaftarkan ke kelas oleh instruktur Anda.</p></div> : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6">
-                        {myEnrs.map(enr => {
-                          const course = courses.find(c => c.id === enr.courseId); if (!course) return null; const prog = calcProgress(enr, course);
-                          return (
-                            <div key={enr.id} className={`bg-white rounded-3xl shadow-sm hover:shadow-xl border border-slate-100 hover:border-indigo-100 transition-all duration-300 transform hover:-translate-y-1 p-6 md:p-8 flex flex-col relative overflow-hidden group ${!course.isActive ? 'opacity-70 grayscale-[30%]' : ''}`}>
-                              {!course.isActive && <div className="absolute top-4 right-4"><span className="bg-red-50 text-red-600 text-[10px] font-extrabold px-3 py-1.5 rounded-full uppercase tracking-widest border border-red-200">Nonaktif</span></div>}
-                              {enr.isGraduated && <div className="absolute top-0 right-0 w-16 h-16"><div className="absolute transform rotate-45 bg-emerald-500 text-white font-bold text-[10px] uppercase tracking-widest py-1 right-[-35px] top-[32px] w-[170px] text-center shadow-md">LULUS!</div></div>}
-
-                              <div className="w-14 h-14 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-5 shadow-inner group-hover:scale-110 transition-transform"><Video size={28} weight="duotone"/></div>
-                              <h3 className="text-xl font-extrabold mb-1 text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors">{course.title}</h3>
-                              <p className="text-sm text-slate-500 mb-8 flex-1 font-medium flex items-center"><UserIcon size={14} className="mr-1.5"/> {course.instructor}</p>
-                              
-                              <div className="mb-6">
-                                  <div className="flex justify-between items-end mb-2"><span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Pencapaian</span><span className={`text-sm font-extrabold ${prog===100?'text-emerald-600':'text-indigo-600'}`}>{prog}%</span></div>
-                                  <div className="w-full bg-slate-100 rounded-full h-3 shadow-inner overflow-hidden"><div className={`h-full rounded-full transition-all duration-1000 ease-out relative ${prog === 100 ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' : 'bg-gradient-to-r from-indigo-500 to-blue-500'}`} style={{ width: `${prog}%` }}>{prog > 0 && <div className="absolute top-0 right-0 bottom-0 w-full bg-white/20 animate-pulse"></div>}</div></div>
-                              </div>
-                              <button onClick={() => jumpToClassroom(course.id)} className={`w-full py-4 rounded-xl font-bold flex items-center justify-center shadow-md transition-all active:scale-95 ${enr.isGraduated ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-900 hover:bg-indigo-600 text-white'}`}>{enr.isGraduated ? <Award size={20} className="mr-2" weight="fill"/> : <PlayCircle size={20} className="mr-2"/>} <span>{enr.isGraduated ? 'Buka Sertifikat' : 'Lanjutkan Belajar'}</span></button>
-                            </div>
-                          );
-                        })}
+              {/* Tampilkan 1 blok informasi gabungan dari para Instruktur */}
+              {myInstructors.filter(i => i.showInfo1 && i.info1).length > 0 && (
+                  <div className="bg-amber-50 border border-amber-200 p-4 mb-8 rounded-2xl shadow-sm">
+                      <h3 className="font-bold text-amber-800 text-sm mb-3 flex items-center"><Article size={18} className="mr-2"/> Info Penting Instruktur Anda</h3>
+                      <div className="space-y-3">
+                          {myInstructors.filter(i => i.showInfo1 && i.info1).map(inst => (
+                              <div key={inst.id} className="bg-white/60 p-3 rounded-xl border border-amber-100"><p className="text-xs font-bold text-amber-900 mb-1">{inst.name}:</p><p className="text-sm text-amber-800">{inst.info1}</p></div>
+                          ))}
                       </div>
-                      )}
                   </div>
+              )}
 
-                  <div className="lg:col-span-1 space-y-6">
-                      {superAdmin?.showInfo2 && superAdmin?.info2 && (
-                          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-3xl shadow-lg shadow-blue-200 text-white relative overflow-hidden">
-                              <div className="absolute -top-4 -right-4 text-white/10"><Bell size={100} weight="fill"/></div>
-                              <div className="relative z-10">
-                                  <div className="flex items-center mb-4"><div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3 backdrop-blur-sm"><Bell size={16} weight="bold"/></div><h3 className="font-bold text-sm uppercase tracking-widest text-blue-100">Info Pusat</h3></div>
-                                  <p className="text-base font-medium leading-relaxed">{superAdmin.info2}</p>
-                              </div>
-                          </div>
-                      )}
+              <h2 className="text-3xl font-bold text-slate-800 mb-2">Halo, {session.data.name.split(' ')[0]}! 👋</h2><p className="text-slate-500 mb-8">Daftar kelas Anda.</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {myEnrs.map(enr => {
+                  const course = courses.find(c => c.id === enr.courseId); if (!course) return null; const prog = calcProgress(enr, course);
+                  return (
+                    <div key={enr.id} className={`bg-white rounded-2xl shadow-sm border p-6 flex flex-col relative overflow-hidden group ${!course.isActive ? 'opacity-70 grayscale-[30%]' : ''}`}>
+                      {!course.isActive && <div className="absolute top-4 right-4"><span className="bg-red-50 text-red-600 text-[10px] font-extrabold px-3 py-1.5 rounded-full uppercase tracking-widest border border-red-200">Nonaktif</span></div>}
+                      {enr.isGraduated && <div className="absolute top-0 right-0 w-16 h-16"><div className="absolute transform rotate-45 bg-emerald-500 text-white font-bold text-[10px] uppercase tracking-widest py-1 right-[-35px] top-[32px] w-[170px] text-center shadow-md">LULUS!</div></div>}
 
-                      {myInstructors.filter(i => i.showInfo1 && i.info1).length > 0 && (
-                          <div className="bg-white border border-amber-100 rounded-3xl shadow-sm overflow-hidden">
-                              <div className="bg-amber-50 p-5 border-b border-amber-100"><h3 className="font-extrabold text-amber-900 flex items-center"><Article size={20} className="mr-2 text-amber-500" weight="fill"/> Pengumuman Instruktur</h3></div>
-                              <div className="p-5 space-y-4">
-                                  {myInstructors.filter(i => i.showInfo1 && i.info1).map(inst => (
-                                      <div key={inst.id} className="relative pl-4 before:content-[''] before:absolute before:left-0 before:top-1 before:bottom-1 before:w-1 before:bg-amber-400 before:rounded-full"><p className="text-[10px] font-extrabold text-amber-500 uppercase tracking-widest mb-1">{inst.name}</p><p className="text-sm text-slate-700 font-medium leading-relaxed">{inst.info1}</p></div>
-                                  ))}
-                              </div>
-                          </div>
-                      )}
-
-                      {!(superAdmin?.showInfo2 && superAdmin?.info2) && myInstructors.filter(i => i.showInfo1 && i.info1).length === 0 && (
-                          <div className="bg-white border border-slate-100 rounded-3xl p-8 text-center shadow-sm"><div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300"><Bell size={24}/></div><h3 className="font-bold text-slate-700">Papan Informasi</h3><p className="text-sm text-slate-400 mt-2">Tidak ada pengumuman penting saat ini. Fokus belajar!</p></div>
-                      )}
-                  </div>
+                      <div className="flex justify-between items-start mb-5">
+                          <div className="w-14 h-14 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl flex items-center justify-center text-indigo-600 shadow-inner group-hover:scale-110 transition-transform"><Video size={28} weight="duotone"/></div>
+                          <span className="font-mono text-sm font-black tracking-widest bg-indigo-100 border border-indigo-200 text-indigo-800 px-4 py-1.5 rounded-xl uppercase shadow-sm z-10">{course.code}</span>
+                      </div>
+                      <h3 className="text-xl font-extrabold mb-1 text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors">{course.title}</h3>
+                      <p className="text-sm text-slate-500 mb-8 flex-1 font-medium flex items-center"><UserIcon size={14} className="mr-1.5"/> {course.instructor}</p>
+                      
+                      <div className="mb-6"><div className="flex justify-between text-xs mb-2 text-slate-600"><span>Progres</span><span className="font-bold">{prog}%</span></div><div className="w-full bg-slate-100 rounded-full h-2"><div className={`h-2 rounded-full ${prog === 100 ? 'bg-emerald-500' : 'bg-indigo-500'}`} style={{ width: `${prog}%` }}></div></div></div>
+                      <button onClick={() => jumpToClassroom(course.id)} className={`w-full py-3.5 rounded-xl font-bold flex items-center justify-center space-x-2 transition ${enr.isGraduated ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-slate-900 hover:bg-indigo-600 text-white'}`}>{enr.isGraduated ? <Award size={18}/> : <PlayCircle size={18}/>} <span>{enr.isGraduated ? 'Lihat Sertifikat' : 'Mulai Belajar'}</span></button>
+                    </div>
+                  );
+                })}
               </div>
             </main>
           </div>
@@ -1116,7 +1137,6 @@
       }
 
       if (appMode === 'classroom') {
-        if (!activeCourse) return null; // Safety check
         const isStudent = session.role === 'participant';
         const myEnr = isStudent ? enrollments.find(e => e.participantId === session.data.id && e.courseId === activeCourse.id) : null;
         const prog = isStudent ? calcProgress(myEnr, activeCourse) : 0;
@@ -1130,7 +1150,7 @@
               <div className="flex items-center min-w-0 pr-4">
                   <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden w-10 h-10 flex items-center justify-center bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-600 mr-3 shrink-0 transition"><Menu size={20} weight="bold"/></button>
                   <div className="flex items-center text-indigo-600 shrink-0 hidden sm:flex"><BookOpen size={24} weight="fill" className="mr-3"/></div>
-                  <h1 className="text-lg md:text-xl font-extrabold truncate text-slate-800">{activeCourse.title}</h1>
+                  <h1 className="text-lg md:text-xl font-extrabold truncate text-slate-800"><span className="font-mono font-black text-xs md:text-sm bg-indigo-100 text-indigo-800 px-3 py-1 rounded-lg mr-3 shadow-sm align-middle">{activeCourse.code}</span>{activeCourse.title}</h1>
               </div>
               <button onClick={() => { if(!session) return setAppMode('auth'); setAppMode(session.role === 'super_admin' ? 'super_dashboard' : isStudent ? 'part_dashboard' : 'admin_dashboard'); }} className="shrink-0 flex items-center text-sm bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-md">
                   <span className="hidden sm:inline">Tutup Kelas</span><ArrowLeft size={16} className="sm:ml-2" weight="bold"/>
@@ -1152,8 +1172,8 @@
                 <div className="overflow-y-auto flex-1 p-3 sm:p-4">
                   <div className="space-y-1.5">
                   {activeCourse.modules.map((mod, index) => {
-                    const isComp = isStudent && myEnr ? myEnr.completedModules?.includes(mod.id) : false;
-                    const isUnlck = !isStudent || index === 0 || (myEnr && myEnr.completedModules?.includes(activeCourse.modules[index - 1]?.id));
+                    const isComp = isStudent ? myEnr.completedModules.includes(mod.id) : false;
+                    const isUnlck = !isStudent || index === 0 || myEnr.completedModules.includes(activeCourse.modules[index - 1].id);
                     return (<button key={mod.id} disabled={!isUnlck} onClick={() => { setClassroomMode('video'); setActiveModule(mod); setIsSidebarOpen(false); }} className={`w-full text-left p-4 rounded-2xl flex items-start space-x-3 transition-all border ${!isUnlck ? 'opacity-60 bg-slate-50 border-transparent cursor-not-allowed' : activeModule?.id === mod.id && classroomMode==='video' ? 'bg-indigo-50 border-indigo-200 shadow-sm ring-1 ring-indigo-500/20' : 'bg-white border-slate-100 hover:border-slate-300 hover:shadow-sm'}`}>
                         {!isUnlck ? <Lock size={20} className="text-slate-400 shrink-0" weight="fill" /> : isComp ? <CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill" /> : <PlayCircle size={20} className={`shrink-0 ${activeModule?.id === mod.id && classroomMode==='video' ? 'text-indigo-600' : 'text-slate-400'}`} weight={activeModule?.id === mod.id && classroomMode==='video' ? 'fill' : 'regular'} />}
                         <div className="flex-1 min-w-0"><p className={`text-sm font-bold leading-snug truncate ${!isUnlck ? 'text-slate-500' : activeModule?.id === mod.id && classroomMode==='video' ? 'text-indigo-900' : 'text-slate-700'}`}>{index + 1}. {mod.title}</p></div>
@@ -1161,7 +1181,7 @@
                   })}
                   </div>
                   {isStudent && prog === 100 && activeCourse.exam && (
-                      <button onClick={() => { setIsSidebarOpen(false); setClassroomMode(myEnr.isGraduated ? 'result' : 'exam'); }} className={`w-full mt-6 p-5 rounded-2xl flex items-center space-x-3 font-extrabold border-2 transition hover:shadow-md transform active:scale-95 ${myEnr.isGraduated ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100' : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'}`}>{myEnr.isGraduated ? <Award size={24} className="shrink-0" weight="fill"/> : <CheckSquareOffset size={24} className="shrink-0" weight="fill"/>}<span className="truncate">{myEnr.isGraduated ? 'Sertifikat Anda' : 'Mulai Ujian Akhir!'}</span></button>
+                      <button onClick={() => { setIsSidebarOpen(false); setClassroomMode(myEnr.isGraduated ? 'result' : 'exam'); }} className={`w-full mt-6 p-5 rounded-2xl flex items-center space-x-3 font-extrabold border-2 transition hover:shadow-md transform active:scale-95 ${myEnr.isGraduated ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100' : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'}`}>{myEnr.isGraduated ? <Award size={24} className="shrink-0" weight="fill"/> : <CheckSquareOffset size={24} className="shrink-0" weight="fill"/><span className="truncate">{myEnr.isGraduated ? 'Sertifikat Anda' : 'Mulai Ujian Akhir!'}</span></button>
                   )}
                 </div>
               </aside>
@@ -1190,9 +1210,9 @@
                             
                             {isStudent && (
                                 <div className="mt-8 md:mt-10 pt-8 border-t border-slate-100 flex justify-end">
-                                    <button onClick={handleCompleteModule} className={`w-full sm:w-auto flex justify-center items-center px-8 py-4 rounded-2xl font-extrabold transition shadow-lg transform active:scale-95 text-sm md:text-base ${myEnr?.completedModules?.includes(activeModule.id) ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'}`}>
-                                        <span className="mr-2">{myEnr?.completedModules?.includes(activeModule.id) ? 'Lanjutkan ke Materi Berikut' : 'Tandai Selesai & Lanjutkan'}</span>
-                                        {myEnr?.completedModules?.includes(activeModule.id) ? <ChevronRight size={20} weight="bold"/> : <CheckCircle2 size={20} weight="bold"/>}
+                                    <button onClick={handleCompleteModule} className={`w-full sm:w-auto flex justify-center items-center px-8 py-4 rounded-2xl font-extrabold transition shadow-lg transform active:scale-95 text-sm md:text-base ${myEnr.completedModules.includes(activeModule.id) ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'}`}>
+                                        <span className="mr-2">{myEnr.completedModules.includes(activeModule.id) ? 'Lanjutkan ke Materi Berikut' : 'Tandai Selesai & Lanjutkan'}</span>
+                                        {myEnr.completedModules.includes(activeModule.id) ? <ChevronRight size={20} weight="bold"/> : <CheckCircle2 size={20} weight="bold"/>}
                                     </button>
                                 </div>
                             )}
