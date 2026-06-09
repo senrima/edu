@@ -3,62 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem Verifikasi & Pendaftaran Instan - EduLearn</title>
+  <title>LMS Link Generator - EduLearn by SenTools</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <style>
-    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-    .glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(226, 232, 240, 0.8); }
-    .scan-line {
-      height: 4px;
-      background: linear-gradient(90deg, transparent, #4f46e5, transparent);
-      animation: scan 2s linear infinite;
-    }
-    @keyframes scan {
-      0% { top: 0%; }
-      50% { top: 100%; }
-      100% { top: 0%; }
-    }
+    body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
+    .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .glass-input { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); }
+    .glass-input:focus { border-color: #6366f1; background: rgba(15, 23, 42, 0.8); }
   </style>
 </head>
 <body>
   <div id="root"></div>
 
   <script type="text/babel">
-    const _0xDbChunks = [
-        "aHR0cHM6Ly9zY3JpcHQuZ29",
-        "vZ2xlLmNvbS9tYWNyb3Mvcy",
-        "9BS2Z5Y2J3dFRCMkRwOXVF",
-        "a3RBS2xSY1psa1lhN1NYX2hl",
-        "MjRDMERjSFAxdHBzdk1OX1NL",
-        "OWZNcU80dzhmbVdSamtudFN",
-        "Jb3ovZXhlYw=="
-    ];
-    const DEFAULT_SHEETS_URL = atob(_0xDbChunks.join(""));
-
     // Komponen pembantu untuk merender ikon dan loading spinner
     const IconWrapper = ({ name, size = 24, className = "", weight="regular" }) => (
       <i className={`ph${weight === 'fill' ? '-fill' : weight === 'duotone' ? '-duotone' : weight === 'bold' ? '-bold' : ''} ph-${name} ${className}`} style={{ fontSize: size }}></i>
     );
     const Loader2 = (p) => <IconWrapper name="spinner" className="animate-spin" {...p} />;
-
-    // Fungsi pengalihan aman untuk mencegah crash di lingkungan sandbox iframe
-    const safeRedirect = (target) => {
-        try {
-            const currentHref = window.location.href;
-            if (currentHref && !currentHref.startsWith('about:') && !currentHref.startsWith('data:') && currentHref !== 'null') {
-                const url = new URL(target, currentHref);
-                window.location.href = url.href;
-            } else {
-                console.warn(`[Sandbox Bypass] Navigasi otomatis ke "${target}" diabaikan di dalam Frame Sandbox.`);
-            }
-        } catch (e) {
-            console.error("Gagal melakukan navigasi otomatis:", e);
-        }
-    };
 
     // ===============================================================
     // S-TOOLS ID : UNIVERSAL AUTH GUARD INTEGRATION
@@ -84,10 +50,11 @@
             if (result.status === 'success') {
                 return result.userData; 
             } else {
-                return null;
+                throw new Error("Sesi tidak valid");
             }
         } catch (error) {
-            console.warn("Gagal menghubungi S-Tools ID API. Sesi dialihkan ke lokal/tamu.");
+            localStorage.removeItem('sessionToken');
+            window.location.href = LOGIN_PORTAL_URL + "?redirect=" + encodeURIComponent(window.location.href);
             return null;
         }
     }
@@ -95,374 +62,218 @@
     function App() {
       const [ssoUser, setSsoUser] = React.useState(null);
       const [ssoChecking, setSsoChecking] = React.useState(true);
-      const [loading, setLoading] = React.useState(true);
-      const [status, setStatus] = React.useState({ type: "idle", message: "Membaca tautan..." });
-      const [db, setDb] = React.useState({ admins: [], courses: [], participants: [], enrollments: [], notifications: [] });
-      
-      // State Form Manual (Hanya untuk pendaftaran siswa)
-      const [showManualForm, setShowManualForm] = React.useState(false);
-      const [formData, setFormData] = React.useState({
-        name: "",
-        email: "",
-        courseCode: "",
-        instructorUsername: "",
-        accessCode: ""
+      const [toast, setToast] = React.useState(null);
+
+      // State default URL verifikasi.html
+      const [baseUrl, setBaseUrl] = React.useState(() => {
+          const loc = window.location;
+          return `${loc.protocol}//${loc.host}${loc.pathname.substring(0, loc.pathname.lastIndexOf('/'))}/verifikasi.html`;
       });
 
-      // 1. Eksekusi Auth Guard S-Tools ID saat pertama dibuka dengan Penanganan Fallback Aman
+      // State data form pendaftaran siswa
+      const [enrollForm, setEnrollForm] = React.useState({
+          name: "",
+          email: "",
+          courseCode: "",
+          instructorUsername: "", 
+          pin: ""
+      });
+
+      // Jalankan Auth Guard S-Tools ID pertama kali dimuat
       React.useEffect(() => {
           async function handleSSO() {
               setSsoChecking(true);
-              try {
-                  const userData = await checkEcosystemSession();
-                  if (userData) {
-                      setSsoUser(userData);
-                      initializePage(userData);
-                  } else {
-                      const fallbackUser = { nama: "Operator Lokal", email: "operator@s-tools.id" };
-                      setSsoUser(fallbackUser);
-                      initializePage(fallbackUser);
-                  }
-              } catch (err) {
-                  console.error("SSO Guard Error:", err);
-                  const fallbackUser = { nama: "Operator Lokal (Offline)", email: "operator@s-tools.id" };
-                  setSsoUser(fallbackUser);
-                  initializePage(fallbackUser);
-              } finally {
-                  setSsoChecking(false);
+              const userData = await checkEcosystemSession();
+              if (userData) {
+                  setSsoUser(userData);
               }
+              setSsoChecking(false);
           }
           handleSSO();
       }, []);
 
-      // 2. Tarik Database dan baca parameter URL
-      const initializePage = (userData) => {
-        const queryParams = new URLSearchParams(window.location.search);
-        const action = queryParams.get("action") || "enroll";
-        const name = queryParams.get("name") || "";
-        const email = queryParams.get("email") || "";
-        const course = queryParams.get("course") || queryParams.get("code") || "";
-        const instructor = queryParams.get("instructor") || "";
-        const pin = queryParams.get("pin") || queryParams.get("code_akses") || "";
+      const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
-        // JIKA TIDAK ADA PARAMETER REGISTRASI DI URL, LANGSUNG BUKA APLIKASI UTAMA
-        if (!course) {
-            safeRedirect("edu8.html");
-            return;
-        }
-
-        // Tampilkan error jika mencoba menggunakan link pembuatan kelas lama
-        if (action === "create_course") {
-            setLoading(false);
-            setStatus({ 
-                type: "error", 
-                message: "Fitur pendaftaran kelas via link eksternal telah dinonaktifkan. Pembuatan kelas baru sekarang wajib dilakukan secara aman melalui Dashboard Instruktur Anda." 
-            });
-            return;
-        }
-
-        setStatus({ type: "loading", message: "Menghubungkan ke database pusat..." });
-        
-        fetch(DEFAULT_SHEETS_URL)
-          .then(res => { if(!res.ok) throw new Error("Gagal memuat database."); return res.json(); })
-          .then(data => {
-            setDb(data);
-            
-            // Perbaikan: Konversi a.username ke String secara aman sebelum melakukan pencarian
-            const matchedInstructor = data.admins.find(a => 
-              String(a.username || '').toLowerCase() === String(instructor || '').trim().toLowerCase()
-            );
-
-            const initialForm = {
-              name: name || userData.nama || "",
-              email: email || userData.email || "",
-              courseCode: String(course || '').toUpperCase(),
-              instructorUsername: matchedInstructor ? matchedInstructor.username : String(instructor || '').trim().toLowerCase(),
-              accessCode: pin || Math.floor(100000 + Math.random() * 900000).toString()
-            };
-            setFormData(initialForm);
-
-            // Validasi apakah parameter URL sudah lengkap untuk auto-submit
-            if ((name || userData.nama) && (email || userData.email) && course && instructor) {
-              executeAutoAction(initialForm, data);
-            } else {
-              setLoading(false);
-              setShowManualForm(true);
-              setStatus({ type: "input", message: "Silakan lengkapi data pendaftaran di bawah." });
-            }
-          })
-          .catch(err => {
-            console.error(err);
-            setLoading(false);
-            setStatus({ type: "error", message: "Gagal terhubung ke server. Pastikan koneksi internet Anda stabil." });
-          });
+      // Logika Pembuatan Link Enrollment
+      const getGeneratedEnrollLink = () => {
+          if (!enrollForm.courseCode || !enrollForm.instructorUsername) return "";
+          const params = new URLSearchParams();
+          params.append("action", "enroll");
+          if (enrollForm.name) params.append("name", enrollForm.name);
+          if (enrollForm.email) params.append("email", enrollForm.email);
+          params.append("course", enrollForm.courseCode.toUpperCase());
+          params.append("instructor", enrollForm.instructorUsername.trim().toLowerCase()); 
+          if (enrollForm.pin) params.append("pin", enrollForm.pin);
+          return `${baseUrl}?${params.toString()}`;
       };
 
-      // Kirim balik data ke Google Sheets Web App
-      const saveToDatabase = async (updatedDb) => {
-        return fetch(DEFAULT_SHEETS_URL, {
-          method: 'POST',
-          body: JSON.stringify(updatedDb)
-        });
-      };
-
-      // Kirim Notifikasi Email Otomatis via Apps Script
-      const triggerEmail = (emailAction) => {
-        fetch(DEFAULT_SHEETS_URL, { 
-          method: 'POST', 
-          body: JSON.stringify({ emailAction }) 
-        }).catch(console.error);
-      };
-
-      // Eksekusi Pendaftaran otomatis
-      const executeAutoAction = async (form, currentDb) => {
-        setLoading(true);
-        setStatus({ type: "processing", message: "Sedang memverifikasi data dan mendaftarkan kelas..." });
-
-        try {
-          // Cari Instruktur BERDASARKAN USERNAME SECARA KETAT
-          const instructorObj = currentDb.admins.find(a => 
-            String(a.username || '').toLowerCase() === String(form.instructorUsername || '').trim().toLowerCase()
-          );
-
-          if (!instructorObj) {
-            throw new Error(`Instruktur dengan username "${form.instructorUsername}" tidak ditemukan di database.`);
+      // Fungsi menyalin teks ke Clipboard dengan fallback aman
+      const handleCopyToClipboard = (text, message = "Link disalin ke clipboard!") => {
+          if (!text) return;
+          const tempTextArea = document.createElement("textarea");
+          tempTextArea.value = text;
+          document.body.appendChild(tempTextArea);
+          tempTextArea.select();
+          try {
+              document.execCommand("copy");
+              showToast(message);
+          } catch (err) {
+              showToast("Gagal menyalin otomatis.");
           }
-
-          // Cari Kursus Berdasarkan Kode
-          const courseObj = currentDb.courses.find(c => 
-            String(c.code || '').toUpperCase() === String(form.courseCode || '').toUpperCase()
-          );
-          if (!courseObj) {
-            throw new Error(`Kode Kelas "${form.courseCode}" tidak ditemukan.`);
-          }
-
-          // Buat atau update data peserta secara cerdas
-          let participantObj = currentDb.participants.find(p => 
-            String(p.email || '').toLowerCase() === String(form.email || '').toLowerCase()
-          );
-          let updatedParticipants = [...currentDb.participants];
-          let isNewStudent = false;
-
-          if (!participantObj) {
-            participantObj = {
-              id: `p_${Date.now()}`,
-              name: form.name,
-              email: form.email,
-              accessCode: form.accessCode
-            };
-            updatedParticipants.push(participantObj);
-            isNewStudent = true;
-          } else {
-            participantObj.name = form.name || participantObj.name;
-            
-            if (form.accessCode && form.accessCode !== participantObj.accessCode && showManualForm) {
-              participantObj.accessCode = form.accessCode;
-            }
-            
-            updatedParticipants = currentDb.participants.map(p => p.id === participantObj.id ? participantObj : p);
-          }
-
-          // Daftarkan Peserta ke Kelas (Enrollment)
-          const isAlreadyEnrolled = currentDb.enrollments.some(e => 
-            e.participantId === participantObj.id && e.courseId === courseObj.id
-          );
-
-          if (isAlreadyEnrolled) {
-            setStatus({ 
-              type: "success", 
-              message: `Pemberitahuan: Peserta ${participantObj.name} memang sudah terdaftar aktif di kelas "${courseObj.title}"! Mengalihkan Anda ke portal utama dalam 2 detik...` 
-            });
-            setLoading(false);
-            setTimeout(() => {
-                safeRedirect("edu8.html");
-            }, 2000);
-            return;
-          }
-
-          const newEnrollment = {
-            id: `e_${Date.now()}`,
-            participantId: participantObj.id,
-            courseId: courseObj.id,
-            completedModules: [],
-            isGraduated: false,
-            certDownloaded: false,
-            examScore: null,
-            graduatedAt: null
-          };
-
-          const updatedEnrollments = [...currentDb.enrollments, newEnrollment];
-          const finalDb = {
-            ...currentDb,
-            participants: updatedParticipants,
-            enrollments: updatedEnrollments
-          };
-
-          await saveToDatabase(finalDb);
-
-          // Kirim Email Konfirmasi Kelas Baru
-          triggerEmail({
-            tujuan: participantObj.email,
-            subjek: `Akses Kelas ${courseObj.title} Telah Aktif!`,
-            namaPengguna: participantObj.name,
-            isiPesanInti: isNewStudent
-              ? `Pendaftaran kelas Anda berhasil diverifikasi.<br><br><b>Detail Akses Masuk:</b><br>• Kelas: <b>${courseObj.title}</b><br>• Email: <b>${participantObj.email}</b><br>• PIN Akses Masuk: <b style="font-size: 16px; color: #4f46e5;">${participantObj.accessCode}</b>`
-              : `Akun Anda telah berhasil dikaitkan dengan kelas tambahan baru!<br><br><b>Detail Akses Kelas Baru:</b><br>• Kelas Tambahan: <b>${courseObj.title}</b><br>• Email Anda: <b>${participantObj.email}</b><br>• PIN Akses (Tetap Menggunakan PIN Lama Anda): <b style="font-size: 16px; color: #4f46e5;">${participantObj.accessCode}</b>`
-          });
-
-          setStatus({ 
-            type: "success", 
-            message: isNewStudent
-              ? `Selamat! ${participantObj.name} berhasil didaftarkan sebagai siswa baru di kelas "${courseObj.title}" (Pengajar: ${instructorObj.name}). Mengalihkan ke aplikasi...`
-              : `Berhasil menyelaraskan! Siswa lama (${participantObj.name}) sukses ditambahkan ke kelas baru: "${courseObj.title}" (Pengajar: ${instructorObj.name}). Mengalihkan ke aplikasi...`
-          });
-
-          setTimeout(() => {
-              safeRedirect("edu8.html");
-          }, 3000);
-
-        } catch (error) {
-          setStatus({ type: "error", message: error.message });
-        } finally {
-          setLoading(false);
-        }
+          document.body.removeChild(tempTextArea);
       };
 
-      const handleSubmitManual = (e) => {
-        e.preventDefault();
-        executeAutoAction(formData, db);
+      // WhatsApp Template generator
+      const getWATemplate = () => {
+          const link = getGeneratedEnrollLink();
+          return `Halo *${enrollForm.name || 'Siswa'}*, pendaftaran kelas Anda di EduLearn telah sukses disetujui.\n\nSilakan klik link aktivasi berikut untuk membuka kelas Anda:\n👉 ${link}\n\nSetelah klik link di atas, sistem akan mengalihkan Anda secara otomatis ke portal pembelajaran utama. Selamat belajar!`;
       };
 
-      // Tampilan Loading Verifikasi Sesi SSO
       if (ssoChecking) {
           return (
-              <div className="flex flex-col items-center justify-center h-screen bg-slate-900 text-white">
+              <div className="flex flex-col items-center justify-center h-screen bg-slate-950 text-white">
                   <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-indigo-600/30 animate-pulse">
                       <IconWrapper name="shield-check" size={40} className="text-indigo-200" weight="fill" />
                   </div>
                   <Loader2 size={36} className="text-indigo-500 mb-4" />
-                  <h2 className="text-xl font-bold tracking-wide">Menghubungkan S-Tools ID...</h2>
-                  <p className="text-sm text-slate-400 mt-2">Mengamankan Sesi Keamanan Ekosistem Utama</p>
+                  <h2 className="text-xl font-bold tracking-wide animate-pulse">Memverifikasi Sesi S-Tools ID...</h2>
+                  <p className="text-sm text-slate-400 mt-2">Mengamankan Akses Pembuat Link Sistem</p>
               </div>
           );
       }
 
+      const activeLink = getGeneratedEnrollLink();
+
       return (
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
-          {/* Efek Background Estetik */}
-          <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
-            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600 blur-[120px]"></div>
-            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-600 blur-[120px]"></div>
+        <div className="min-h-screen p-4 md:p-8 relative flex flex-col justify-between">
+          {toast && (
+              <div className="fixed top-4 right-4 z-[100] bg-indigo-600 text-white px-6 py-3.5 rounded-2xl shadow-xl flex items-center space-x-2 border border-indigo-400 transition-all animate-[fadeIn_0.2s_ease-out]">
+                  <IconWrapper name="check-circle" size={20} weight="fill" />
+                  <span className="font-bold text-sm">{toast}</span>
+              </div>
+          )}
+
+          {/* Background Lights */}
+          <div className="absolute inset-0 z-0 opacity-20 pointer-events-none overflow-hidden">
+            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600 blur-[150px]"></div>
+            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-600 blur-[150px]"></div>
           </div>
 
-          <div className="relative z-10 w-full max-w-xl glass-card rounded-3xl overflow-hidden shadow-2xl p-6 sm:p-10 text-slate-800">
-            
-            {/* Header */}
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 shadow-lg shadow-indigo-500/20">
-                <i className="ph-fill ph-shield-check text-3xl"></i>
+          <div className="relative z-10 w-full max-w-4xl mx-auto flex-1 flex flex-col justify-center py-6">
+            <div className="glass-card rounded-3xl overflow-hidden shadow-2xl p-6 md:p-10">
+              
+              {/* Header */}
+              <div className="flex flex-col md:flex-row md:items-center justify-between pb-8 border-b border-slate-700/50 gap-4 mb-8">
+                  <div className="flex items-center gap-4">
+                      <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+                          <IconWrapper name="link" size={28} weight="bold" />
+                      </div>
+                      <div>
+                          <h1 className="text-xl md:text-2xl font-black text-white tracking-tight">EduLearn Link Generator</h1>
+                          <p className="text-slate-400 text-xs md:text-sm">Alat otomatis pembuat tautan pendaftaran siswa tanpa kesalahan</p>
+                      </div>
+                  </div>
+                  <div className="bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700 flex items-center text-xs gap-2 self-start md:self-auto">
+                      <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></div>
+                      <span className="font-bold text-slate-300">Operator: {ssoUser?.nama || 'S-Tools ID'}</span>
+                  </div>
               </div>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">Verifikasi & Pendaftaran Instan</h1>
-              <p className="text-slate-500 text-sm mt-1">Gerbang Pintar Integrasi Pembelajaran EduLearn</p>
+
+              {/* Konfigurasi URL Verifikasi */}
+              <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800 mb-8">
+                  <label className="text-xs font-bold text-indigo-400 uppercase tracking-wider block mb-2">Alamat URL Target (verifikasi.html)</label>
+                  <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-500"><IconWrapper name="globe" size={18} /></div>
+                      <input type="text" value={baseUrl} onChange={e => setBaseUrl(e.target.value)} className="w-full pl-11 pr-4 py-3 glass-input rounded-xl outline-none text-slate-300 font-mono text-xs md:text-sm transition-all" placeholder="Masukkan URL lengkap verifikasi.html" />
+                  </div>
+              </div>
+
+              {/* Konten Form */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+                  
+                  {/* Bagian Input Form */}
+                  <div className="md:col-span-7 space-y-4">
+                      <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-850 flex items-center text-xs text-indigo-300 gap-2 mb-2">
+                          <IconWrapper name="info" size={16} />
+                          <span>Buat tautan otomatis untuk mendaftarkan siswa baru/lama secara langsung.</span>
+                      </div>
+                      <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Nama Lengkap Siswa</label>
+                          <input type="text" value={enrollForm.name} onChange={e => setEnrollForm({...enrollForm, name: e.target.value})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white transition-all" placeholder="Contoh: Budi Wijaya (Boleh kosong)" />
+                      </div>
+                      <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Alamat Email Siswa</label>
+                          <input type="email" value={enrollForm.email} onChange={e => setEnrollForm({...enrollForm, email: e.target.value})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white transition-all" placeholder="Contoh: budi@mail.com (Boleh kosong)" />
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Kode Kelas Unik <span className="text-red-500">*</span></label>
+                              <input required type="text" value={enrollForm.courseCode} onChange={e => setEnrollForm({...enrollForm, courseCode: e.target.value.toUpperCase()})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white font-mono font-bold transition-all uppercase" placeholder="Contoh: WEB2028" />
+                          </div>
+                          <div className="space-y-1">
+                              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">PIN Rahasia login (Opsional)</label>
+                              <input type="text" maxLength={6} value={enrollForm.pin} onChange={e => setEnrollForm({...enrollForm, pin: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white font-mono transition-all" placeholder="Contoh: 123456" />
+                          </div>
+                      </div>
+                      <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Username Instruktur <span className="text-red-500">*</span></label>
+                          <input required type="text" value={enrollForm.instructorUsername} onChange={e => setEnrollForm({...enrollForm, instructorUsername: e.target.value.trim().toLowerCase()})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white font-mono transition-all" placeholder="Contoh: sitiaminah (Username unik)" />
+                      </div>
+                  </div>
+
+                  {/* Bagian Live Preview & Hasil Link */}
+                  <div className="md:col-span-5 bg-slate-900/80 p-6 rounded-3xl border border-slate-800 flex flex-col justify-between min-h-[360px]">
+                      <div>
+                          <div className="flex items-center gap-2 mb-4 text-indigo-400 font-bold text-xs uppercase tracking-widest border-b border-slate-800 pb-3">
+                              <IconWrapper name="sparkle" size={16} weight="fill" />
+                              <span>Live Preview Hasil Tautan</span>
+                          </div>
+                          
+                          {activeLink ? (
+                              <div className="space-y-4">
+                                  <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 select-all overflow-hidden break-all font-mono text-[11px] text-slate-300 leading-normal max-h-40 overflow-y-auto">
+                                      {activeLink}
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                                      <IconWrapper name="check-circle" size={14} className="text-emerald-500" />
+                                      <span>Tautan siap dikirimkan kepada calon peserta kelas.</span>
+                                  </div>
+                              </div>
+                          ) : (
+                              <div className="py-12 text-center text-slate-500 text-sm italic">
+                                  Silakan lengkapi parameter berbintang (<span className="text-red-500">*</span>) terlebih dahulu untuk menghasilkan link integrasi pendaftaran.
+                              </div>
+                          )}
+                      </div>
+
+                      {activeLink && (
+                          <div className="space-y-3 pt-6 border-t border-slate-800/80 mt-6">
+                              <button onClick={() => handleCopyToClipboard(activeLink)} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 text-sm shadow-lg shadow-indigo-600/20 active:scale-95">
+                                  <IconWrapper name="copy" size={18} weight="bold" />
+                                  <span>Salin Tautan</span>
+                              </button>
+                              
+                              <button onClick={() => handleCopyToClipboard(getWATemplate(), "Format template WhatsApp disalin!")} className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-400 font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 text-sm active:scale-95">
+                                  <IconWrapper name="whatsapp-logo" size={18} weight="fill" />
+                                  <span>Salin Format WhatsApp</span>
+                              </button>
+
+                              <a href={activeLink} target="_blank" rel="noopener noreferrer" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 text-sm active:scale-95">
+                                  <IconWrapper name="arrow-square-out" size={18} weight="bold" />
+                                  <span>Tes Buka Tautan</span>
+                              </a>
+                          </div>
+                      )}
+                  </div>
+              </div>
+
             </div>
-
-            {/* Scanning / Loading Screen */}
-            {loading && (
-              <div className="py-8 text-center relative">
-                <div className="w-24 h-24 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-6"></div>
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[62px] w-[84px] h-[84px] bg-slate-50 rounded-full flex items-center justify-center">
-                  <i className="ph-bold ph-keyhole text-3xl text-indigo-600 animate-pulse"></i>
-                </div>
-                <p className="text-slate-700 font-bold text-lg animate-pulse">{status.message}</p>
-              </div>
-            )}
-
-            {/* Status Selesai / Error */}
-            {!loading && status.type === "success" && (
-              <div className="py-6 text-center animate-[fadeIn_0.5s_ease-out]">
-                <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                  <i className="ph-fill ph-check-circle text-5xl"></i>
-                </div>
-                <h3 className="text-xl font-extrabold text-slate-900 mb-2">Verifikasi Berhasil!</h3>
-                <p className="text-slate-600 mb-8 leading-relaxed font-medium bg-emerald-50 border border-emerald-100 p-4 rounded-2xl text-sm text-left">{status.message}</p>
-                <div className="flex justify-center items-center gap-2 text-indigo-600 text-sm font-bold animate-pulse">
-                    <Loader2 size={18} />
-                    <span>Membuka aplikasi LMS utama secara otomatis...</span>
-                </div>
-              </div>
-            )}
-
-            {!loading && status.type === "error" && (
-              <div className="py-6 text-center animate-[fadeIn_0.5s_ease-out]">
-                <div className="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                  <i className="ph-fill ph-warning-octagon text-5xl"></i>
-                </div>
-                <h3 className="text-xl font-extrabold text-slate-900 mb-2">Pendaftaran Gagal</h3>
-                <p className="text-red-700 mb-8 leading-relaxed font-medium bg-red-50 border border-red-100 p-4 rounded-2xl text-sm">{status.message}</p>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button onClick={() => window.location.reload()} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition">
-                    Coba Lagi
-                  </button>
-                  <button onClick={() => { setShowManualForm(true); setStatus({type:"input"}); }} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg transition">
-                    Gunakan Form Manual
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Form Manual Input */}
-            {!loading && showManualForm && (
-              <form onSubmit={handleSubmitManual} className="space-y-4 animate-[fadeIn_0.3s_ease-out]">
-                
-                <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex items-start mb-4">
-                  <IconWrapper name="user-plus" size={20} className="text-indigo-600 mr-2 shrink-0 mt-0.5" weight="fill" />
-                  <p className="text-xs text-indigo-900 font-bold leading-relaxed">
-                    Form Pendaftaran Siswa Baru/Lama ke Sesi Kelas Utama.
-                  </p>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nama Lengkap Peserta</label>
-                  <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Contoh: Budi Santoso" />
-                </div>
-                
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Alamat Email Aktif</label>
-                  <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="budi@example.com" />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Kode Kelas Unik</label>
-                    <input required type="text" value={formData.courseCode} onChange={e => setFormData({...formData, courseCode: e.target.value.toUpperCase()})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm font-mono font-bold" placeholder="WEB2028" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">PIN login (6 Digit)</label>
-                    <div className="flex gap-2">
-                      <input required type="text" value={formData.accessCode} onChange={e => setFormData({...formData, accessCode: e.target.value})} className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm font-mono font-bold" placeholder="123456" />
-                      <button type="button" onClick={() => setFormData({...formData, accessCode: Math.floor(100000 + Math.random() * 900000).toString()})} className="w-12 bg-slate-100 hover:bg-slate-200 border rounded-xl flex items-center justify-center text-slate-500" title="Acak PIN"><i className="ph ph-arrows-clockwise text-lg"></i></button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Instruktur Penanggung Jawab</label>
-                  <select required value={formData.instructorUsername} onChange={e => setFormData({...formData, instructorUsername: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 text-sm cursor-pointer transition appearance-none">
-                    <option value="" disabled>-- Pilih Instruktur Pengajar --</option>
-                    {db.admins.filter(a => !a.isSuper).map(a => (
-                      <option key={a.id} value={a.username}>{a.name} (@{a.username})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-600/20 transition mt-6 text-sm flex items-center justify-center gap-2">
-                  <i className="ph-bold ph-user-plus text-lg"></i> Proses Pendaftaran Siswa
-                </button>
-              </form>
-            )}
-
-            <p className="text-center text-xs text-slate-400 mt-8 font-mono tracking-widest">© 2026 S-TOOLS.ID • EDULEARN</p>
           </div>
+
+          {/* Footer */}
+          <footer className="relative z-10 text-center text-xs text-slate-600 font-mono tracking-widest py-4 border-t border-slate-900/50">
+              © 2026 S-TOOLS.ID • EDULEARN PLATFORM LINK ENGINE
+          </footer>
         </div>
       );
     }
