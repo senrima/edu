@@ -371,14 +371,30 @@
         e.target.reset(); showToast("Materi ditambah!");
       };
 
-      const handleDeleteModule = (courseId, moduleId) => {
+        const handleDeleteModule = (courseId, moduleId) => {
+        // Cek apakah sudah ada peserta yang lulus di kelas ini
+        const hasGraduatedStudent = enrollments.some(e => e.courseId === courseId && e.isGraduated);
+        
+        if (hasGraduatedStudent) {
+            showToast("Akses Ditolak: Ada Siswa Lulus!");
+            setConfirmDialog({
+                isOpen: true, 
+                message: "Aksi ditolak! Anda tidak dapat menghapus modul video ini karena sudah ada peserta yang menyelesaikan kelas dan lulus. Integritas materi harus dipertahankan untuk menjamin keabsahan sertifikat alumni.",
+                onConfirm: null // Tidak menampilkan tombol aksi lanjutan (hanya tombol Tutup)
+            });
+            return;
+        }
+
         setConfirmDialog({
-            isOpen: true, message: "Hapus materi video ini?",
+            isOpen: true, 
+            message: "Hapus materi video ini?",
             onConfirm: async () => {
-                setConfirmDialog({ isOpen: false }); const course = courses.find(c => c.id === courseId);
+                setConfirmDialog({ isOpen: false }); 
+                const course = courses.find(c => c.id === courseId);
                 await execDbAction( () => {
                         const updated = courses.map(c => c.id === courseId ? { ...c, modules: c.modules.filter(m => m.id !== moduleId) } : c);
-                        setCourses(updated); localStorage.setItem('edu_courses', JSON.stringify(updated));
+                        setCourses(updated); 
+                        localStorage.setItem('edu_courses', JSON.stringify(updated));
                 }, async () => {} );
                 showToast("Materi dihapus.");
             }
@@ -941,6 +957,14 @@
                   <div className="xl:col-span-1 space-y-6 md:space-y-8">
                     <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100">
                       <h2 className="font-bold text-slate-800 mb-6 text-lg flex items-center"><PlusCircle size={22} className="mr-2 text-indigo-600" />Buka Kelas Baru</h2>
+
+                      <div className="bg-amber-50 border border-amber-200 p-3.5 mb-5 rounded-xl flex items-start">
+                          <AlertCircle size={18} className="text-amber-600 mr-2 shrink-0 mt-0.5" weight="fill" />
+                          <p className="text-xs text-amber-800 font-bold leading-relaxed">
+                              Peringatan: Cek baik-baik data (Kode Unik & Judul Kelas) sebelum memposting kelas baru. Data kelas yang sudah diposting tidak dapat diubah kembali!
+                          </p>
+                      </div>
+                      
                       <form onSubmit={handleCreateCourse} className="space-y-4">
                         <div className="flex items-center gap-2">
                             <input name="code" id="crscode" required maxLength={10} className="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm font-mono uppercase" placeholder="Kode Unik (Maks 10)"/>
