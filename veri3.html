@@ -93,7 +93,7 @@
         email: "",
         courseCode: "",
         courseTitle: "",
-        instructorName: "",
+        instructorUsername: "", // Diubah agar fokus ke Username
         accessCode: ""
       });
 
@@ -118,7 +118,7 @@
         const email = queryParams.get("email") || "";
         const course = queryParams.get("course") || queryParams.get("code") || "";
         const title = queryParams.get("title") || "";
-        const instructor = queryParams.get("instructor") || "";
+        const instructor = queryParams.get("instructor") || ""; // Diharapkan berisi Username instan
         const pin = queryParams.get("pin") || queryParams.get("code_akses") || "";
 
         // JIKA TIDAK ADA PARAMETER REGISTRASI DI URL, LANGSUNG BUKA APLIKASI UTAMA
@@ -134,9 +134,9 @@
           .then(data => {
             setDb(data);
             
+            // Pencarian ketat berdasarkan Username Instruktur
             const matchedInstructor = data.admins.find(a => 
-              a.name.toLowerCase().includes(instructor.toLowerCase()) || 
-              a.username.toLowerCase() === instructor.toLowerCase()
+              a.username.toLowerCase() === instructor.trim().toLowerCase()
             );
 
             const initialForm = {
@@ -145,7 +145,7 @@
               email: email || userData.email || "",
               courseCode: course.toUpperCase(),
               courseTitle: title,
-              instructorName: matchedInstructor ? matchedInstructor.name : (instructor || ""),
+              instructorUsername: matchedInstructor ? matchedInstructor.username : (instructor.trim().toLowerCase() || ""),
               accessCode: pin || Math.floor(100000 + Math.random() * 900000).toString()
             };
             setFormData(initialForm);
@@ -162,6 +162,7 @@
             }
           })
           .catch(err => {
+            console.error(err);
             setLoading(false);
             setStatus({ type: "error", message: "Gagal terhubung ke server. Pastikan koneksi internet Anda stabil." });
           });
@@ -189,14 +190,13 @@
         setStatus({ type: "processing", message: "Sedang memverifikasi data dan menyelaraskan kelas..." });
 
         try {
-          // Cari Instruktur
+          // Cari Instruktur BERDASARKAN USERNAME SECARA KETAT
           const instructorObj = currentDb.admins.find(a => 
-            a.name.toLowerCase() === form.instructorName.toLowerCase() || 
-            a.username.toLowerCase() === form.instructorName.toLowerCase()
+            a.username.toLowerCase() === form.instructorUsername.trim().toLowerCase()
           );
 
           if (!instructorObj) {
-            throw new Error(`Instruktur bernama "${form.instructorName}" tidak terdaftar di sistem pusat.`);
+            throw new Error(`Instruktur dengan username "${form.instructorUsername}" tidak ditemukan di database.`);
           }
 
           if (actionType === "enroll") {
@@ -222,11 +222,9 @@
               updatedParticipants.push(participantObj);
               isNewStudent = true;
             } else {
-              // Jika siswa sudah terdaftar sebelumnya, sistem akan memperbarui nama jika diperlukan, 
-              // dan mempertahankan PIN akses lamanya agar siswa tidak bingung login
+              // Pertahankan info dasar dan PIN akses lamanya
               participantObj.name = form.name || participantObj.name;
               
-              // Jika instruktur mendaftarkan manual dengan PIN baru, kita update PIN lamanya
               if (form.accessCode && form.accessCode !== participantObj.accessCode && showManualForm) {
                 participantObj.accessCode = form.accessCode;
               }
@@ -245,7 +243,6 @@
                 message: `Pemberitahuan: Peserta ${participantObj.name} memang sudah terdaftar aktif di kelas "${courseObj.title}"! Mengalihkan Anda ke portal utama dalam 2 detik...` 
               });
               setLoading(false);
-              // LANGSUNG REDIRECT KE APLIKASI
               setTimeout(() => {
                   window.location.href = "edu8.html";
               }, 2000);
@@ -290,7 +287,6 @@
                 : `Berhasil menyelaraskan! Siswa lama (${participantObj.name}) sukses ditambahkan ke kelas baru: "${courseObj.title}" (Pengajar: ${instructorObj.name}). Mengalihkan ke aplikasi...`
             });
 
-            // LANGSUNG REDIRECT KE APLIKASI SETELAH REGISTRASI BERHASIL
             setTimeout(() => {
                 window.location.href = "edu8.html";
             }, 3000);
@@ -326,10 +322,9 @@
 
             setStatus({ 
               type: "success", 
-              message: `Kelas baru "${form.courseTitle}" (${form.courseCode}) berhasil dibuat! Mengalihkan ke dashboard...` 
+              message: `Kelas baru "${form.courseTitle}" (${form.courseCode}) berhasil dibuat di bawah instruktur ${instructorObj.name}! Mengalihkan ke dashboard...` 
             });
 
-            // LANGSUNG REDIRECT KE APLIKASI SETELAH KELAS BERHASIL DIBUAT
             setTimeout(() => {
                 window.location.href = "edu8.html";
             }, 2500);
@@ -485,10 +480,10 @@
                 {/* Pilihan Instruktur Pengajar (Berlaku untuk kedua aksi) */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Instruktur Penanggung Jawab</label>
-                  <select required value={formData.instructorName} onChange={e => setFormData({...formData, instructorName: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 text-sm cursor-pointer transition appearance-none">
+                  <select required value={formData.instructorUsername} onChange={e => setFormData({...formData, instructorUsername: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 text-sm cursor-pointer transition appearance-none">
                     <option value="" disabled>-- Pilih Instruktur Pengajar --</option>
                     {db.admins.filter(a => !a.isSuper).map(a => (
-                      <option key={a.id} value={a.name}>{a.name}</option>
+                      <option key={a.id} value={a.username}>{a.name} (@{a.username})</option>
                     ))}
                   </select>
                 </div>
