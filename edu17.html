@@ -1307,7 +1307,27 @@
                             </div>
                         )}
 
-                        <div className="relative w-full rounded-3xl overflow-hidden shadow-xl bg-slate-900 aspect-video mb-6 md:mb-8 ring-1 ring-slate-200"><iframe src={formatVideoUrl(activeModule.videoUrl)} title={activeModule.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen className="absolute top-0 left-0 w-full h-full border-0"></iframe></div>
+{/* Kontainer Video Pintar: Menyesuaikan Rasio khusus untuk Google Drive di Mobile */}
+{(() => {
+    const isDriveVideo = activeModule?.videoUrl && activeModule.videoUrl.includes('drive.google.com');
+    return (
+        <div className={`relative w-full rounded-3xl overflow-hidden shadow-xl bg-slate-900 mb-6 md:mb-8 ring-1 ring-slate-200 transition-all ${
+            isDriveVideo 
+              ? 'aspect-[4/3] sm:aspect-video min-h-[280px] sm:min-h-0' 
+              : 'aspect-video'
+        }`}>
+            <iframe 
+                src={formatVideoUrl(activeModule.videoUrl)} 
+                title={activeModule.title} 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                allowFullScreen 
+                className="absolute top-0 left-0 w-full h-full border-0"
+            ></iframe>
+        </div>
+    );
+})()}
+
+
                         
                         <div className="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100">
                             <h2 className="text-2xl md:text-3xl font-extrabold mb-4 text-slate-900">{activeModule.title}</h2>
