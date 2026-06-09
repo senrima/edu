@@ -62,7 +62,6 @@
     function App() {
       const [ssoUser, setSsoUser] = React.useState(null);
       const [ssoChecking, setSsoChecking] = React.useState(true);
-      const [activeTab, setActiveTab] = React.useState("enroll");
       const [toast, setToast] = React.useState(null);
 
       // State default URL verifikasi.html
@@ -71,20 +70,13 @@
           return `${loc.protocol}//${loc.host}${loc.pathname.substring(0, loc.pathname.lastIndexOf('/'))}/verifikasi.html`;
       });
 
-      // State data form pendaftaran siswa (Skenario A)
+      // State data form pendaftaran siswa
       const [enrollForm, setEnrollForm] = React.useState({
           name: "",
           email: "",
           courseCode: "",
-          instructorUsername: "", // Menggunakan Username pengajar secara ketat
+          instructorUsername: "", 
           pin: ""
-      });
-
-      // State data form pembuatan kelas baru (Skenario B)
-      const [courseForm, setCourseForm] = React.useState({
-          code: "",
-          title: "",
-          instructorUsername: "" // Menggunakan Username pengajar secara ketat
       });
 
       // Jalankan Auth Guard S-Tools ID pertama kali dimuat
@@ -102,7 +94,7 @@
 
       const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
 
-      // Logika Pembuatan Link Skenario A (Enrollment)
+      // Logika Pembuatan Link Enrollment
       const getGeneratedEnrollLink = () => {
           if (!enrollForm.courseCode || !enrollForm.instructorUsername) return "";
           const params = new URLSearchParams();
@@ -110,19 +102,8 @@
           if (enrollForm.name) params.append("name", enrollForm.name);
           if (enrollForm.email) params.append("email", enrollForm.email);
           params.append("course", enrollForm.courseCode.toUpperCase());
-          params.append("instructor", enrollForm.instructorUsername.trim().toLowerCase()); // Menyimpan Username
+          params.append("instructor", enrollForm.instructorUsername.trim().toLowerCase()); 
           if (enrollForm.pin) params.append("pin", enrollForm.pin);
-          return `${baseUrl}?${params.toString()}`;
-      };
-
-      // Logika Pembuatan Link Skenario B (Create Course)
-      const getGeneratedCourseLink = () => {
-          if (!courseForm.code || !courseForm.title || !courseForm.instructorUsername) return "";
-          const params = new URLSearchParams();
-          params.append("action", "create_course");
-          params.append("code", courseForm.code.toUpperCase());
-          params.append("title", courseForm.title);
-          params.append("instructor", courseForm.instructorUsername.trim().toLowerCase()); // Menyimpan Username
           return `${baseUrl}?${params.toString()}`;
       };
 
@@ -161,7 +142,7 @@
           );
       }
 
-      const activeLink = activeTab === "enroll" ? getGeneratedEnrollLink() : getGeneratedCourseLink();
+      const activeLink = getGeneratedEnrollLink();
 
       return (
         <div className="min-h-screen p-4 md:p-8 relative flex flex-col justify-between">
@@ -189,7 +170,7 @@
                       </div>
                       <div>
                           <h1 className="text-xl md:text-2xl font-black text-white tracking-tight">EduLearn Link Generator</h1>
-                          <p className="text-slate-400 text-xs md:text-sm">Alat otomatis pembuat tautan integrasi LMS tanpa kesalahan</p>
+                          <p className="text-slate-400 text-xs md:text-sm">Alat otomatis pembuat tautan pendaftaran siswa tanpa kesalahan</p>
                       </div>
                   </div>
                   <div className="bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700 flex items-center text-xs gap-2 self-start md:self-auto">
@@ -199,7 +180,7 @@
               </div>
 
               {/* Konfigurasi URL Verifikasi */}
-              <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800 mb-6">
+              <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800 mb-8">
                   <label className="text-xs font-bold text-indigo-400 uppercase tracking-wider block mb-2">Alamat URL Target (verifikasi.html)</label>
                   <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-500"><IconWrapper name="globe" size={18} /></div>
@@ -207,64 +188,37 @@
                   </div>
               </div>
 
-              {/* Switch Tab Form */}
-              <div className="grid grid-cols-2 gap-2 p-1 bg-slate-900/80 rounded-2xl border border-slate-800 mb-8">
-                  <button onClick={() => setActiveTab("enroll")} className={`py-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition ${activeTab === 'enroll' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
-                      <IconWrapper name="user-plus" size={18} />
-                      <span>Skenario A: Daftar Siswa</span>
-                  </button>
-                  <button onClick={() => setActiveTab("create_course")} className={`py-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition ${activeTab === 'create_course' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
-                      <IconWrapper name="folder-plus" size={18} />
-                      <span>Skenario B: Tambah Kelas</span>
-                  </button>
-              </div>
-
               {/* Konten Form */}
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
                   
                   {/* Bagian Input Form */}
                   <div className="md:col-span-7 space-y-4">
-                      {activeTab === "enroll" ? (
-                          <>
-                              <div className="space-y-1">
-                                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Nama Lengkap Siswa</label>
-                                  <input type="text" value={enrollForm.name} onChange={e => setEnrollForm({...enrollForm, name: e.target.value})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white transition-all" placeholder="Contoh: Budi Wijaya (Boleh kosong)" />
-                              </div>
-                              <div className="space-y-1">
-                                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Alamat Email Siswa</label>
-                                  <input type="email" value={enrollForm.email} onChange={e => setEnrollForm({...enrollForm, email: e.target.value})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white transition-all" placeholder="Contoh: budi@mail.com (Boleh kosong)" />
-                              </div>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                  <div className="space-y-1">
-                                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Kode Kelas Unik <span className="text-red-500">*</span></label>
-                                      <input required type="text" value={enrollForm.courseCode} onChange={e => setEnrollForm({...enrollForm, courseCode: e.target.value.toUpperCase()})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white font-mono font-bold transition-all uppercase" placeholder="Contoh: WEB2028" />
-                                  </div>
-                                  <div className="space-y-1">
-                                      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">PIN Rahasia login (Opsional)</label>
-                                      <input type="text" maxLength={6} value={enrollForm.pin} onChange={e => setEnrollForm({...enrollForm, pin: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white font-mono transition-all" placeholder="Contoh: 123456" />
-                                  </div>
-                              </div>
-                              <div className="space-y-1">
-                                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Username Instruktur <span className="text-red-500">*</span></label>
-                                  <input required type="text" value={enrollForm.instructorUsername} onChange={e => setEnrollForm({...enrollForm, instructorUsername: e.target.value.trim().toLowerCase()})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white font-mono transition-all" placeholder="Contoh: sitiaminah (Username unik)" />
-                              </div>
-                          </>
-                      ) : (
-                          <>
-                              <div className="space-y-1">
-                                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Judul Utama Kelas Baru <span className="text-red-500">*</span></label>
-                                  <input required type="text" value={courseForm.title} onChange={e => setCourseForm({...courseForm, title: e.target.value})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white transition-all" placeholder="Contoh: Mastering Node.js & REST API" />
-                              </div>
-                              <div className="space-y-1">
-                                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Kode Kelas Baru <span className="text-red-500">*</span></label>
-                                  <input required type="text" maxLength={10} value={courseForm.code} onChange={e => setCourseForm({...courseForm, code: e.target.value.toUpperCase()})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white font-mono font-bold transition-all uppercase" placeholder="Contoh: NODE2026" />
-                              </div>
-                              <div className="space-y-1">
-                                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Username Instruktur Penanggung Jawab <span className="text-red-500">*</span></label>
-                                  <input required type="text" value={courseForm.instructorUsername} onChange={e => setCourseForm({...courseForm, instructorUsername: e.target.value.trim().toLowerCase()})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white font-mono transition-all" placeholder="Contoh: budisantoso (Username unik)" />
-                              </div>
-                          </>
-                      )}
+                      <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-850 flex items-center text-xs text-indigo-300 gap-2 mb-2">
+                          <IconWrapper name="info" size={16} />
+                          <span>Buat tautan otomatis untuk mendaftarkan siswa baru/lama secara langsung.</span>
+                      </div>
+                      <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Nama Lengkap Siswa</label>
+                          <input type="text" value={enrollForm.name} onChange={e => setEnrollForm({...enrollForm, name: e.target.value})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white transition-all" placeholder="Contoh: Budi Wijaya (Boleh kosong)" />
+                      </div>
+                      <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Alamat Email Siswa</label>
+                          <input type="email" value={enrollForm.email} onChange={e => setEnrollForm({...enrollForm, email: e.target.value})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white transition-all" placeholder="Contoh: budi@mail.com (Boleh kosong)" />
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Kode Kelas Unik <span className="text-red-500">*</span></label>
+                              <input required type="text" value={enrollForm.courseCode} onChange={e => setEnrollForm({...enrollForm, courseCode: e.target.value.toUpperCase()})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white font-mono font-bold transition-all uppercase" placeholder="Contoh: WEB2028" />
+                          </div>
+                          <div className="space-y-1">
+                              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">PIN Rahasia login (Opsional)</label>
+                              <input type="text" maxLength={6} value={enrollForm.pin} onChange={e => setEnrollForm({...enrollForm, pin: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white font-mono transition-all" placeholder="Contoh: 123456" />
+                          </div>
+                      </div>
+                      <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Username Instruktur <span className="text-red-500">*</span></label>
+                          <input required type="text" value={enrollForm.instructorUsername} onChange={e => setEnrollForm({...enrollForm, instructorUsername: e.target.value.trim().toLowerCase()})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white font-mono transition-all" placeholder="Contoh: sitiaminah (Username unik)" />
+                      </div>
                   </div>
 
                   {/* Bagian Live Preview & Hasil Link */}
@@ -282,12 +236,12 @@
                                   </div>
                                   <div className="flex items-center gap-2 text-xs text-slate-500">
                                       <IconWrapper name="check-circle" size={14} className="text-emerald-500" />
-                                      <span>Parameter URL sudah ter-encode secara aman menggunakan Username.</span>
+                                      <span>Tautan siap dikirimkan kepada calon peserta kelas.</span>
                                   </div>
                               </div>
                           ) : (
                               <div className="py-12 text-center text-slate-500 text-sm italic">
-                                  Silakan lengkapi parameter berbintang (<span className="text-red-500">*</span>) terlebih dahulu untuk menghasilkan link integrasi.
+                                  Silakan lengkapi parameter berbintang (<span className="text-red-500">*</span>) terlebih dahulu untuk menghasilkan link integrasi pendaftaran.
                               </div>
                           )}
                       </div>
@@ -299,12 +253,10 @@
                                   <span>Salin Tautan</span>
                               </button>
                               
-                              {activeTab === "enroll" && (
-                                  <button onClick={() => handleCopyToClipboard(getWATemplate(), "Format template WhatsApp disalin!")} className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-400 font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 text-sm active:scale-95">
-                                      <IconWrapper name="whatsapp-logo" size={18} weight="fill" />
-                                      <span>Salin Format WhatsApp</span>
-                                  </button>
-                              )}
+                              <button onClick={() => handleCopyToClipboard(getWATemplate(), "Format template WhatsApp disalin!")} className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-400 font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 text-sm active:scale-95">
+                                  <IconWrapper name="whatsapp-logo" size={18} weight="fill" />
+                                  <span>Salin Format WhatsApp</span>
+                              </button>
 
                               <a href={activeLink} target="_blank" rel="noopener noreferrer" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 text-sm active:scale-95">
                                   <IconWrapper name="arrow-square-out" size={18} weight="bold" />
