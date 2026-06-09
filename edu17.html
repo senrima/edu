@@ -942,11 +942,9 @@
                     <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100">
                       <h2 className="font-bold text-slate-800 mb-6 text-lg flex items-center"><PlusCircle size={22} className="mr-2 text-indigo-600" />Buka Kelas Baru</h2>
                       <form onSubmit={handleCreateCourse} className="space-y-4">
-                        <div className="flex items-center space-x-2">
-                            <input name="code" id="crscode" required maxLength={10} className="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Kode Unik (Maks 10)"/>
-                            <button type="button" onClick={()=>document.getElementById('crscode').value = generateRandomCode("CR")} className="w-12 h-[50px] bg-slate-100 hover:bg-slate-200 flex items-center justify-center rounded-xl text-slate-600 transition shrink-0 shadow-sm border border-slate-200" title="Generate Kode Acak">
-                                <RefreshCw size={20}/>
-                            </button>
+                        <div className="flex items-center gap-2">
+                            <input name="code" id="crscode" required maxLength={10} className="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm font-mono uppercase" placeholder="Kode Unik (Maks 10)"/>
+                            <button type="button" onClick={()=>document.getElementById('crscode').value = generateRandomCode("CR")} className="w-14 h-[50px] bg-slate-100 hover:bg-slate-200 flex items-center justify-center rounded-xl text-slate-500 transition shrink-0" title="Generate Kode Acak"><RefreshCw size={20}/></button>
                         </div>
                         <input name="title" required maxLength={60} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Judul Kelas Utama"/>
                         <input name="inst" defaultValue={session.data.name} required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Nama Tampil Pengajar"/>
@@ -1017,7 +1015,10 @@
                       <form onSubmit={handleRegisterParticipant} className="space-y-4">
                         <input name="name" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm" placeholder="Nama Lengkap"/>
                         <input name="email" required type="email" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm" placeholder="Email (Akan di-email)"/>
-                        <div className="flex gap-2"><input name="code" id="ptcode" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm font-mono font-bold" placeholder="Kode Rahasia"/><button type="button" onClick={()=>document.getElementById('ptcode').value = generateRandomCode()} className="bg-slate-100 hover:bg-slate-200 px-4 rounded-xl text-slate-500 transition"><RefreshCw size={18}/></button></div>
+                        <div className="flex items-center gap-2">
+                            <input name="code" id="ptcode" required className="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm font-mono" placeholder="PIN Angka (6 Digit)"/>
+                            <button type="button" onClick={()=>document.getElementById('ptcode').value = Math.floor(100000 + Math.random() * 900000).toString()} className="w-14 h-[50px] bg-slate-100 hover:bg-slate-200 flex items-center justify-center rounded-xl text-slate-500 transition shrink-0" title="Generate PIN Angka Acak"><RefreshCw size={20}/></button>
+                        </div>
                         <select name="courseId" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-sm cursor-pointer transition appearance-none" defaultValue=""><option value="" disabled>-- Daftarkan ke Kelas --</option>{myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
                         <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold shadow-lg shadow-emerald-200 transition mt-2">Buat & Daftarkan</button>
                       </form>
