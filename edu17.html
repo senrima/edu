@@ -307,7 +307,15 @@
         e.preventDefault(); setIsLoggingIn(true); setLoginError("");
         setTimeout(() => {
           const { username, password } = loginInput;
-          const adminFound = admins.find(a => a.username === username && a.password === password);
+          const cleanUser = username.trim().toLowerCase();
+          const cleanPass = password.trim();
+
+          // Konversi password admin ke String dan bersihkan spasi
+          const adminFound = admins.find(a => 
+            a.username.trim().toLowerCase() === cleanUser && 
+            String(a.password).trim() === cleanPass
+          );
+
           if (adminFound) {
             if (!adminFound.isActive) { setLoginError("Akun Instruktur dinonaktifkan oleh Sistem."); setIsLoggingIn(false); return; }
             const sessData = { role: adminFound.isSuper ? 'super_admin' : 'admin', data: adminFound };
@@ -315,7 +323,13 @@
             if(!adminFound.isSuper) setProfileForm({ donationLink: adminFound.donationLink || "" });
             setAppMode(adminFound.isSuper ? 'super_dashboard' : 'admin_dashboard'); setIsLoggingIn(false); return;
           }
-          const partFound = participants.find(p => p.email === username && p.accessCode === password);
+
+          // Konversi PIN akses peserta ke String agar kode angka murni berhasil login
+          const partFound = participants.find(p => 
+            p.email.trim().toLowerCase() === cleanUser && 
+            String(p.accessCode).trim() === cleanPass
+          );
+
           if (partFound) {
             const sessData = { role: 'participant', data: partFound };
             setSession(sessData); sessionStorage.setItem('edu_session', JSON.stringify(sessData));
