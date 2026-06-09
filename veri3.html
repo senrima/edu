@@ -140,7 +140,7 @@
         const queryParams = new URLSearchParams(window.location.search);
         const action = queryParams.get("action") || "enroll";
         const name = queryParams.get("name") || "";
-        const email = queryParams.get("email") || "";
+        const email = (queryParams.get("email") || "").trim().toLowerCase(); // Normalisasi email parameter ke lowercase
         const course = queryParams.get("course") || queryParams.get("code") || "";
         const instructor = queryParams.get("instructor") || "";
         const pin = queryParams.get("pin") || queryParams.get("code_akses") || "";
@@ -168,14 +168,14 @@
           .then(data => {
             setDb(data);
             
-            // Perbaikan: Konversi a.username ke String secara aman sebelum melakukan pencarian
+            // Pencarian ketat berdasarkan Username Instruktur
             const matchedInstructor = data.admins.find(a => 
               String(a.username || '').toLowerCase() === String(instructor || '').trim().toLowerCase()
             );
 
             const initialForm = {
               name: name || userData.nama || "",
-              email: email || userData.email || "",
+              email: (email || userData.email || "").trim().toLowerCase(), // Normalisasi email sesi ke lowercase
               courseCode: String(course || '').toUpperCase(),
               instructorUsername: matchedInstructor ? matchedInstructor.username : String(instructor || '').trim().toLowerCase(),
               accessCode: pin || Math.floor(100000 + Math.random() * 900000).toString()
@@ -242,9 +242,10 @@
             throw new Error("Kelas dan instruktur tidak cocok.");
           }
 
-          // 4. CEK APAKAH PESERTA LAMA ATAU BARU
+          // 4. CEK APAKAH PESERTA LAMA ATAU BARU (Email diclean ke lowercase)
+          const targetEmail = String(form.email || '').trim().toLowerCase();
           let participantObj = currentDb.participants.find(p => 
-            String(p.email || '').toLowerCase() === String(form.email || '').toLowerCase()
+            String(p.email || '').toLowerCase() === targetEmail
           );
           let updatedParticipants = [...currentDb.participants];
           let isNewStudent = false;
@@ -254,7 +255,7 @@
             participantObj = {
               id: `p_${Date.now()}`,
               name: form.name,
-              email: form.email,
+              email: targetEmail, // Disimpan dalam bentuk lowercase bersih
               accessCode: form.accessCode
             };
             updatedParticipants.push(participantObj);
@@ -262,6 +263,7 @@
           } else {
             // Skenario Siswa Lama
             participantObj.name = form.name || participantObj.name;
+            participantObj.email = targetEmail; // Pastikan terupdate ke lowercase
             
             if (form.accessCode && form.accessCode !== participantObj.accessCode && showManualForm) {
               participantObj.accessCode = form.accessCode;
@@ -320,8 +322,8 @@
           setStatus({ 
             type: "success", 
             message: isNewStudent
-              ? `Selamat! ${participantObj.name} berhasil didaftarkan sebagai siswa baru di kelas "${courseObj.title}" (Pengajar: ${instructorObj.name}). Mengalihkan ke aplikasi...`
-              : `Berhasil menyelaraskan! Siswa lama (${participantObj.name}) sukses ditambahkan ke kelas baru: "${courseObj.title}" (Pengajar: ${instructorObj.name}). Mengalihkan ke aplikasi...`
+              ? `Selamat! ${participantObj.name} berhasil didaftarkan sebagai siswa baru di kelas "${courseObj.title}". Mengalihkan ke aplikasi...`
+              : `Berhasil menyelaraskan! Siswa lama (${participantObj.name}) sukses ditambahkan ke kelas baru: "${courseObj.title}". Mengalihkan ke aplikasi...`
           });
 
           setTimeout(() => {
@@ -435,7 +437,8 @@
                 
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Alamat Email Aktif</label>
-                  <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="budi@example.com" />
+                  {/* MODIFIKASI: Input email otomatis dikonversi ke huruf kecil (lowercase) secara real-time saat diketik */}
+                  <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value.toLowerCase()})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="budi@example.com" />
                 </div>
                 
                 <div className="grid grid-cols-2 gap-3">
@@ -452,14 +455,10 @@
                   </div>
                 </div>
 
+                {/* Dropdown diubah menjadi kolom input teks demi menjaga privasi data instruktur */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Instruktur Penanggung Jawab</label>
-                  <select required value={formData.instructorUsername} onChange={e => setFormData({...formData, instructorUsername: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 text-sm cursor-pointer transition appearance-none">
-                    <option value="" disabled>-- Pilih Instruktur Pengajar --</option>
-                    {db.admins.filter(a => !a.isSuper).map(a => (
-                      <option key={a.id} value={a.username}>{a.name} (@{a.username})</option>
-                    ))}
-                  </select>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Username Instruktur Pengajar</label>
+                  <input required type="text" value={formData.instructorUsername} onChange={e => setFormData({...formData, instructorUsername: e.target.value.trim().toLowerCase()})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm font-mono" placeholder="Contoh: sitiaminah (Ketik username unik)" />
                 </div>
 
                 <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-600/20 transition mt-6 text-sm flex items-center justify-center gap-2">
@@ -474,8 +473,8 @@
       );
     }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
+    const rootMounted = ReactDOM.createRoot(document.getElementById('root'));
+    rootMounted.render(<App />);
   </script>
 </body>
 </html>
