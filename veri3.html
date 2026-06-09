@@ -49,7 +49,6 @@
     const safeRedirect = (target) => {
         try {
             const currentHref = window.location.href;
-            // Jika href tidak valid atau berupa data/srcdoc, jangan lakukan pengalihan fisik untuk menghindari SyntaxError
             if (currentHref && !currentHref.startsWith('about:') && !currentHref.startsWith('data:') && currentHref !== 'null') {
                 const url = new URL(target, currentHref);
                 window.location.href = url.href;
@@ -85,11 +84,11 @@
             if (result.status === 'success') {
                 return result.userData; 
             } else {
-                return null; // Mengembalikan null agar sistem dapat beralih ke sesi fallback
+                return null;
             }
         } catch (error) {
             console.warn("Gagal menghubungi S-Tools ID API. Sesi dialihkan ke lokal/tamu.");
-            return null; // Mengembalikan null agar tidak crash dan tidak loading selamanya
+            return null;
         }
     }
 
@@ -100,14 +99,12 @@
       const [status, setStatus] = React.useState({ type: "idle", message: "Membaca tautan..." });
       const [db, setDb] = React.useState({ admins: [], courses: [], participants: [], enrollments: [], notifications: [] });
       
-      // State Form Manual (jika parameter URL tidak lengkap)
+      // State Form Manual (Hanya untuk pendaftaran siswa)
       const [showManualForm, setShowManualForm] = React.useState(false);
       const [formData, setFormData] = React.useState({
-        action: "enroll",
         name: "",
         email: "",
         courseCode: "",
-        courseTitle: "",
         instructorUsername: "",
         accessCode: ""
       });
@@ -122,7 +119,6 @@
                       setSsoUser(userData);
                       initializePage(userData);
                   } else {
-                      // Fallback Sesi Tamu/Lokal jika pengguna belum login atau redirect diblokir di sandbox
                       const fallbackUser = { nama: "Operator Lokal", email: "operator@s-tools.id" };
                       setSsoUser(fallbackUser);
                       initializePage(fallbackUser);
@@ -133,7 +129,7 @@
                   setSsoUser(fallbackUser);
                   initializePage(fallbackUser);
               } finally {
-                  setSsoChecking(false); // Di jamin akan selalu bernilai false agar tidak loading selamanya
+                  setSsoChecking(false);
               }
           }
           handleSSO();
@@ -142,17 +138,26 @@
       // 2. Tarik Database dan baca parameter URL
       const initializePage = (userData) => {
         const queryParams = new URLSearchParams(window.location.search);
-        const action = queryParams.get("action") || "";
+        const action = queryParams.get("action") || "enroll";
         const name = queryParams.get("name") || "";
         const email = queryParams.get("email") || "";
         const course = queryParams.get("course") || queryParams.get("code") || "";
-        const title = queryParams.get("title") || "";
-        const instructor = queryParams.get("instructor") || ""; // Diharapkan berisi Username instan
+        const instructor = queryParams.get("instructor") || "";
         const pin = queryParams.get("pin") || queryParams.get("code_akses") || "";
 
         // JIKA TIDAK ADA PARAMETER REGISTRASI DI URL, LANGSUNG BUKA APLIKASI UTAMA
-        if (!action && !course) {
+        if (!course) {
             safeRedirect("edu8.html");
+            return;
+        }
+
+        // Tampilkan error jika mencoba menggunakan link pembuatan kelas lama
+        if (action === "create_course") {
+            setLoading(false);
+            setStatus({ 
+                type: "error", 
+                message: "Fitur pendaftaran kelas via link eksternal telah dinonaktifkan. Pembuatan kelas baru sekarang wajib dilakukan secara aman melalui Dashboard Instruktur Anda." 
+            });
             return;
         }
 
@@ -163,27 +168,23 @@
           .then(data => {
             setDb(data);
             
-            // Pencarian ketat berdasarkan Username Instruktur
+            // Perbaikan: Konversi a.username ke String secara aman sebelum melakukan pencarian
             const matchedInstructor = data.admins.find(a => 
-              a.username.toLowerCase() === instructor.trim().toLowerCase()
+              String(a.username || '').toLowerCase() === String(instructor || '').trim().toLowerCase()
             );
 
             const initialForm = {
-              action: action || "enroll",
               name: name || userData.nama || "",
               email: email || userData.email || "",
-              courseCode: course.toUpperCase(),
-              courseTitle: title,
-              instructorUsername: matchedInstructor ? matchedInstructor.username : (instructor.trim().toLowerCase() || ""),
+              courseCode: String(course || '').toUpperCase(),
+              instructorUsername: matchedInstructor ? matchedInstructor.username : String(instructor || '').trim().toLowerCase(),
               accessCode: pin || Math.floor(100000 + Math.random() * 900000).toString()
             };
             setFormData(initialForm);
 
             // Validasi apakah parameter URL sudah lengkap untuk auto-submit
-            if (action === "enroll" && (name || userData.nama) && (email || userData.email) && course && instructor) {
-              executeAutoAction("enroll", initialForm, data);
-            } else if (action === "create_course" && course && title && instructor) {
-              executeAutoAction("create_course", initialForm, data);
+            if ((name || userData.nama) && (email || userData.email) && course && instructor) {
+              executeAutoAction(initialForm, data);
             } else {
               setLoading(false);
               setShowManualForm(true);
@@ -213,151 +214,112 @@
         }).catch(console.error);
       };
 
-      // Eksekusi Pendaftaran / Pembuatan otomatis
-      const executeAutoAction = async (actionType, form, currentDb) => {
+      // Eksekusi Pendaftaran otomatis
+      const executeAutoAction = async (form, currentDb) => {
         setLoading(true);
-        setStatus({ type: "processing", message: "Sedang memverifikasi data dan menyelaraskan kelas..." });
+        setStatus({ type: "processing", message: "Sedang memverifikasi data dan mendaftarkan kelas..." });
 
         try {
           // Cari Instruktur BERDASARKAN USERNAME SECARA KETAT
           const instructorObj = currentDb.admins.find(a => 
-            a.username.toLowerCase() === form.instructorUsername.trim().toLowerCase()
+            String(a.username || '').toLowerCase() === String(form.instructorUsername || '').trim().toLowerCase()
           );
 
           if (!instructorObj) {
             throw new Error(`Instruktur dengan username "${form.instructorUsername}" tidak ditemukan di database.`);
           }
 
-          if (actionType === "enroll") {
-            // 1. Cari Kursus Berdasarkan Kode
-            const courseObj = currentDb.courses.find(c => c.code.toUpperCase() === form.courseCode.toUpperCase());
-            if (!courseObj) {
-              throw new Error(`Kode Kelas "${form.courseCode}" tidak ditemukan.`);
-            }
-
-            // 2. Buat atau update data peserta secara cerdas
-            let participantObj = currentDb.participants.find(p => p.email.toLowerCase() === form.email.toLowerCase());
-            let updatedParticipants = [...currentDb.participants];
-            let isNewStudent = false;
-
-            if (!participantObj) {
-              // Jika ini siswa baru, buat objek baru
-              participantObj = {
-                id: `p_${Date.now()}`,
-                name: form.name,
-                email: form.email,
-                accessCode: form.accessCode
-              };
-              updatedParticipants.push(participantObj);
-              isNewStudent = true;
-            } else {
-              // Pertahankan info dasar dan PIN akses lamanya
-              participantObj.name = form.name || participantObj.name;
-              
-              if (form.accessCode && form.accessCode !== participantObj.accessCode && showManualForm) {
-                participantObj.accessCode = form.accessCode;
-              }
-              
-              updatedParticipants = currentDb.participants.map(p => p.id === participantObj.id ? participantObj : p);
-            }
-
-            // 3. Daftarkan Peserta ke Kelas (Enrollment)
-            const isAlreadyEnrolled = currentDb.enrollments.some(e => 
-              e.participantId === participantObj.id && e.courseId === courseObj.id
-            );
-
-            if (isAlreadyEnrolled) {
-              setStatus({ 
-                type: "success", 
-                message: `Pemberitahuan: Peserta ${participantObj.name} memang sudah terdaftar aktif di kelas "${courseObj.title}"! Mengalihkan Anda ke portal utama dalam 2 detik...` 
-              });
-              setLoading(false);
-              setTimeout(() => {
-                  safeRedirect("edu8.html");
-              }, 2000);
-              return;
-            }
-
-            const newEnrollment = {
-              id: `e_${Date.now()}`,
-              participantId: participantObj.id,
-              courseId: courseObj.id,
-              completedModules: [],
-              isGraduated: false,
-              certDownloaded: false,
-              examScore: null,
-              graduatedAt: null
-            };
-
-            const updatedEnrollments = [...currentDb.enrollments, newEnrollment];
-            const finalDb = {
-              ...currentDb,
-              participants: updatedParticipants,
-              enrollments: updatedEnrollments
-            };
-
-            // Simpan ke spreadsheet
-            await saveToDatabase(finalDb);
-
-            // Kirim Email Konfirmasi Kelas Baru
-            triggerEmail({
-              tujuan: participantObj.email,
-              subjek: `Akses Kelas ${courseObj.title} Telah Aktif!`,
-              namaPengguna: participantObj.name,
-              isiPesanInti: isNewStudent
-                ? `Pendaftaran kelas Anda berhasil diverifikasi.<br><br><b>Detail Akses Masuk:</b><br>• Kelas: <b>${courseObj.title}</b><br>• Email: <b>${participantObj.email}</b><br>• PIN Akses Masuk: <b style="font-size: 16px; color: #4f46e5;">${participantObj.accessCode}</b>`
-                : `Akun Anda telah berhasil dikaitkan dengan kelas tambahan baru!<br><br><b>Detail Akses Kelas Baru:</b><br>• Kelas Tambahan: <b>${courseObj.title}</b><br>• Email Anda: <b>${participantObj.email}</b><br>• PIN Akses (Tetap Menggunakan PIN Lama Anda): <b style="font-size: 16px; color: #4f46e5;">${participantObj.accessCode}</b>`
-            });
-
-            setStatus({ 
-              type: "success", 
-              message: isNewStudent
-                ? `Selamat! ${participantObj.name} berhasil didaftarkan sebagai siswa baru di kelas "${courseObj.title}" (Pengajar: ${instructorObj.name}). Mengalihkan ke aplikasi...`
-                : `Berhasil menyelaraskan! Siswa lama (${participantObj.name}) sukses ditambahkan ke kelas baru: "${courseObj.title}" (Pengajar: ${instructorObj.name}). Mengalihkan ke aplikasi...`
-            });
-
-            setTimeout(() => {
-                safeRedirect("edu8.html");
-            }, 3000);
-
-          } else if (actionType === "create_course") {
-            // Buat Kelas Baru
-            const isCourseExist = currentDb.courses.some(c => c.code.toUpperCase() === form.courseCode.toUpperCase());
-            if (isCourseExist) {
-              throw new Error(`Gagal: Kode kelas "${form.courseCode}" sudah dipakai oleh kelas lain.`);
-            }
-
-            const newCourse = {
-              id: `c_${Date.now()}`,
-              authorId: instructorObj.id,
-              code: form.courseCode.toUpperCase(),
-              title: form.courseTitle,
-              instructor: instructorObj.name,
-              isActive: true,
-              docLink: "",
-              modules: [],
-              exam: { 
-                minScore: 70, 
-                questions: Array.from({length: 10}, () => ({ q: '', options: ['','','',''], answer: 0 })) 
-              }
-            };
-
-            const finalDb = {
-              ...currentDb,
-              courses: [...currentDb.courses, newCourse]
-            };
-
-            await saveToDatabase(finalDb);
-
-            setStatus({ 
-              type: "success", 
-              message: `Kelas baru "${form.courseTitle}" (${form.courseCode}) berhasil dibuat di bawah instruktur ${instructorObj.name}! Mengalihkan ke dashboard...` 
-            });
-
-            setTimeout(() => {
-                safeRedirect("edu8.html");
-            }, 2500);
+          // Cari Kursus Berdasarkan Kode
+          const courseObj = currentDb.courses.find(c => 
+            String(c.code || '').toUpperCase() === String(form.courseCode || '').toUpperCase()
+          );
+          if (!courseObj) {
+            throw new Error(`Kode Kelas "${form.courseCode}" tidak ditemukan.`);
           }
+
+          // Buat atau update data peserta secara cerdas
+          let participantObj = currentDb.participants.find(p => 
+            String(p.email || '').toLowerCase() === String(form.email || '').toLowerCase()
+          );
+          let updatedParticipants = [...currentDb.participants];
+          let isNewStudent = false;
+
+          if (!participantObj) {
+            participantObj = {
+              id: `p_${Date.now()}`,
+              name: form.name,
+              email: form.email,
+              accessCode: form.accessCode
+            };
+            updatedParticipants.push(participantObj);
+            isNewStudent = true;
+          } else {
+            participantObj.name = form.name || participantObj.name;
+            
+            if (form.accessCode && form.accessCode !== participantObj.accessCode && showManualForm) {
+              participantObj.accessCode = form.accessCode;
+            }
+            
+            updatedParticipants = currentDb.participants.map(p => p.id === participantObj.id ? participantObj : p);
+          }
+
+          // Daftarkan Peserta ke Kelas (Enrollment)
+          const isAlreadyEnrolled = currentDb.enrollments.some(e => 
+            e.participantId === participantObj.id && e.courseId === courseObj.id
+          );
+
+          if (isAlreadyEnrolled) {
+            setStatus({ 
+              type: "success", 
+              message: `Pemberitahuan: Peserta ${participantObj.name} memang sudah terdaftar aktif di kelas "${courseObj.title}"! Mengalihkan Anda ke portal utama dalam 2 detik...` 
+            });
+            setLoading(false);
+            setTimeout(() => {
+                safeRedirect("edu8.html");
+            }, 2000);
+            return;
+          }
+
+          const newEnrollment = {
+            id: `e_${Date.now()}`,
+            participantId: participantObj.id,
+            courseId: courseObj.id,
+            completedModules: [],
+            isGraduated: false,
+            certDownloaded: false,
+            examScore: null,
+            graduatedAt: null
+          };
+
+          const updatedEnrollments = [...currentDb.enrollments, newEnrollment];
+          const finalDb = {
+            ...currentDb,
+            participants: updatedParticipants,
+            enrollments: updatedEnrollments
+          };
+
+          await saveToDatabase(finalDb);
+
+          // Kirim Email Konfirmasi Kelas Baru
+          triggerEmail({
+            tujuan: participantObj.email,
+            subjek: `Akses Kelas ${courseObj.title} Telah Aktif!`,
+            namaPengguna: participantObj.name,
+            isiPesanInti: isNewStudent
+              ? `Pendaftaran kelas Anda berhasil diverifikasi.<br><br><b>Detail Akses Masuk:</b><br>• Kelas: <b>${courseObj.title}</b><br>• Email: <b>${participantObj.email}</b><br>• PIN Akses Masuk: <b style="font-size: 16px; color: #4f46e5;">${participantObj.accessCode}</b>`
+              : `Akun Anda telah berhasil dikaitkan dengan kelas tambahan baru!<br><br><b>Detail Akses Kelas Baru:</b><br>• Kelas Tambahan: <b>${courseObj.title}</b><br>• Email Anda: <b>${participantObj.email}</b><br>• PIN Akses (Tetap Menggunakan PIN Lama Anda): <b style="font-size: 16px; color: #4f46e5;">${participantObj.accessCode}</b>`
+          });
+
+          setStatus({ 
+            type: "success", 
+            message: isNewStudent
+              ? `Selamat! ${participantObj.name} berhasil didaftarkan sebagai siswa baru di kelas "${courseObj.title}" (Pengajar: ${instructorObj.name}). Mengalihkan ke aplikasi...`
+              : `Berhasil menyelaraskan! Siswa lama (${participantObj.name}) sukses ditambahkan ke kelas baru: "${courseObj.title}" (Pengajar: ${instructorObj.name}). Mengalihkan ke aplikasi...`
+          });
+
+          setTimeout(() => {
+              safeRedirect("edu8.html");
+          }, 3000);
 
         } catch (error) {
           setStatus({ type: "error", message: error.message });
@@ -368,7 +330,7 @@
 
       const handleSubmitManual = (e) => {
         e.preventDefault();
-        executeAutoAction(formData.action, formData, db);
+        executeAutoAction(formData, db);
       };
 
       // Tampilan Loading Verifikasi Sesi SSO
@@ -452,61 +414,37 @@
             {!loading && showManualForm && (
               <form onSubmit={handleSubmitManual} className="space-y-4 animate-[fadeIn_0.3s_ease-out]">
                 
-                {/* Switcher Aksi */}
-                <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-2xl mb-4">
-                  <button type="button" onClick={() => setFormData({...formData, action: "enroll"})} className={`py-3 rounded-xl font-bold text-sm transition ${formData.action === 'enroll' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
-                    <i className="ph-bold ph-user-plus mr-1"></i> Daftar Siswa
-                  </button>
-                  <button type="button" onClick={() => setFormData({...formData, action: "create_course"})} className={`py-3 rounded-xl font-bold text-sm transition ${formData.action === 'create_course' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}>
-                    <i className="ph-bold ph-folder-plus mr-1"></i> Tambah Kelas
-                  </button>
+                <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex items-start mb-4">
+                  <IconWrapper name="user-plus" size={20} className="text-indigo-600 mr-2 shrink-0 mt-0.5" weight="fill" />
+                  <p className="text-xs text-indigo-900 font-bold leading-relaxed">
+                    Form Pendaftaran Siswa Baru/Lama ke Sesi Kelas Utama.
+                  </p>
                 </div>
 
-                {/* Field Khusus Tambah Peserta */}
-                {formData.action === 'enroll' && (
-                  <>
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nama Lengkap Peserta</label>
-                      <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Contoh: Budi Santoso" />
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nama Lengkap Peserta</label>
+                  <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Contoh: Budi Santoso" />
+                </div>
+                
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Alamat Email Aktif</label>
+                  <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="budi@example.com" />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Kode Kelas Unik</label>
+                    <input required type="text" value={formData.courseCode} onChange={e => setFormData({...formData, courseCode: e.target.value.toUpperCase()})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm font-mono font-bold" placeholder="WEB2028" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">PIN login (6 Digit)</label>
+                    <div className="flex gap-2">
+                      <input required type="text" value={formData.accessCode} onChange={e => setFormData({...formData, accessCode: e.target.value})} className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm font-mono font-bold" placeholder="123456" />
+                      <button type="button" onClick={() => setFormData({...formData, accessCode: Math.floor(100000 + Math.random() * 900000).toString()})} className="w-12 bg-slate-100 hover:bg-slate-200 border rounded-xl flex items-center justify-center text-slate-500" title="Acak PIN"><i className="ph ph-arrows-clockwise text-lg"></i></button>
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Alamat Email Aktif</label>
-                      <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="budi@example.com" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Kode Kelas Unik</label>
-                        <input required type="text" value={formData.courseCode} onChange={e => setFormData({...formData, courseCode: e.target.value.toUpperCase()})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm font-mono font-bold" placeholder="WEB2028" />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">PIN Rahasia (6 Digit)</label>
-                        <div className="flex gap-2">
-                          <input required type="text" value={formData.accessCode} onChange={e => setFormData({...formData, accessCode: e.target.value})} className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm font-mono font-bold" placeholder="123456" />
-                          <button type="button" onClick={() => setFormData({...formData, accessCode: Math.floor(100000 + Math.random() * 900000).toString()})} className="w-12 bg-slate-100 hover:bg-slate-200 border rounded-xl flex items-center justify-center text-slate-500" title="Acak PIN"><i className="ph ph-arrows-clockwise text-lg"></i></button>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
+                  </div>
+                </div>
 
-                {/* Field Khusus Tambah Kelas Baru */}
-                {formData.action === 'create_course' && (
-                  <>
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Judul Utama Kelas Baru</label>
-                      <input required type="text" value={formData.courseTitle} onChange={e => setFormData({...formData, courseTitle: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Contoh: Mastering React & Next.js" />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Kode Kelas Unik (Maks 10 Karakter)</label>
-                      <div className="flex gap-2">
-                        <input required type="text" maxLength={10} value={formData.courseCode} onChange={e => setFormData({...formData, courseCode: e.target.value.toUpperCase()})} className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm font-mono font-bold" placeholder="REACT2026" />
-                        <button type="button" onClick={() => setFormData({...formData, courseCode: 'CR' + Math.random().toString(36).substring(2, 8).toUpperCase()})} className="w-12 bg-slate-100 hover:bg-slate-200 border rounded-xl flex items-center justify-center text-slate-500" title="Acak Kode"><i className="ph ph-arrows-clockwise text-lg"></i></button>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Pilihan Instruktur Pengajar (Berlaku untuk kedua aksi) */}
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Instruktur Penanggung Jawab</label>
                   <select required value={formData.instructorUsername} onChange={e => setFormData({...formData, instructorUsername: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 text-sm cursor-pointer transition appearance-none">
@@ -518,7 +456,7 @@
                 </div>
 
                 <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-600/20 transition mt-6 text-sm flex items-center justify-center gap-2">
-                  <i className="ph-bold ph-shield-check text-lg"></i> Proses Pendaftaran Instan
+                  <i className="ph-bold ph-user-plus text-lg"></i> Proses Pendaftaran Siswa
                 </button>
               </form>
             )}
