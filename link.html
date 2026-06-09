@@ -76,7 +76,7 @@
           name: "",
           email: "",
           courseCode: "",
-          instructorName: "",
+          instructorUsername: "", // Menggunakan Username pengajar secara ketat
           pin: ""
       });
 
@@ -84,7 +84,7 @@
       const [courseForm, setCourseForm] = React.useState({
           code: "",
           title: "",
-          instructorName: ""
+          instructorUsername: "" // Menggunakan Username pengajar secara ketat
       });
 
       // Jalankan Auth Guard S-Tools ID pertama kali dimuat
@@ -104,25 +104,25 @@
 
       // Logika Pembuatan Link Skenario A (Enrollment)
       const getGeneratedEnrollLink = () => {
-          if (!enrollForm.courseCode || !enrollForm.instructorName) return "";
+          if (!enrollForm.courseCode || !enrollForm.instructorUsername) return "";
           const params = new URLSearchParams();
           params.append("action", "enroll");
           if (enrollForm.name) params.append("name", enrollForm.name);
           if (enrollForm.email) params.append("email", enrollForm.email);
           params.append("course", enrollForm.courseCode.toUpperCase());
-          params.append("instructor", enrollForm.instructorName);
+          params.append("instructor", enrollForm.instructorUsername.trim().toLowerCase()); // Menyimpan Username
           if (enrollForm.pin) params.append("pin", enrollForm.pin);
           return `${baseUrl}?${params.toString()}`;
       };
 
       // Logika Pembuatan Link Skenario B (Create Course)
       const getGeneratedCourseLink = () => {
-          if (!courseForm.code || !courseForm.title || !courseForm.instructorName) return "";
+          if (!courseForm.code || !courseForm.title || !courseForm.instructorUsername) return "";
           const params = new URLSearchParams();
           params.append("action", "create_course");
           params.append("code", courseForm.code.toUpperCase());
           params.append("title", courseForm.title);
-          params.append("instructor", courseForm.instructorName);
+          params.append("instructor", courseForm.instructorUsername.trim().toLowerCase()); // Menyimpan Username
           return `${baseUrl}?${params.toString()}`;
       };
 
@@ -245,8 +245,8 @@
                                   </div>
                               </div>
                               <div className="space-y-1">
-                                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Nama Lengkap Instruktur <span className="text-red-500">*</span></label>
-                                  <input required type="text" value={enrollForm.instructorName} onChange={e => setEnrollForm({...enrollForm, instructorName: e.target.value})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white transition-all" placeholder="Contoh: Siti Aminah" />
+                                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Username Instruktur <span className="text-red-500">*</span></label>
+                                  <input required type="text" value={enrollForm.instructorUsername} onChange={e => setEnrollForm({...enrollForm, instructorUsername: e.target.value.trim().toLowerCase()})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white font-mono transition-all" placeholder="Contoh: sitiaminah (Username unik)" />
                               </div>
                           </>
                       ) : (
@@ -260,8 +260,8 @@
                                   <input required type="text" maxLength={10} value={courseForm.code} onChange={e => setCourseForm({...courseForm, code: e.target.value.toUpperCase()})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white font-mono font-bold transition-all uppercase" placeholder="Contoh: NODE2026" />
                               </div>
                               <div className="space-y-1">
-                                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Instruktur Penanggung Jawab <span className="text-red-500">*</span></label>
-                                  <input required type="text" value={courseForm.instructorName} onChange={e => setCourseForm({...courseForm, instructorName: e.target.value})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white transition-all" placeholder="Contoh: Budi Santoso" />
+                                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Username Instruktur Penanggung Jawab <span className="text-red-500">*</span></label>
+                                  <input required type="text" value={courseForm.instructorUsername} onChange={e => setCourseForm({...courseForm, instructorUsername: e.target.value.trim().toLowerCase()})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white font-mono transition-all" placeholder="Contoh: budisantoso (Username unik)" />
                               </div>
                           </>
                       )}
@@ -282,7 +282,7 @@
                                   </div>
                                   <div className="flex items-center gap-2 text-xs text-slate-500">
                                       <IconWrapper name="check-circle" size={14} className="text-emerald-500" />
-                                      <span>Parameter URL sudah ter-encode secara aman.</span>
+                                      <span>Parameter URL sudah ter-encode secara aman menggunakan Username.</span>
                                   </div>
                               </div>
                           ) : (
