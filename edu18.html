@@ -30,14 +30,14 @@
 
     let fbApp = null, fbAuth = null, fbDb = null;
 
-    // URL Google Apps Script Baru yang Di-enkripsi Aman
+    // URL Google Apps Script Baru yang Di-enkripsi Aman (Menuju ke LsFo9/exec)
     const _0xDbChunks = [
         "aHR0cHM6Ly9zY3JpcHQuZ29v",
         "Z2xlLmNvbS9tYWNyb3Mvcy9B",
-        "S2Z5Y2J4bUpvR0hBLTlJbU12",
-        "OTkzVVFVQUlvTlBmdmdSWF9y",
-        "ckxSZDM1bzZKTTNaV0ZUV0oz",
-        "eUlyT1otaXc1LWRLMVNYSjUv",
+        "S2Z5Y2J3RUtHcWw1b0FNM3NY",
+        "WnZZSGdYeDExd1dUelk2cEVH",
+        "amZRVkRPZjc1Q0VmTjZFY2hX",
+        "RUVmeER0dVpza2psTHNGbzkv",
         "ZXhlYw=="
     ];
     const DEFAULT_SHEETS_URL = atob(_0xDbChunks.join(""));
@@ -80,7 +80,7 @@
     const MagnifyingGlass = (p) => <IconWrapper name="magnifying-glass" {...p} />;
 
     const initialAdmins = [
-      { id: 'adm_super_rahasia', username: 'super_admin', password: 'Sandy236', name: 'Master System', email: 'senrima.ms@gmail.com', isSuper: true, isActive: true, donationLink: 'https://donation.s-tools.id', info1: 'Haloo Semua', showInfo1: true, info2: 'Semangat Belajar', showInfo2: true }
+      { id: 'adm_super_rahasia', username: 'super_admin', password: 'Sandy236', name: 'Master System', email: 'senrima.ms@gmail.com', isSupern: true, isActive: true, donationLink: 'https://donation.s-tools.id', info1: 'Haloo Semua', showInfo1: true, info2: 'Semangat Belajar', showInfo2: true }
     ];
     
     const emptyExam = { minScore: 70, questions: Array.from({length: 10}, () => ({ q: '', options: ['','','',''], answer: 0 })) };
@@ -211,7 +211,6 @@
           fetch(url)
             .then(res => { if(!res.ok) throw new Error("Network error"); return res.json(); })
             .then(data => {
-                // FORCE CACHE UPDATE: Memaksa LocalStorage terhapus dan diganti dengan struktur baru dari Sheets
                 if(data.admins) {
                     const uniqueAdmins = Array.from(new Map(data.admins.map(a => [a.id, a])).values());
                     setAdmins(uniqueAdmins); 
@@ -268,7 +267,6 @@
               localAction(); 
               const url = localStorage.getItem('edu_sheets_url') || DEFAULT_SHEETS_URL;
               if (url) {
-                  // MENGAMBIL DATA LANGSUNG DARI STATE TERBARU, BUKAN CACHE LAMA
                   const currentAdmins = JSON.parse(localStorage.getItem('edu_admins')) || admins;
                   const uniqueAdmins = Array.from(new Map(currentAdmins.map(a => [a.id, a])).values());
                 
@@ -321,6 +319,7 @@
         setIsLoggingIn(false);
       };
 
+      // Alur Login Multi-Peran Terintegrasi Kolom Email Instruktur
       const handleLogin = (e) => {
         e.preventDefault(); 
         setIsLoggingIn(true); 
@@ -343,7 +342,7 @@
               return; 
             }
 
-            const adminEmail = (adminFound.email || "").trim().toLowerCase();
+            const adminEmail = adminFound.email ? String(adminFound.email).trim().toLowerCase() : `${String(adminFound.username).trim().toLowerCase()}@edulearn.local`;
 
             let matchedPart = participants.find(p => 
               p.email.trim().toLowerCase() === adminEmail
@@ -352,8 +351,8 @@
             if (!matchedPart) {
               matchedPart = {
                 id: 'p_virtual_' + adminFound.id,
-                name: adminFound.name,
-                email: adminEmail || (String(adminFound.username).trim().toLowerCase() + '@edulearn.local'),
+                name: adminFound.name || adminFound.username,
+                email: adminEmail,
                 accessCode: adminFound.password
               };
             }
@@ -416,7 +415,7 @@
          const adminFound = admins.find(a => a.id === cleanId || a.id === userId);
 
          if (adminFound) {
-            const adminEmail = (adminFound.email || "").trim().toLowerCase();
+            const adminEmail = adminFound.email ? String(adminFound.email).trim().toLowerCase() : `${String(adminFound.username).trim().toLowerCase()}@edulearn.local`;
 
             let matchedPart = participants.find(p => 
               p.email.trim().toLowerCase() === adminEmail
@@ -425,8 +424,8 @@
             if (!matchedPart) {
               matchedPart = {
                 id: 'p_virtual_' + adminFound.id,
-                name: adminFound.name,
-                email: adminEmail || (String(adminFound.username).trim().toLowerCase() + '@edulearn.local'),
+                name: adminFound.name || adminFound.username,
+                email: adminEmail,
                 accessCode: adminFound.password
               };
             }
@@ -735,6 +734,8 @@
         }, async () => {} );
       };
 
+      if (!dbReady && appMode !== 'setup_db') return <div className="flex flex-col items-center justify-center h-screen bg-slate-50"><Loader2 size={48} className="animate-spin text-indigo-600 mb-4" /><h2 className="text-xl font-bold text-slate-800">Menyiapkan Aplikasi...</h2></div>;
+
       if (setupError) {
           return (
               <div className="flex flex-col items-center justify-center h-screen bg-slate-50 p-6 text-center">
@@ -749,8 +750,6 @@
               </div>
           );
       }
-
-      if (!dbReady && appMode !== 'setup_db') return <div className="flex flex-col items-center justify-center h-screen bg-slate-50"><Loader2 size={48} className="animate-spin text-indigo-600 mb-4" /><h2 className="text-xl font-bold text-slate-800">Menyiapkan Aplikasi...</h2></div>;
 
       const ConfirmModal = () => {
         if (!confirmDialog.isOpen) return null;
@@ -768,7 +767,6 @@
         );
       };
 
-      // Fix Anti-Hangs: Eksekusi sebagai fungsi {ManageExamModal()} di UI Dashboard untuk menghentikan Bug Remounting/Scroll Up
       const ManageExamModal = () => {
         if (!examModalOpen) return null;
         return (
@@ -1014,7 +1012,7 @@
 
         return (
           <div className="min-h-screen bg-slate-50 flex flex-col animate-[fadeIn_200ms_ease-out]">
-            {ConfirmModal()}{toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"><CheckCircle2 size={20}/><span>{toast}</span></div>}
+            {ConfirmModal()}{ManageExamModal()}{toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"><CheckCircle2 size={20}/><span>{toast}</span></div>}
             
             <header className="bg-slate-900 text-white px-4 md:px-6 py-4 flex flex-col md:flex-row items-center justify-between z-20 gap-4 shadow-md">
               <div className="flex items-center space-x-3 w-full md:w-auto justify-center md:justify-start">
@@ -1028,7 +1026,7 @@
                 <button onClick={() => setSuperTab('participants')} className={`shrink-0 px-4 py-2 rounded-lg text-sm font-bold flex items-center transition ${superTab==='participants'?'bg-amber-500 text-slate-900 shadow-sm':'text-slate-300 hover:bg-slate-700'}`}><GraduationCap size={18} className="mr-2"/> Peserta</button>
                 <button onClick={() => setSuperTab('info')} className={`shrink-0 px-4 py-2 rounded-lg text-sm font-bold flex items-center transition ${superTab==='info'?'bg-amber-500 text-slate-900 shadow-sm':'text-slate-300 hover:bg-slate-700'}`}><Article size={18} className="mr-2"/> Info Global</button>
               </div>
-              <div className="flex items-center justify-between gap-2 w-full md:w-auto mt-2 md:mt-0">
+              <div className="flex items-center gap-2 justify-between w-full md:w-auto mt-2 md:mt-0">
                   <span className="text-sm font-bold text-amber-400 block md:mr-2">{session.data.name}</span>
                   {isSwitchableAccount() && (
                     <button onClick={triggerRoleSwitch} className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Beralih Peran">
@@ -1219,12 +1217,11 @@
                       <div className="bg-amber-50 p-3.5 mb-5 rounded-xl border border-amber-200 flex items-start">
                           <AlertCircle size={18} className="text-amber-600 mr-2 shrink-0 mt-0.5" weight="fill" />
                           <p className="text-xs text-amber-800 font-bold leading-relaxed">
-                              Peringatan: Tulis Kode Unik (misal: REACT01) dan Judul Kelas Anda. Setelah di-posting, kode kelas tersebut akan permanen!
+                              Peringatan: Cek baik-baik data (Kode Unik & Judul Kelas) sebelum memposting kelas baru. Data kelas yang sudah diposting tidak dapat diubah kembali!
                           </p>
                       </div>
                       
                       <form onSubmit={handleCreateCourse} className="space-y-4">
-                        {/* Tombol Acak Dihapus Sesuai Permintaan */}
                         <input name="code" required maxLength={10} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm font-mono uppercase font-bold" placeholder="Tulis Kode Kelas Unik (Maks 10 Karakter)"/>
                         <input name="title" required maxLength={60} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Judul Kelas Utama"/>
                         <input name="inst" defaultValue={session.data.name} required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Nama Tampil Pengajar"/>
@@ -1567,7 +1564,7 @@
                             </div>
                         )}
 
-                        {/* Kontainer Video Pintar */}
+                        {/* Kontainer Video Pintar: Menyesuaikan Rasio khusus untuk Google Drive di Mobile */}
                         {(() => {
                             const isDriveVideo = activeModule?.videoUrl && activeModule.videoUrl.includes('drive.google.com');
                             return (
@@ -1586,7 +1583,7 @@
                                 </div>
                             );
                         })()}
-
+                        
                         <div className="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100">
                             <h2 className="text-2xl md:text-3xl font-extrabold mb-4 text-slate-900">{activeModule.title}</h2>
                             <p className="text-slate-600 text-base md:text-lg leading-relaxed">{activeModule.description}</p>
