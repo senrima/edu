@@ -18,10 +18,6 @@
     .glass-panel { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    /* Efek transisi halus */
-    .fade-enter { opacity: 0; transform: scale(0.95); }
-    .fade-enter-active { opacity: 1; transform: scale(1); transition: opacity 300ms, transform 300ms; }
   </style>
 </head>
 <body>
@@ -72,7 +68,6 @@
     const ArrowLeft = (p) => <IconWrapper name="arrow-left" {...p} />;
     const RefreshCw = (p) => <IconWrapper name="arrows-clockwise" {...p} />;
     const UserIcon = (p) => <IconWrapper name="user" {...p} />;
-    const Globe = (p) => <IconWrapper name="globe" {...p} />;
     const HardDrives = (p) => <IconWrapper name="hard-drives" {...p} />;
     const ShieldCheck = (p) => <IconWrapper name="shield-check" {...p} />;
     const Coffee = (p) => <IconWrapper name="coffee" {...p} />;
@@ -86,7 +81,7 @@
     const MagnifyingGlass = (p) => <IconWrapper name="magnifying-glass" {...p} />;
 
     const initialAdmins = [
-      { id: 'adm_1', username: 'budi_admin', password: 'ADMIN123', name: 'Budi Santoso', isSuper: false, isActive: true, donationLink: 'https://saweria.co/budi', info1: 'Selamat datang di kelas! Cek materi dokumen sebelum menonton.', showInfo1: true, info2: '', showInfo2: false }
+      { id: 'adm_1', username: 'budi_admin', password: 'ADMIN123', name: 'Budi Santoso', email: 'budi@mail.com', isSuper: false, isActive: true, donationLink: 'https://saweria.co/budi', info1: 'Selamat datang di kelas! Cek materi dokumen sebelum menonton.', showInfo1: true, info2: '', showInfo2: false }
     ];
     
     const emptyExam = { minScore: 70, questions: Array.from({length: 10}, () => ({ q: '', options: ['','','',''], answer: 0 })) };
@@ -181,13 +176,12 @@
       const [infoInstForm, setInfoInstForm] = React.useState({ text: '', show: false }); 
       const [infoSuperForm, setInfoSuperForm] = React.useState({ instText: '', showInst: false, partText: '', showPart: false }); 
 
-      // STATE BARU UNTUK SELEKSI MULTI PERAN / LOGIN MATCHES
+      // State Multi Peran / Login Matches
       const [loginMatches, setLoginMatches] = React.useState(null);
 
-      // STATE NAVIGASI SOAL UJIAN (SATU PER SATU)
+      // State Navigasi Nomor Soal Ujian Satu Demi Satu
       const [currentQuestionIndex, setCurrentQuestionIndex] = React.useState(0);
 
-      // Otomatis reset nomor soal ke indeks 0 ketika mode ujian aktif
       React.useEffect(() => {
           if (classroomMode === 'exam') {
               setCurrentQuestionIndex(0);
@@ -315,7 +309,7 @@
         setIsLoggingIn(false);
       };
 
-      // MODIFIKASI ALUR LOGIN UNTUK EKOSISTEM SATU BAGIAN (ROLE CHANGER)
+      // Alur Login Multi-Peran Terintegrasi Kolom Email Instruktur
       const handleLogin = (e) => {
         e.preventDefault(); 
         setIsLoggingIn(true); 
@@ -326,7 +320,6 @@
           const cleanUser = username.trim().toLowerCase();
           const cleanPass = password.trim();
 
-          // 1. Cari kecocokan di tabel admins (Instruktur atau Super Admin)
           const adminFound = admins.find(a => 
             (a.username.trim().toLowerCase() === cleanUser || (a.email && a.email.trim().toLowerCase() === cleanUser)) && 
             String(a.password).trim() === cleanPass
@@ -339,25 +332,21 @@
               return; 
             }
 
-            // Sebagai Instruktur/Super Admin, mereka otomatis juga berhak bertindak sebagai Peserta.
-            // Kita cari apakah ada record peserta yang sesuai (dengan mencocokkan email atau username).
+            const adminEmail = (adminFound.email || "").trim().toLowerCase();
+
             let matchedPart = participants.find(p => 
-              p.email.trim().toLowerCase() === cleanUser || 
-              p.email.trim().toLowerCase() === adminFound.username.trim().toLowerCase() ||
-              (adminFound.email && p.email.trim().toLowerCase() === adminFound.email.trim().toLowerCase())
+              p.email.trim().toLowerCase() === adminEmail
             );
 
-            // Jika tidak ada data peserta yang terdaftar, buat profil peserta bayangan agar tidak crash
             if (!matchedPart) {
               matchedPart = {
                 id: 'p_virtual_' + adminFound.id,
                 name: adminFound.name,
-                email: adminEmailVirtual,
+                email: adminEmail || (adminFound.username.trim().toLowerCase() + '@edulearn.local'),
                 accessCode: adminFound.password
               };
             }
 
-            // Tentukan pilihan peran yang berhak dipilih
             const roles = [];
             if (adminFound.isSuper) {
               roles.push({ id: 'super_admin', label: 'Super Admin', desc: 'Akses penuh ke semua kontrol, daftar instruktur, dan semua kursus.', icon: 'shield-check', color: 'from-amber-500 to-orange-600' });
@@ -365,21 +354,18 @@
             roles.push({ id: 'admin', label: 'Instruktur', desc: 'Kelola kelas Anda sendiri, tonton, periksa tugas, dan tambah modul baru.', icon: 'chalkboard-teacher', color: 'from-indigo-500 to-indigo-700' });
             roles.push({ id: 'participant', label: 'Peserta Belajar', desc: 'Masuk ke ruang belajar kelas Anda, ikuti kuis, tonton video, dan dapatkan sertifikat.', icon: 'graduation-cap', color: 'from-emerald-500 to-teal-600' });
 
-            // Simpan temuan lalu arahkan ke layar Pemilihan Peran
             setLoginMatches({ admin: adminFound, participant: matchedPart, roles });
             setAppMode('role_selection');
             setIsLoggingIn(false);
             return;
           }
 
-          // 2. Jika bukan instruktur, cari di tabel peserta biasa
           const partFound = participants.find(p => 
             p.email.trim().toLowerCase() === cleanUser && 
             String(p.accessCode).trim() === cleanPass
           );
 
           if (partFound) {
-            // Peserta biasa hanya punya 1 peran, langsung arahkan ke Dashboard Peserta
             const sessData = { role: 'participant', data: partFound };
             setSession(sessData); 
             sessionStorage.setItem('edu_session', JSON.stringify(sessData));
@@ -393,7 +379,6 @@
         }, 600);
       };
 
-      // Fungsi untuk mengeksekusi peran terpilih dari halaman transisi
       const handleSelectRole = (roleId) => {
         if (!loginMatches) return;
         let sessData = null;
@@ -412,8 +397,7 @@
         setSession(sessData);
         sessionStorage.setItem('edu_session', JSON.stringify(sessData));
       };
-      
-      // Fungsi instan untuk kembali ke pemilih peran saat berada di dalam dashboard (Ganti Peran)
+
       const triggerRoleSwitch = () => {
          if (!session) return;
          const userId = session.data.id;
@@ -421,23 +405,17 @@
          const adminFound = admins.find(a => a.id === cleanId || a.id === userId);
 
          if (adminFound) {
-            // Ambil username murni dan buat versi email virtualnya untuk pencocokan yang akurat
-            const adminUserClean = adminFound.username.trim().toLowerCase();
-            const adminEmailVirtual = adminUserClean.includes('@') ? adminUserClean : adminUserClean + '@edulearn.local';
+            const adminEmail = (adminFound.email || "").trim().toLowerCase();
 
-            let matchedPart = participants.find(p => {
-              const partEmailClean = p.email.trim().toLowerCase();
-              return partEmailClean === adminUserClean || 
-                     partEmailClean === adminEmailVirtual ||
-                     (adminFound.email && partEmailClean === adminFound.email.trim().toLowerCase());
-            });
+            let matchedPart = participants.find(p => 
+              p.email.trim().toLowerCase() === adminEmail
+            );
 
-            // Jika tidak ada di spreadsheet, kunci menggunakan email virtual terstandarisasi
             if (!matchedPart) {
               matchedPart = {
                 id: 'p_virtual_' + adminFound.id,
                 name: adminFound.name,
-                email: adminEmailVirtual, // Menggunakan sandy@edulearn.local
+                email: adminEmail || (adminFound.username.trim().toLowerCase() + '@edulearn.local'),
                 accessCode: adminFound.password
               };
             }
@@ -456,7 +434,6 @@
          }
       };
 
-      // Mengecek apakah tombol "Ganti Peran" berhak ditampilkan di header saat ini
       const isSwitchableAccount = () => {
          if (!session) return false;
          const userId = session.data.id;
@@ -476,9 +453,9 @@
       };
 
       const handleRegisterAdmin = async (e) => {
-        e.preventDefault(); const fd = new FormData(e.target); const username = fd.get('username');
+        e.preventDefault(); const fd = new FormData(e.target); const username = fd.get('username').trim().toLowerCase();
         if (admins.some(a => a.username === username)) return showToast("Username terpakai!");
-        const newAdminData = { name: fd.get('name'), username, password: fd.get('password'), isSuper: false, isActive: true, donationLink: '', info1: '', showInfo1: false, info2: '', showInfo2: false };
+        const newAdminData = { name: fd.get('name'), username, email: fd.get('email').trim().toLowerCase(), password: fd.get('password'), isSuper: false, isActive: true, donationLink: '', info1: '', showInfo1: false, info2: '', showInfo2: false };
         await execDbAction( () => {
             const updatedA = [...admins, { id: `adm_${Date.now()}`, ...newAdminData }];
             setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
@@ -503,7 +480,7 @@
       };
 
       const handleCreateCourse = async (e) => {
-        e.preventDefault(); const fd = new FormData(e.target); const code = fd.get('code');
+        e.preventDefault(); const fd = new FormData(e.target); const code = fd.get('code').trim().toUpperCase();
         if (courses.some(c => c.code === code)) return showToast("Kode sudah ada!");
         const courseData = { authorId: session.data.id, code, title: fd.get('title'), instructor: fd.get('inst'), isActive: true, docLink: fd.get('docLink'), modules: [], exam: emptyExam };
         await execDbAction( () => {
@@ -599,9 +576,9 @@
       };
 
       const handleRegisterParticipant = async (e) => {
-        e.preventDefault(); const fd = new FormData(e.target); const email = fd.get('email');
+        e.preventDefault(); const fd = new FormData(e.target); const email = fd.get('email').trim().toLowerCase();
         if (participants.some(p => p.email === email)) return showToast("Email sudah terdaftar!");
-        const partData = { name: fd.get('name'), email, accessCode: fd.get('code') };
+        const partData = { name: fd.get('name').trim(), email, accessCode: fd.get('code').trim() };
         const enrData = { courseId: fd.get('courseId'), completedModules: [], isGraduated: false, certDownloaded: false, examScore: null, graduatedAt: null };
         const courseObj = courses.find(c => c.id === fd.get('courseId'));
         await execDbAction( () => {
@@ -620,7 +597,7 @@
       };
 
       const handleEnrollExisting = async (e) => {
-        e.preventDefault(); const fd = new FormData(e.target); const email = fd.get('email'); const cId = fd.get('cId');
+        e.preventDefault(); const fd = new FormData(e.target); const email = fd.get('email').trim().toLowerCase(); const cId = fd.get('cId');
         const participant = participants.find(p => p.email === email);
         if (!participant) return showToast("Peserta tidak ditemukan!");
         const pId = participant.id;
@@ -733,7 +710,7 @@
         }, async () => {} );
 
         const certContent = `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><title>Sertifikat - ${activeCourse.title}</title>
-<style>@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap'); body { font-family: 'Playfair Display', serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background-color: #f1f5f9; padding: 20px; box-sizing: border-box; } .cert-container { background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); max-width: 900px; width: 100%; position: relative; } .cert-border { border: 4px double #0f172a; padding: 40px 60px; text-align: center; position: relative; background-image: radial-gradient(#f8fafc 20%, transparent 20%), radial-gradient(#f8fafc 20%, transparent 20%); background-color: #ffffff; background-position: 0 0, 10px 10px; background-size: 20px 20px; min-height: 480px;} .header-logo { color: #0f172a; font-size: 16px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 40px; } .title { color: #0f172a; font-size: 48px; font-weight: 700; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 4px; } .subtitle { color: #475569; font-size: 18px; margin-bottom: 20px; font-style: italic; } .name { font-size: 42px; color: #1d4ed8; font-weight: 700; margin: 10px 0; border-bottom: 2px solid #cbd5e1; display: inline-block; padding: 0 40px 10px; } .course-label { color: #475569; font-size: 18px; margin: 30px 0 10px; font-style: italic; } .course-name { font-size: 32px; color: #0f172a; font-weight: 700; line-height: 1.3; margin-bottom: 20px; } .date-issued { color: #64748b; font-size: 16px; margin-bottom: 40px; font-style: italic; } .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 50px; padding-bottom: 30px; } .signature-block { width: 250px; text-align: center; } .signature { font-family: 'Great Vibes', cursive; font-size: 36px; color: #0f172a; border-bottom: 1px solid #94a3b8; margin-bottom: 5px; padding-bottom: 5px; } .instructor-name { font-size: 16px; font-weight: bold; color: #0f172a; } .instructor-title { font-size: 14px; color: #64748b; } .website { position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; color: #64748b; font-family: sans-serif; font-size: 12px; letter-spacing: 1px; } </style></head><body><div class="cert-container"><div class="cert-border"><div class="header-logo">EduLearn by SenTools</div><div class="title">Sertifikat Kelulusan</div><div class="subtitle">Diberikan dengan bangga kepada:</div><div class="name">${session.data.name}</div><div class="course-label">Atas keberhasilannya menyelesaikan kursus:</div><div class="course-name">${activeCourse.title}</div><div class="date-issued">Diberikan pada: ${myEnr.graduatedAt || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div><div class="footer"><div class="signature-block"><div class="signature">${instructorData?.name || activeCourse.instructor}</div><div class="instructor-name">${instructorData?.name || activeCourse.instructor}</div><div class="instructor-title">Instruktur Utama</div></div><div class="signature-block"><div class="signature">SenTools</div><div class="instructor-name">Sistem Manajemen</div><div class="instructor-title">EduLearn by SenTools</div></div></div><div class="website">https://s-tools.id/edu/</div></div></div></body></html>`;
+<style>@import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap'); body { font-family: 'Playfair Display', serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background-color: #f1f5f9; padding: 20px; box-sizing: border-box; } .cert-container { background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); max-width: 900px; width: 100%; position: relative; } .cert-border { border: 4px double #0f172a; padding: 40px 60px; text-align: center; position: relative; background-image: radial-gradient(#f8fafc 20%, transparent 20%), radial-gradient(#f8fafc 20%, transparent 20%); background-color: #ffffff; background-position: 0 0, 10px 10px; background-size: 20px 20px; min-height: 480px;} .header-logo { color: #0f172a; font-size: 16px; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 40px; } .title { color: #0f172a; font-size: 48px; font-weight: 700; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 4px; } .subtitle { color: #475569; font-style: italic; font-size: 18px; margin-bottom: 20px; } .name { font-size: 42px; color: #1d4ed8; font-weight: 700; margin: 10px 0; border-bottom: 2px solid #cbd5e1; display: inline-block; padding: 0 40px 10px; } .course-label { color: #475569; font-size: 18px; margin: 30px 0 10px; font-style: italic; } .course-name { font-size: 32px; color: #0f172a; font-weight: 700; line-height: 1.3; margin-bottom: 20px; } .date-issued { color: #64748b; font-size: 16px; margin-bottom: 40px; font-style: italic; } .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 50px; padding-bottom: 30px; } .signature-block { width: 250px; text-align: center; } .signature { font-family: 'Great Vibes', cursive; font-size: 36px; color: #0f172a; border-bottom: 1px solid #94a3b8; margin-bottom: 5px; padding-bottom: 5px; } .instructor-name { font-size: 16px; font-weight: bold; color: #0f172a; } .instructor-title { font-size: 14px; color: #64748b; } .website { position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; color: #64748b; font-family: sans-serif; font-size: 12px; letter-spacing: 1px; } </style></head><body><div class="cert-container"><div class="cert-border"><div class="header-logo">EduLearn by SenTools</div><div class="title">Sertifikat Kelulusan</div><div class="subtitle">Diberikan dengan bangga kepada:</div><div class="name">${session.data.name}</div><div class="course-label">Atas keberhasilannya menyelesaikan kursus:</div><div class="course-name">${activeCourse.title}</div><div class="date-issued">Diberikan pada: ${myEnr.graduatedAt || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div><div class="footer"><div class="signature-block"><div class="signature">${instructorData?.name || activeCourse.instructor}</div><div class="instructor-name">${instructorData?.name || activeCourse.instructor}</div><div class="instructor-title">Instruktur Utama</div></div><div class="signature-block"><div class="signature">SenTools</div><div class="instructor-name">Sistem Manajemen</div><div class="instructor-title">EduLearn by SenTools</div></div></div><div class="website">https://s-tools.id/edu/</div></div></div></body></html>`;
         const blob = new Blob([certContent], { type: 'text/html' }); const url = URL.createObjectURL(blob);
         const link = document.createElement('a'); link.href = url; link.download = `Sertifikat-${activeCourse.title.replace(/\s+/g, '-')}.html`;
         document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
@@ -780,6 +757,7 @@
         );
       };
 
+      // Fix Anti-Hangs: Eksekusi sebagai fungsi {ManageExamModal()} di UI Dashboard untuk menghentikan Bug Remounting/Scroll Up
       const ManageExamModal = () => {
         if (!examModalOpen) return null;
         return (
@@ -792,7 +770,7 @@
                 <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-6 sm:space-y-8">
                     <div className="bg-amber-50 p-4 sm:p-5 rounded-2xl border border-amber-200">
                         <label className="font-bold text-amber-900 block mb-2 text-sm sm:text-base">Target Minimal Kelulusan (Min. Score)</label>
-                        <input type="number" min="0" max="100" value={examForm.minScore} onChange={e=>setSetupError("") || setExamForm({...examForm, minScore: parseInt(e.target.value)})} className="w-full sm:w-32 p-3 border border-amber-300 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 font-bold text-amber-900 bg-white transition" />
+                        <input type="number" min="0" max="100" value={examForm.minScore} onChange={e=>setExamForm({...examForm, minScore: parseInt(e.target.value)})} className="w-full sm:w-32 p-3 border border-amber-300 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 font-bold text-amber-900 bg-white transition" />
                         <span className="block sm:inline sm:ml-3 mt-2 sm:mt-0 text-sm text-amber-700">Tiap soal bernilai 10 Poin.</span>
                     </div>
                     {examForm.questions.map((q, idx) => (
@@ -839,7 +817,7 @@
                         <label className="font-bold text-sm text-slate-700 mb-2 block">Cek URL Google Apps Script Anda:</label>
                         <input type="url" value={sheetsUrlInput} onChange={e => setSheetsUrlInput(e.target.value)} className="w-full p-4 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 transition mb-4 text-sm" placeholder="Paste URL Exec Apps Script..." />
                         <button onClick={() => {
-                            if(!sheetsUrlInput.includes("script.google.com")) return setSetupError("URL tidak valid!");
+                            if(!sheetsUrlInput.includes("script.google.com")) return showToast("URL tidak valid!");
                             localStorage.setItem('edu_sheets_url', sheetsUrlInput.trim()); localStorage.setItem('edu_db_mode', 'sheets'); window.location.reload(); 
                         }} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg transition">Coba Hubungkan Ulang</button>
                     </div>
@@ -944,13 +922,10 @@
         );
       }
 
-      // ===============================================================
-      // TAMPILAN PREMIUM BARU: TRANSER ROLE SELECTOR (PEMILIH PERAN)
-      // ===============================================================
+      // Halaman Transisi Pemilih Peran Premium (Role Selector)
       if (appMode === 'role_selection' && loginMatches) {
         return (
           <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 md:p-8 relative overflow-hidden">
-            {/* Background Radial Lights */}
             <div className="absolute inset-0 z-0 opacity-25 pointer-events-none">
               <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-indigo-600 blur-[130px] animate-pulse"></div>
               <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-emerald-600 blur-[130px] animate-pulse" style={{ animationDelay: '2.5s' }}></div>
@@ -965,7 +940,6 @@
                 <p className="text-slate-400 text-xs sm:text-sm mt-1.5 max-w-md mx-auto">Akun terpadu Anda terverifikasi dengan multi-peran aktif. Silakan pilih ruang kerja Anda:</p>
               </div>
 
-              {/* Grid Kartu Pilihan Peran */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 {loginMatches.roles.map((role) => {
                   let badgeColor = "bg-indigo-500/20 text-indigo-300 border-indigo-500/30";
@@ -1005,7 +979,6 @@
                 })}
               </div>
 
-              {/* Batal & Logout */}
               <div className="flex justify-center border-t border-slate-800 pt-6">
                 <button 
                   onClick={handleLogout} 
@@ -1046,7 +1019,6 @@
               </div>
               <div className="flex items-center gap-2 justify-between w-full md:w-auto mt-2 md:mt-0">
                   <span className="text-sm font-bold text-amber-400 block md:mr-2">{session.data.name}</span>
-                  {/* TOMBOL GANTI PERAN INSTAN */}
                   {isSwitchableAccount() && (
                     <button onClick={triggerRoleSwitch} className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Beralih Peran">
                       <IconWrapper name="users-three" size={16} weight="fill" />
@@ -1119,6 +1091,8 @@
                     <form onSubmit={handleRegisterAdmin} className="space-y-4">
                       <input name="name" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition shadow-sm text-sm" placeholder="Nama Lengkap"/>
                       <input name="username" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition shadow-sm text-sm" placeholder="Username Khusus"/>
+                      {/* Update: Input Kolom Email untuk Sinkronisasi Sempurna */}
+                      <input name="email" type="email" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition shadow-sm text-sm" placeholder="Email Instruktur Aktif"/>
                       <input name="password" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition shadow-sm text-sm" defaultValue="GURU123" placeholder="Password"/>
                       <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-bold transition shadow-md mt-2">Buat Akun Instruktur</button>
                     </form>
@@ -1164,7 +1138,7 @@
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                       <h2 className="font-bold text-slate-800 text-lg flex items-center"><GraduationCap size={22} className="mr-2 text-slate-400"/>Progress Belajar Global</h2>
-                      <div className="relative w-full sm:w-auto"><MagnifyingGlass size={18} className="absolute left-3 top-3 text-slate-400"/><input type="text" placeholder="Cari nama peserta..." value={searchPart} onChange={e=>setSearchPart(e.target.value)} className="w-full sm:w-64 pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm"/></div>
+                      <div className="relative w-full sm:w-auto"><MagnifyingGlass size={18} className="absolute left-3 top-3 text-slate-400"/><input type="text" placeholder="Cari nama peserta..." value={searchPart} onChange={e=>setSearchPart(e.target.value)} className="w-full sm:w-64 pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm"/></div>
                   </div>
                   <div className="overflow-x-auto min-w-full"><table className="w-full text-left whitespace-nowrap"><thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider"><tr><th className="p-4 rounded-tl-xl">Nama Peserta</th><th className="p-4">Kelas Diikuti</th><th className="p-4">Progress</th><th className="p-4">Skor Ujian</th><th className="p-4 rounded-tr-xl">Status Akhir</th></tr></thead><tbody className="divide-y divide-slate-100 text-sm">
                           {filteredEnrs.length === 0 ? <tr><td colSpan="5" className="p-8 text-center text-slate-400 italic">Tidak ada data progress.</td></tr> : filteredEnrs.map((enr, i) => (<tr key={i} className="hover:bg-slate-50 transition"><td className="p-4 font-bold text-slate-800">{enr.pName}</td><td className="p-4 text-slate-600">{enr.cTitle}</td><td className="p-4"><div className="flex items-center"><div className="w-16 bg-slate-200 rounded-full h-2 mr-2"><div className={`h-2 rounded-full ${enr.prog===100?'bg-emerald-500':'bg-indigo-500'}`} style={{width:`${enr.prog}%`}}></div></div><span className="font-mono text-xs">{enr.prog}%</span></div></td><td className="p-4 font-bold text-slate-700">{enr.examScore !== null ? enr.examScore : '-'}</td><td className="p-4">{enr.isGraduated ? <span className="text-emerald-700 font-bold text-[10px] uppercase tracking-widest bg-emerald-100 px-2 py-1 rounded border border-emerald-200"><Award size={12} className="inline mr-1 pb-0.5"/>Lulus</span> : <span className="text-blue-700 font-bold text-[10px] uppercase tracking-widest bg-blue-50 px-2 py-1 rounded border border-blue-200">Belajar</span>}</td></tr>))}
@@ -1208,7 +1182,6 @@
               </div>
               <div className="flex items-center justify-between gap-2 w-full md:w-auto mt-2 md:mt-0">
                   <span className="text-sm font-bold text-slate-300 block md:mr-2">{session.data.name}</span>
-                  {/* TOMBOL GANTI PERAN INSTAN */}
                   {isSwitchableAccount() && (
                     <button onClick={triggerRoleSwitch} className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Beralih Peran">
                       <IconWrapper name="users-three" size={16} weight="fill" />
@@ -1233,7 +1206,7 @@
                     <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100">
                       <h2 className="font-bold text-slate-800 mb-2 text-lg flex items-center"><PlusCircle size={22} className="mr-2 text-indigo-600" />Buka Kelas Baru</h2>
 
-                      <div className="bg-amber-50 border border-amber-200 p-3.5 mb-5 rounded-xl flex items-start">
+                      <div className="bg-amber-50 p-3.5 mb-5 rounded-xl border border-amber-200 flex items-start">
                           <AlertCircle size={18} className="text-amber-600 mr-2 shrink-0 mt-0.5" weight="fill" />
                           <p className="text-xs text-amber-800 font-bold leading-relaxed">
                               Peringatan: Cek baik-baik data (Kode Unik & Judul Kelas) sebelum memposting kelas baru. Data kelas yang sudah diposting tidak dapat diubah kembali!
@@ -1241,10 +1214,8 @@
                       </div>
                       
                       <form onSubmit={handleCreateCourse} className="space-y-4">
-                        <div className="flex items-center gap-2">
-                            <input name="code" id="crscode" required maxLength={10} className="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm font-mono uppercase" placeholder="Kode Unik (Maks 10)"/>
-                            <button type="button" onClick={()=>document.getElementById('crscode').value = generateRandomCode("CR")} className="w-14 h-[50px] bg-slate-100 hover:bg-slate-200 flex items-center justify-center rounded-xl text-slate-500 transition shrink-0" title="Generate Kode Acak"><RefreshCw size={20}/></button>
-                        </div>
+                        {/* Update: Tombol generator acak dihapus, input murni manual untuk kode kelas */}
+                        <input name="code" required maxLength={10} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm font-mono uppercase font-bold" placeholder="Tulis Kode Kelas Unik (Maks 10 Karakter)"/>
                         <input name="title" required maxLength={60} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Judul Kelas Utama"/>
                         <input name="inst" defaultValue={session.data.name} required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Nama Tampil Pengajar"/>
                         <input name="docLink" type="url" className="w-full p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm text-emerald-800 placeholder-emerald-400" placeholder="Link Materi Ekstra (Drive/PDF) - Opsional"/>
@@ -1432,7 +1403,6 @@
                   <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-sm">{session.data.name.charAt(0)}</div>
                   <p className="text-sm font-bold text-slate-700 mr-2 pr-2 border-r border-slate-300 hidden md:block">{session.data.name}</p>
                   
-                  {/* TOMBOL GANTI PERAN INSTAN */}
                   {isSwitchableAccount() && (
                     <button onClick={triggerRoleSwitch} className="px-3.5 py-1.5 bg-slate-200 hover:bg-indigo-600 text-slate-700 hover:text-white rounded-full text-xs font-bold transition flex items-center gap-1.5 shadow-sm" title="Beralih Peran">
                       <IconWrapper name="users-three" size={16} weight="fill" />
@@ -1445,7 +1415,6 @@
 
             <main className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full">
               
-              {/* HERO BANNER MOTIVASI */}
               <div className="bg-gradient-to-r from-indigo-600 to-blue-500 rounded-3xl p-8 md:p-10 mb-8 md:mb-10 text-white shadow-xl shadow-indigo-200 relative overflow-hidden">
                   <div className="absolute top-0 right-0 -mr-16 -mt-16 text-white/10"><Sparkle size={200} weight="fill"/></div>
                   <div className="relative z-10">
@@ -1458,7 +1427,7 @@
                   <div className="lg:col-span-2">
                       <div className="flex items-center mb-6"><h3 className="text-2xl font-extrabold text-slate-800 flex-1">Perjalanan Kelasmu</h3><span className="bg-indigo-100 text-indigo-700 font-bold px-3 py-1 rounded-full text-xs uppercase tracking-widest">{myEnrs.length} Terdaftar</span></div>
                       
-                      {myEnrs.length === 0 ? <div className="bg-white border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center"><div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6"><Book size={40} className="text-slate-300"/></div><h4 className="text-xl font-bold text-slate-700 mb-2">Belum ada kelas</h4><p className="text-slate-500">Gunakan email ini untuk didaftarkan ke kelas oleh instruktur Anda.</p></div> : (
+                      {myEnrs.length === 0 ? <div className="bg-white border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center"><div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm"><Book size={40} className="text-slate-300"/></div><h4 className="text-xl font-bold text-slate-700 mb-2">Belum ada kelas</h4><p className="text-slate-500">Gunakan email ini untuk didaftarkan ke kelas oleh instruktur Anda.</p></div> : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6">
                         {myEnrs.map(enr => {
                           const course = courses.find(c => c.id === enr.courseId); if (!course) return null; const prog = calcProgress(enr, course);
@@ -1487,14 +1456,12 @@
                   </div>
 
                   <div className="lg:col-span-1 space-y-6">
-                      {/* PAPAN INFORMASI PESERTA (SIDEBAR) */}
                       {superAdmin?.showInfo2 && superAdmin?.info2 && (
                           <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-3xl shadow-lg shadow-blue-200 text-white relative overflow-hidden">
                               <div className="absolute -top-4 -right-4 text-white/10"><Bell size={100} weight="fill"/></div>
                               <div className="relative z-10">
                                   <div className="flex items-center mb-4"><div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3 backdrop-blur-sm"><Bell size={16} weight="bold"/></div><h3 className="font-bold text-sm uppercase tracking-widest text-blue-100">Info Pusat</h3></div>
-                                  <p className="text-base font-medium leading-relaxed">{superAdmin.info2}</p>
-                              </div>
+                                  <p className="text-base font-medium leading-relaxed">{superAdmin.info2}</p></div>
                           </div>
                       )}
 
@@ -1542,10 +1509,8 @@
 
             <div className="flex flex-1 overflow-hidden relative">
               
-              {/* BACKDROP MOBILE SIDEBAR */}
               {isSidebarOpen && <div className="fixed inset-0 bg-slate-900/60 z-40 lg:hidden backdrop-blur-sm transition-opacity" onClick={() => setIsSidebarOpen(false)}></div>}
               
-              {/* SIDEBAR MATERI */}
               <aside className={`fixed lg:static w-[85%] sm:w-80 bg-white border-r h-full z-50 lg:z-10 flex flex-col transition-transform duration-300 ease-in-out shadow-2xl lg:shadow-none ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
                 <div className="p-6 border-b bg-slate-50/50 flex justify-between items-center">
                     <div>
@@ -1575,7 +1540,6 @@
                 <div className="max-w-4xl mx-auto p-4 md:p-8 lg:p-10">
                   {classroomMode === 'video' && activeModule && (
                       <div className="animate-[fadeIn_0.3s_ease-out]">
-                        {/* AREA DOKUMEN MODUL TAMBAHAN (MUNCUL JIKA ADA LINK) */}
                         {activeCourse.docLink && (
                             <div className="mb-6 md:mb-8 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 p-5 md:p-6 rounded-3xl flex flex-col sm:flex-row justify-between items-start sm:items-center shadow-sm">
                                 <div className="mb-4 sm:mb-0">
@@ -1588,7 +1552,6 @@
                             </div>
                         )}
 
-                        {/* Kontainer Video Pintar */}
                         {(() => {
                             const isDriveVideo = activeModule?.videoUrl && activeModule.videoUrl.includes('drive.google.com');
                             return (
@@ -1635,7 +1598,6 @@
                       </div>
                   )}
 
-                  {/* ANTARMUKA UJIAN BARU DENGAN NAVIGASI SOAL SATU PER SATU */}
                   {classroomMode === 'exam' && activeCourse.exam && (
                       <div className="bg-white rounded-3xl p-6 md:p-12 shadow-xl border border-slate-100 animate-[fadeIn_0.3s_ease-out]">
                           <div className="text-center mb-8 border-b border-slate-100 pb-6">
@@ -1646,7 +1608,6 @@
                               <p className="text-slate-500 text-sm md:text-base">Kerjakan dengan teliti. Nilai kelulusan minimal: <b className="text-amber-600 bg-amber-50 px-2 py-1 rounded-lg">{activeCourse.exam.minScore} Poin</b></p>
                           </div>
                           
-                          {/* BILAH PROGRES PENGERJAAN SOAL */}
                           <div className="mb-8">
                               <div className="flex justify-between items-center mb-2">
                                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Progres Pengerjaan Soal</span>
@@ -1660,7 +1621,6 @@
                               </div>
                           </div>
 
-                          {/* PANEL NAVIGASI NOMOR SOAL SECARA LANGSUNG */}
                           <div className="mb-8 p-4 bg-slate-50 rounded-2xl border border-slate-200/60">
                               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 text-center">Navigasi Soal</p>
                               <div className="flex flex-wrap justify-center gap-2">
@@ -1686,7 +1646,6 @@
                               </div>
                           </div>
 
-                          {/* MATERI PERTANYAAN AKTIF */}
                           {(() => {
                               const q = activeCourse.exam.questions[currentQuestionIndex];
                               if (!q) return null;
@@ -1735,7 +1694,6 @@
                               );
                           })()}
 
-                          {/* KONTROL NAVIGASI KAKI */}
                           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-slate-200">
                               <button
                                   onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
@@ -1766,7 +1724,6 @@
                               )}
                           </div>
                           
-                          {/* INDIKATOR SOAL BELUM SELESAI */}
                           {Object.keys(studentAnswers).length < activeCourse.exam.questions.length && (
                               <p className="text-center text-xs text-rose-500 font-bold mt-4 animate-pulse">
                                   * Harap jawab semua soal terlebih dahulu! ({Object.keys(studentAnswers).length} dari {activeCourse.exam.questions.length} selesai dijawab)
