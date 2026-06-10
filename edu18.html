@@ -352,7 +352,7 @@
               matchedPart = {
                 id: 'p_virtual_' + adminFound.id,
                 name: adminFound.name,
-                email: adminFound.email || (adminFound.username + '@edulearn.com'),
+                email: adminEmailVirtual,
                 accessCode: adminFound.password
               };
             }
@@ -412,26 +412,32 @@
         setSession(sessData);
         sessionStorage.setItem('edu_session', JSON.stringify(sessData));
       };
-
+      
       // Fungsi instan untuk kembali ke pemilih peran saat berada di dalam dashboard (Ganti Peran)
       const triggerRoleSwitch = () => {
          if (!session) return;
-         // Cari data admin asli di state
          const userId = session.data.id;
          const cleanId = userId.replace('p_virtual_', '');
          const adminFound = admins.find(a => a.id === cleanId || a.id === userId);
 
          if (adminFound) {
-            let matchedPart = participants.find(p => 
-              p.email.trim().toLowerCase() === adminFound.username.trim().toLowerCase() ||
-              (adminFound.email && p.email.trim().toLowerCase() === adminFound.email.trim().toLowerCase())
-            );
+            // Ambil username murni dan buat versi email virtualnya untuk pencocokan yang akurat
+            const adminUserClean = adminFound.username.trim().toLowerCase();
+            const adminEmailVirtual = adminUserClean.includes('@') ? adminUserClean : adminUserClean + '@edulearn.local';
 
+            let matchedPart = participants.find(p => {
+              const partEmailClean = p.email.trim().toLowerCase();
+              return partEmailClean === adminUserClean || 
+                     partEmailClean === adminEmailVirtual ||
+                     (adminFound.email && partEmailClean === adminFound.email.trim().toLowerCase());
+            });
+
+            // Jika tidak ada di spreadsheet, kunci menggunakan email virtual terstandarisasi
             if (!matchedPart) {
               matchedPart = {
                 id: 'p_virtual_' + adminFound.id,
                 name: adminFound.name,
-                email: adminFound.email || (adminFound.username + '@edulearn.com'),
+                email: adminEmailVirtual, // Menggunakan sandy@edulearn.local
                 accessCode: adminFound.password
               };
             }
@@ -446,7 +452,6 @@
             setLoginMatches({ admin: adminFound, participant: matchedPart, roles });
             setAppMode('role_selection');
          } else {
-             // Jika entah bagaimana tidak ditemukan, tawarkan ke auth
              handleLogout();
          }
       };
