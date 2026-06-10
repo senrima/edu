@@ -30,17 +30,22 @@
 
     let fbApp = null, fbAuth = null, fbDb = null;
 
-    // URL Google Apps Script Baru yang Di-enkripsi Aman (Menuju ke LsFo9/exec)
+    // URL Google Apps Script BARU yang Di-enkripsi Super
     const _0xDbChunks = [
         "aHR0cHM6Ly9zY3JpcHQuZ29v",
         "Z2xlLmNvbS9tYWNyb3Mvcy9B",
-        "S2Z5Y2J3RUtHcWw1b0FNM3NY",
-        "WnZZSGdYeDExd1dUelk2cEVH",
-        "amZRVkRPZjc1Q0VmTjZFY2hX",
-        "RUVmeER0dVpza2psTHNGbzkv",
+        "S2Z5Y2J6NFM0VVF0elpqbVcy",
+        "bURnTHoxczVDSHJUVWtvSG5I",
+        "dmt3bkZ4SzZFaklCeXF0aFpI",
+        "UTlOQzZPUlBqcC1tSXQ3U2gv",
         "ZXhlYw=="
     ];
     const DEFAULT_SHEETS_URL = atob(_0xDbChunks.join(""));
+
+    // ANTI-CACHE: Memaksa aplikasi menggunakan URL GAS terbaru (Menghapus jejak URL lama di memori browser)
+    if (localStorage.getItem('edu_sheets_url') !== DEFAULT_SHEETS_URL) {
+        localStorage.setItem('edu_sheets_url', DEFAULT_SHEETS_URL);
+    }
 
     const IconWrapper = ({ name, size = 24, className = "", weight="regular" }) => <i className={`ph${weight === 'fill' ? '-fill' : weight === 'duotone' ? '-duotone' : weight === 'bold' ? '-bold' : ''} ph-${name} ${className}`} style={{ fontSize: size }}></i>;
     const PlayCircle = (p) => <IconWrapper name="play-circle" {...p} />;
@@ -79,45 +84,18 @@
     const Sparkle = (p) => <IconWrapper name="sparkle" {...p} />;
     const MagnifyingGlass = (p) => <IconWrapper name="magnifying-glass" {...p} />;
 
-    const initialAdmins = [
-      { id: 'adm_super_rahasia', username: 'super_admin', password: 'Sandy236', name: 'Master System', email: 'senrima.ms@gmail.com', isSupern: true, isActive: true, donationLink: 'https://donation.s-tools.id', info1: 'Haloo Semua', showInfo1: true, info2: 'Semangat Belajar', showInfo2: true }
-    ];
-    
+    const initialAdmins = [];
+    const initialCourses = [];
+    const initialParticipants = [];
+    const initialEnrollments = [];
     const emptyExam = { minScore: 70, questions: Array.from({length: 10}, () => ({ q: '', options: ['','','',''], answer: 0 })) };
-
-    const initialCourses = [
-      { 
-        id: 'c_1', authorId: 'adm_super_rahasia', code: 'WEB2026', title: "Mastering Web Development", instructor: "Master System", isActive: true, docLink: "",
-        exam: { 
-            minScore: 80, 
-            questions: [
-                { q: "Fungsi utama JavaScript adalah?", options: ["Styling", "Struktur", "Interaktivitas", "Database"], answer: 2 },
-                { q: "Tag untuk membuat paragraf di HTML?", options: ["<p>", "<h1>", "<div>", "<span>"], answer: 0 },
-                { q: "Sifat CSS untuk mengubah warna latar?", options: ["color", "bg-color", "background-color", "back-color"], answer: 2 },
-                { q: "Simbol yang digunakan untuk ID di CSS?", options: [".", "#", "*", "&"], answer: 1 },
-                { q: "Keyword deklarasi variabel JS yang nilainya bisa diubah?", options: ["const", "let", "var", "let & var"], answer: 3 },
-                { q: "Apa kepanjangan dari HTML?", options: ["Hyper Text Markup Language", "Hyperlinks Text Language", "Home Tool Markup Language", "Hyper Tool Markup"], answer: 0 },
-                { q: "Tipe data [1, 2, 3] dalam JavaScript disebut?", options: ["Object", "String", "Number", "Array"], answer: 3 },
-                { q: "Bagaimana cara membuat fungsi di JavaScript?", options: ["function myFunction()", "create myFunction()", "def myFunction()", "fn myFunction()"], answer: 0 },
-                { q: "File CSS eksternal dihubungkan menggunakan tag?", options: ["<style>", "<link>", "<script>", "<meta>"], answer: 1 },
-                { q: "Framework CSS Utility-First yang populer saat ini?", options: ["Bootstrap", "Materialize", "Tailwind", "Foundation"], answer: 2 }
-            ] 
-        },
-        modules: [ { id: 'm_1', title: "Pengantar HTML", videoUrl: "https://www.youtube.com/embed/pQN-pnXPaVg", description: "Dasar web", comments: [] } ] 
-      }
-    ];
-    
-    const initialParticipants = [{ id: 'p_1', name: "Andi Wijaya", email: "andi@mail.com", accessCode: "P9X2A1" }];
-    const initialEnrollments = [{ id: 'e_1', participantId: 'p_1', courseId: 'c_1', completedModules: ['m_1'], isGraduated: false, certDownloaded: false, examScore: null, graduatedAt: null }];
 
     const normalizeCourses = (coursesArr) => {
         if (!coursesArr) return [];
         return coursesArr.map(c => {
             let exam = c.exam || { minScore: 70, questions: [] };
             if (!exam.questions) exam.questions = [];
-            while(exam.questions.length < 10) {
-                exam.questions.push({ q: '', options: ['','','',''], answer: 0 });
-            }
+            while(exam.questions.length < 10) exam.questions.push({ q: '', options: ['','','',''], answer: 0 });
             if (exam.questions.length > 10) exam.questions = exam.questions.slice(0, 10);
             c.exam = exam;
             return c;
@@ -172,6 +150,7 @@
 
       const [profileForm, setProfileForm] = React.useState({ donationLink: "" });
       
+      // Menggunakan info3 khusus untuk Papan Pengumuman Instruktur
       const [infoInstForm, setInfoInstForm] = React.useState({ text: '', show: false }); 
       const [infoSuperForm, setInfoSuperForm] = React.useState({ instText: '', showInst: false, partText: '', showPart: false }); 
 
@@ -186,11 +165,13 @@
       
       React.useEffect(() => {
           if (session?.role === 'admin' && admins.length > 0) {
-              const me = admins.find(a => a.id === session.data.id);
-              if(me) setInfoInstForm({ text: me.info1 || '', show: me.showInfo1 || false });
+              const currentUsername = String(session.data.username).trim().toLowerCase();
+              const me = admins.find(a => String(a.username).trim().toLowerCase() === currentUsername);
+              if(me) setInfoInstForm({ text: me.info3 || '', show: me.showInfo3 || false });
           }
           if (session?.role === 'super_admin' && admins.length > 0) {
-              const sup = admins.find(a => a.id === session.data.id);
+              const currentUsername = String(session.data.username).trim().toLowerCase();
+              const sup = admins.find(a => String(a.username).trim().toLowerCase() === currentUsername);
               if(sup) setInfoSuperForm({ instText: sup.info1||'', showInst: sup.showInfo1||false, partText: sup.info2||'', showPart: sup.showInfo2||false });
           }
       }, [session, admins]);
@@ -211,6 +192,7 @@
           fetch(url)
             .then(res => { if(!res.ok) throw new Error("Network error"); return res.json(); })
             .then(data => {
+                // FORCE CACHE OVERWRITE
                 if(data.admins) {
                     const uniqueAdmins = Array.from(new Map(data.admins.map(a => [a.id, a])).values());
                     setAdmins(uniqueAdmins); 
@@ -253,10 +235,8 @@
         if (Array.isArray(enr.completedModules)) {
             completedArray = enr.completedModules;
         } else if (typeof enr.completedModules === 'string') {
-            try { completedArray = JSON.parse(enr.completedModules); } 
-            catch (e) { completedArray = []; }
+            try { completedArray = JSON.parse(enr.completedModules); } catch (e) { completedArray = []; }
         }
-
         let prog = Math.round((completedArray.length / crs.modules.length) * 100); 
         return prog > 100 ? 100 : prog;
       };
@@ -314,12 +294,11 @@
             localStorage.setItem('edu_courses', JSON.stringify(normalizeCourses(initialCourses))); setCourses(normalizeCourses(initialCourses));
             localStorage.setItem('edu_participants', JSON.stringify(initialParticipants)); setParticipants(initialParticipants);
             localStorage.setItem('edu_enrollments', JSON.stringify(initialEnrollments)); setEnrollments(initialEnrollments);
-            showToast("Database Terinisialisasi!");
+            showToast("Database Di-reset!");
           }, async () => {} );
         setIsLoggingIn(false);
       };
 
-      // Alur Login Multi-Peran Terintegrasi Kolom Email Instruktur
       const handleLogin = (e) => {
         e.preventDefault(); 
         setIsLoggingIn(true); 
@@ -327,11 +306,11 @@
 
         setTimeout(() => {
           const { username, password } = loginInput;
-          const cleanUser = username.trim().toLowerCase();
+          const cleanInput = username.trim().toLowerCase();
           const cleanPass = password.trim();
 
           const adminFound = admins.find(a => 
-            (String(a.username).trim().toLowerCase() === cleanUser || (a.email && String(a.email).trim().toLowerCase() === cleanUser)) && 
+            (String(a.username).trim().toLowerCase() === cleanInput || (a.email && String(a.email).trim().toLowerCase() === cleanInput)) && 
             String(a.password).trim() === cleanPass
           );
 
@@ -344,13 +323,11 @@
 
             const adminEmail = adminFound.email ? String(adminFound.email).trim().toLowerCase() : `${String(adminFound.username).trim().toLowerCase()}@edulearn.local`;
 
-            let matchedPart = participants.find(p => 
-              p.email.trim().toLowerCase() === adminEmail
-            );
+            let matchedPart = participants.find(p => p.email.trim().toLowerCase() === adminEmail);
 
             if (!matchedPart) {
               matchedPart = {
-                id: 'p_virtual_' + adminFound.id,
+                id: 'p_virtual_' + adminFound.username,
                 name: adminFound.name || adminFound.username,
                 email: adminEmail,
                 accessCode: adminFound.password
@@ -358,7 +335,8 @@
             }
 
             const roles = [];
-            if (adminFound.isSuper) {
+            const isItSuper = adminFound.isSuper === true || adminFound.isSuper === 'true' || adminFound.isSuper === 'TRUE';
+            if (isItSuper) {
               roles.push({ id: 'super_admin', label: 'Super Admin', desc: 'Akses penuh ke semua kontrol, daftar instruktur, dan semua kursus.', icon: 'shield-check', color: 'from-amber-500 to-orange-600' });
             }
             roles.push({ id: 'admin', label: 'Instruktur', desc: 'Kelola kelas Anda sendiri, tonton, periksa tugas, dan tambah modul baru.', icon: 'chalkboard-teacher', color: 'from-indigo-500 to-indigo-700' });
@@ -371,7 +349,7 @@
           }
 
           const partFound = participants.find(p => 
-            p.email.trim().toLowerCase() === cleanUser && 
+            p.email.trim().toLowerCase() === cleanInput && 
             String(p.accessCode).trim() === cleanPass
           );
 
@@ -410,20 +388,28 @@
 
       const triggerRoleSwitch = () => {
          if (!session) return;
-         const userId = session.data.id;
-         const cleanId = String(userId).replace('p_virtual_', '');
-         const adminFound = admins.find(a => a.id === cleanId || a.id === userId);
+         
+         let adminFound = null;
+
+         if (session.role === 'admin' || session.role === 'super_admin') {
+             const currentUsername = String(session.data.username).trim().toLowerCase();
+             adminFound = admins.find(a => String(a.username).trim().toLowerCase() === currentUsername);
+         } else {
+             const currentEmail = String(session.data.email).trim().toLowerCase();
+             adminFound = admins.find(a => {
+                 const aEmail = a.email ? String(a.email).trim().toLowerCase() : `${String(a.username).trim().toLowerCase()}@edulearn.local`;
+                 return aEmail === currentEmail;
+             });
+         }
 
          if (adminFound) {
             const adminEmail = adminFound.email ? String(adminFound.email).trim().toLowerCase() : `${String(adminFound.username).trim().toLowerCase()}@edulearn.local`;
 
-            let matchedPart = participants.find(p => 
-              p.email.trim().toLowerCase() === adminEmail
-            );
+            let matchedPart = participants.find(p => p.email.trim().toLowerCase() === adminEmail);
 
             if (!matchedPart) {
               matchedPart = {
-                id: 'p_virtual_' + adminFound.id,
+                id: 'p_virtual_' + adminFound.username,
                 name: adminFound.name || adminFound.username,
                 email: adminEmail,
                 accessCode: adminFound.password
@@ -431,7 +417,8 @@
             }
 
             const roles = [];
-            if (adminFound.isSuper) {
+            const isItSuper = adminFound.isSuper === true || adminFound.isSuper === 'true' || adminFound.isSuper === 'TRUE';
+            if (isItSuper) {
               roles.push({ id: 'super_admin', label: 'Super Admin', desc: 'Akses penuh ke semua kontrol, daftar instruktur, dan semua kursus.', icon: 'shield-check', color: 'from-amber-500 to-orange-600' });
             }
             roles.push({ id: 'admin', label: 'Instruktur', desc: 'Kelola kelas Anda sendiri, tonton, periksa tugas, dan tambah modul baru.', icon: 'chalkboard-teacher', color: 'from-indigo-500 to-indigo-700' });
@@ -446,9 +433,13 @@
 
       const isSwitchableAccount = () => {
          if (!session) return false;
-         const userId = session.data.id;
-         const cleanId = String(userId).replace('p_virtual_', '');
-         return admins.some(a => a.id === cleanId || a.id === userId);
+         if (session.role === 'admin' || session.role === 'super_admin') return true;
+         
+         const currentEmail = String(session.data.email).trim().toLowerCase();
+         return admins.some(a => {
+             const aEmail = a.email ? String(a.email).trim().toLowerCase() : `${String(a.username).trim().toLowerCase()}@edulearn.local`;
+             return aEmail === currentEmail;
+         });
       };
 
       const handleLogout = () => {
@@ -465,7 +456,7 @@
       const handleRegisterAdmin = async (e) => {
         e.preventDefault(); const fd = new FormData(e.target); const username = fd.get('username').trim().toLowerCase();
         if (admins.some(a => a.username === username)) return showToast("Username terpakai!");
-        const newAdminData = { name: fd.get('name'), username, email: fd.get('email').trim().toLowerCase(), password: fd.get('password'), isSuper: false, isActive: true, donationLink: '', info1: '', showInfo1: false, info2: '', showInfo2: false };
+        const newAdminData = { name: fd.get('name'), username, email: fd.get('email').trim().toLowerCase(), password: fd.get('password'), isSuper: false, isActive: true, donationLink: '', info1: '', showInfo1: false, info2: '', showInfo2: false, info3: '', showInfo3: false };
         await execDbAction( () => {
             const updatedA = [...admins, { id: `adm_${Date.now()}`, ...newAdminData }];
             setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
@@ -513,7 +504,7 @@
       };
 
       const handleDeleteModule = (courseId, moduleId) => {
-        const hasGraduatedStudent = enrollments.some(e => e.courseId === courseId && e.isGraduated);
+        const hasGraduatedStudent = enrollments.some(e => String(e.courseId) === String(courseId) && e.isGraduated);
         if (hasGraduatedStudent) {
             showToast("Akses Ditolak: Ada Siswa Lulus!");
             setConfirmDialog({
@@ -545,11 +536,12 @@
           if (session.role === 'super_admin') {
               updatedData = { info1: infoSuperForm.instText, showInfo1: infoSuperForm.showInst, info2: infoSuperForm.partText, showInfo2: infoSuperForm.showPart };
           } else {
-              updatedData = { info1: infoInstForm.text, showInfo1: infoInstForm.show };
+              updatedData = { info3: infoInstForm.text, showInfo3: infoInstForm.show };
           }
 
           await execDbAction( () => {
-              const updatedA = admins.map(a => a.id === session.data.id ? { ...a, ...updatedData } : a);
+              const currentUsername = String(session.data.username).trim().toLowerCase();
+              const updatedA = admins.map(a => String(a.username).trim().toLowerCase() === currentUsername ? { ...a, ...updatedData } : a);
               setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
           }, async () => {} );
           showToast("Papan Informasi Diperbarui!");
@@ -558,7 +550,8 @@
       const handleUpdateProfile = async (e) => {
         e.preventDefault();
         await execDbAction( () => {
-            const updatedA = admins.map(a => a.id === session.data.id ? { ...a, donationLink: profileForm.donationLink } : a);
+            const currentUsername = String(session.data.username).trim().toLowerCase();
+            const updatedA = admins.map(a => String(a.username).trim().toLowerCase() === currentUsername ? { ...a, donationLink: profileForm.donationLink } : a);
             setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
         }, async () => {} );
         showToast("Profil diperbarui!");
@@ -612,7 +605,7 @@
         if (!participant) return showToast("Peserta tidak ditemukan!");
         const pId = participant.id;
         const courseObj = courses.find(c => c.id === cId);
-        if(enrollments.some(en => en.participantId === pId && en.courseId === cId)) return showToast("Sudah terdaftar!");
+        if(enrollments.some(en => String(en.participantId) === String(pId) && String(en.courseId) === String(cId))) return showToast("Sudah terdaftar!");
         const enrData = { participantId: pId, courseId: cId, completedModules: [], isGraduated: false, certDownloaded: false, examScore: null, graduatedAt: null };
         await execDbAction( () => {
             const updatedE = [...enrollments, { id: `e_${Date.now()}`, ...enrData }];
@@ -642,7 +635,8 @@
         if ((session.role === 'admin' || session.role === 'super_admin') && targetModuleId) {
           modToOpen = course.modules.find(m => m.id === targetModuleId) || modToOpen;
         } else if (session.role === 'participant') {
-          const myEnr = enrollments.find(e => e.participantId === session.data.id && e.courseId === courseId);
+          // Identifikasi ID secara unik dari data peserta yang login
+          const myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(courseId));
           if (myEnr) {
             if(myEnr.isGraduated) setClassroomMode('result');
             else {
@@ -677,7 +671,7 @@
       const handleCompleteModule = async () => {
         if (session.role === 'admin' || session.role === 'super_admin') return; 
         const cMods = activeCourse.modules; const cIdx = cMods.findIndex(m => m.id === activeModule.id); const isLast = cIdx === cMods.length - 1;
-        const myEnr = enrollments.find(e => e.participantId === session.data.id && e.courseId === activeCourse.id);
+        const myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(activeCourse.id));
         
         let compList = Array.isArray(myEnr.completedModules) ? myEnr.completedModules : [];
         if(typeof myEnr.completedModules === 'string') { try { compList = JSON.parse(myEnr.completedModules); } catch(e) {} }
@@ -685,7 +679,7 @@
         if (!compList.includes(activeModule.id)) {
           const newComps = [...compList, activeModule.id];
           await execDbAction( () => {
-              const updatedE = enrollments.map(en => en.id === myEnr.id ? { ...en, completedModules: newComps } : en);
+              const updatedE = enrollments.map(en => String(en.id) === String(myEnr.id) ? { ...en, completedModules: newComps } : en);
               setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE));
           }, async () => {} );
           if (!isLast) { setActiveModule(cMods[cIdx + 1]); showToast("Lanjut materi."); } else setClassroomMode('exam');
@@ -697,11 +691,11 @@
       const submitExam = async () => {
         let correct = 0; activeCourse.exam.questions.forEach((q, i) => { if(studentAnswers[i] === q.answer) correct++; });
         const finalScore = correct * 10; const isPassed = finalScore >= activeCourse.exam.minScore;
-        const myEnr = enrollments.find(e => e.participantId === session.data.id && e.courseId === activeCourse.id);
+        const myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(activeCourse.id));
         const todayDateStr = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
         
         await execDbAction( () => {
-                const updatedE = enrollments.map(en => en.id === myEnr.id ? { ...en, examScore: finalScore, isGraduated: isPassed, graduatedAt: isPassed ? todayDateStr : en.graduatedAt } : en);
+                const updatedE = enrollments.map(en => String(en.id) === String(myEnr.id) ? { ...en, examScore: finalScore, isGraduated: isPassed, graduatedAt: isPassed ? todayDateStr : en.graduatedAt } : en);
                 setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE));
         }, async () => {} );
         setClassroomMode('result');
@@ -712,10 +706,10 @@
       };
 
       const handleDownloadCert = async () => {
-        const myEnr = enrollments.find(e => e.participantId === session.data.id && e.courseId === activeCourse.id);
-        const instructorData = admins.find(a => a.id === activeCourse.authorId);
+        const myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(activeCourse.id));
+        const instructorData = admins.find(a => String(a.id) === String(activeCourse.authorId));
         await execDbAction( () => {
-            const updatedE = enrollments.map(en => en.id === myEnr.id ? { ...en, certDownloaded: true } : en);
+            const updatedE = enrollments.map(en => String(en.id) === String(myEnr.id) ? { ...en, certDownloaded: true } : en);
             setEnrollments(updatedE); localStorage.setItem('edu_enrollments', JSON.stringify(updatedE));
         }, async () => {} );
 
@@ -729,7 +723,7 @@
 
       const markNotifsRead = async () => {
         await execDbAction( () => {
-            const updatedN = notifications.map(n => n.adminId === session.data.id ? { ...n, isRead: true } : n);
+            const updatedN = notifications.map(n => String(n.adminId) === String(session.data.id) ? { ...n, isRead: true } : n);
             setNotifications(updatedN); localStorage.setItem('edu_notifications', JSON.stringify(updatedN));
         }, async () => {} );
       };
@@ -894,7 +888,7 @@
                   <p className="text-slate-500 text-center mt-2 text-sm">Gunakan satu akun terpadu untuk semua peran.</p>
               </div>
               
-              {admins.length === 0 && (<div className="mb-4 bg-amber-50 border border-amber-200 p-4 rounded-xl text-center"><p className="text-sm text-amber-800 mb-3 font-medium">Database kosong.</p><button onClick={handleSeedDatabase} disabled={isLoggingIn} className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-3 rounded-xl text-sm font-bold w-full shadow-md transition">Inisialisasi Database Bawaan</button></div>)}
+              {admins.length === 0 && (<div className="mb-4 bg-amber-50 border border-amber-200 p-4 rounded-xl text-center"><p className="text-sm text-amber-800 mb-3 font-medium">Sistem Database Sedang Diperbarui.</p></div>)}
               {loginError && <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-medium rounded-r-lg">{loginError}</div>}
               
               <form onSubmit={handleLogin} className="space-y-5">
@@ -1004,15 +998,15 @@
 
       if (appMode === 'super_dashboard' && session) {
         const safeLower = (str) => (str || '').toString().toLowerCase();
-        const regularAdmins = admins.filter(a => !a.isSuper);
+        const regularAdmins = admins.filter(a => !(a.isSuper === true || a.isSuper === 'true' || a.isSuper === 'TRUE'));
         const filteredAdmins = regularAdmins.filter(a => safeLower(a.name).includes(safeLower(searchInst)) || safeLower(a.username).includes(safeLower(searchInst)));
         const filteredCourses = courses.filter(c => safeLower(c.title).includes(safeLower(searchCourse)) || safeLower(c.code).includes(safeLower(searchCourse)) || safeLower(c.instructor).includes(safeLower(searchCourse)));
-        const allEnrs = enrollments.map(enr => { const p = participants.find(x => x.id === enr.participantId); const c = courses.find(x => x.id === enr.courseId); return { ...enr, pName: p?.name||'', pEmail: p?.email||'', cTitle: c?.title||'', prog: calcProgress(enr,c) }; });
+        const allEnrs = enrollments.map(enr => { const p = participants.find(x => String(x.id) === String(enr.participantId)); const c = courses.find(x => String(x.id) === String(enr.courseId)); return { ...enr, pName: p?.name||'', pEmail: p?.email||'', cTitle: c?.title||'', prog: calcProgress(enr,c) }; });
         const filteredEnrs = allEnrs.filter(e => safeLower(e.pName).includes(safeLower(searchPart)) || safeLower(e.cTitle).includes(safeLower(searchPart)));
 
         return (
           <div className="min-h-screen bg-slate-50 flex flex-col animate-[fadeIn_200ms_ease-out]">
-            {ConfirmModal()}{ManageExamModal()}{toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"><CheckCircle2 size={20}/><span>{toast}</span></div>}
+            {ConfirmModal()}{toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"><CheckCircle2 size={20}/><span>{toast}</span></div>}
             
             <header className="bg-slate-900 text-white px-4 md:px-6 py-4 flex flex-col md:flex-row items-center justify-between z-20 gap-4 shadow-md">
               <div className="flex items-center space-x-3 w-full md:w-auto justify-center md:justify-start">
@@ -1160,17 +1154,28 @@
 
       if (appMode === 'admin_dashboard' && session) {
         const safeLower = (str) => (str || '').toString().toLowerCase();
-        const myCourses = courses.filter(c => c.authorId === session.data.id);
+        
+        // Perbaikan Login: Hanya memuat data berdasarkan USERNAME dari Dashboard Admin
+        const myCourses = courses.filter(c => {
+            const authorAdmin = admins.find(a => String(a.id) === String(c.authorId));
+            return authorAdmin && String(authorAdmin.username).trim().toLowerCase() === String(session.data.username).trim().toLowerCase();
+        });
+        
         const filteredMyCourses = myCourses.filter(c => safeLower(c.title).includes(safeLower(searchCourse)) || safeLower(c.code).includes(safeLower(searchCourse)));
-        const myNotifs = notifications.filter(n => n.adminId === session.data.id);
+        
+        const myNotifs = notifications.filter(n => {
+            const notifAdmin = admins.find(a => String(a.id) === String(n.adminId));
+            return notifAdmin && String(notifAdmin.username).trim().toLowerCase() === String(session.data.username).trim().toLowerCase();
+        });
+        
         const unread = myNotifs.filter(n => !n.isRead).length;
-        const myEnrollments = enrollments.filter(e => myCourses.some(c=>c.id === e.courseId));
+        const myEnrollments = enrollments.filter(e => myCourses.some(c=>String(c.id) === String(e.courseId)));
         const filteredMyEnrs = myEnrollments.filter(enr => {
-            const p = participants.find(x => x.id === enr.participantId);
-            const c = courses.find(x => x.id === enr.courseId);
+            const p = participants.find(x => String(x.id) === String(enr.participantId));
+            const c = courses.find(x => String(x.id) === String(enr.courseId));
             return safeLower(p?.name).includes(safeLower(searchPart)) || safeLower(c?.title).includes(safeLower(searchPart));
         });
-        const superAdmin = admins.find(a => a.isSuper);
+        const superAdmin = admins.find(a => a.isSuper === true || a.isSuper === 'true' || a.isSuper === 'TRUE');
 
         return (
           <div className="min-h-screen flex flex-col bg-slate-50 animate-[fadeIn_200ms_ease-out]">
@@ -1267,7 +1272,7 @@
                                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 px-2">Modul Video / Silabus</h4>
                                 <div className="space-y-2">
                                 {course.modules.length === 0 ? <p className="text-sm text-slate-400 italic px-2">Silabus masih kosong. Tambahkan video pertama.</p> : course.modules.map((m, i) => {
-                                    const hasGraduates = enrollments.some(e => e.courseId === course.id && e.isGraduated);
+                                    const hasGraduates = enrollments.some(e => String(e.courseId) === String(course.id) && e.isGraduated);
                                     return (
                                     <div key={m.id} className="flex justify-between items-center p-3 sm:p-4 hover:bg-slate-50 rounded-xl border border-transparent hover:border-slate-100 transition group">
                                         <div className="flex items-center min-w-0 pr-4">
@@ -1330,7 +1335,7 @@
                     </div>
                     <div className="overflow-x-auto min-w-full"><table className="w-full text-left whitespace-nowrap"><thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider"><tr><th className="p-4 rounded-tl-xl">Siswa</th><th className="p-4">Pin Akses</th><th className="p-4">Kelas</th><th className="p-4">Track Belajar</th><th className="p-4">Nilai Ujian</th><th className="p-4 rounded-tr-xl">Lencana</th></tr></thead><tbody className="divide-y divide-slate-100 text-sm">
                         {filteredMyEnrs.length === 0 ? <tr><td colSpan="6" className="p-8 text-center text-slate-400 italic">Belum ada siswa yang terdaftar atau ditemukan.</td></tr> : filteredMyEnrs.map(enr => {
-                          const part = participants.find(p => p.id === enr.participantId); const crs = courses.find(c => c.id === enr.courseId); const prog = calcProgress(enr, crs); if(!part || !crs) return null;
+                          const part = participants.find(p => String(p.id) === String(enr.participantId)); const crs = courses.find(c => String(c.id) === String(enr.courseId)); const prog = calcProgress(enr, crs); if(!part || !crs) return null;
                           return (<tr key={enr.id} className="hover:bg-slate-50 transition">
                               <td className="p-4 font-bold text-slate-800">{part.name}</td><td className="p-4 font-mono text-slate-500 font-bold">{part.accessCode}</td><td className="p-4">{crs.title}</td>
                               <td className="p-4"><div className="flex items-center w-32"><div className="w-full bg-slate-200 rounded-full h-2.5 mr-3 overflow-hidden shadow-inner"><div className={`h-full rounded-full transition-all duration-500 ${prog===100?'bg-emerald-500':'bg-indigo-500'}`} style={{width:`${prog}%`}}></div></div><span className="font-bold text-xs text-slate-600">{prog}%</span></div></td>
@@ -1396,10 +1401,35 @@
       }
 
       if (appMode === 'part_dashboard' && session) {
-        const myEnrs = enrollments.filter(e => e.participantId === session.data.id);
-        const superAdmin = admins.find(a => a.isSuper);
+        // Fokus Peserta mengacu pada EMAIL yang terdaftar di database
+        let myEnrs = enrollments.filter(e => String(e.participantId) === String(session.data.id));
+        const isVirtual = String(session.data.id).startsWith('p_virtual_');
         
-        const myInstructors = admins.filter(a => myEnrs.some(e => { const c = courses.find(crs => crs.id === e.courseId); return c && c.authorId === a.id; }));
+        // PENGAKSESAN PRATINJAU KELAS OTOMATIS: 
+        // Jika Instruktur membuka dashboard peserta, semua kelas yang ia buat otomatis muncul agar bisa dites
+        if (isVirtual) {
+            const virtualUsername = String(session.data.id).replace('p_virtual_', '');
+            const myAdmin = admins.find(a => String(a.username).trim().toLowerCase() === virtualUsername.toLowerCase());
+            if (myAdmin) {
+                const myAuthoredCourses = courses.filter(c => String(c.authorId) === String(myAdmin.id));
+                const virtualEnrs = myAuthoredCourses.map(c => ({
+                    id: 'enr_v_' + c.id,
+                    participantId: session.data.id,
+                    courseId: c.id,
+                    completedModules: [],
+                    isGraduated: false,
+                    examScore: null,
+                    certDownloaded: false
+                }));
+                const existingCourseIds = myEnrs.map(e => String(e.courseId));
+                virtualEnrs.forEach(ve => {
+                    if (!existingCourseIds.includes(String(ve.courseId))) myEnrs.push(ve);
+                });
+            }
+        }
+        
+        const superAdmin = admins.find(a => a.isSuper === true || a.isSuper === 'true' || a.isSuper === 'TRUE');
+        const myInstructors = admins.filter(a => myEnrs.some(e => { const c = courses.find(crs => String(crs.id) === String(e.courseId)); return c && String(c.authorId) === String(a.id); }));
 
         return (
           <div className="min-h-screen flex flex-col bg-slate-50 animate-[fadeIn_200ms_ease-out]">
@@ -1437,7 +1467,7 @@
                       {myEnrs.length === 0 ? <div className="bg-white border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center"><div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm"><Book size={40} className="text-slate-300"/></div><h4 className="text-xl font-bold text-slate-700 mb-2">Belum ada kelas</h4><p className="text-slate-500">Gunakan email ini untuk didaftarkan ke kelas oleh instruktur Anda.</p></div> : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6">
                         {myEnrs.map(enr => {
-                          const course = courses.find(c => c.id === enr.courseId); if (!course) return null; const prog = calcProgress(enr, course);
+                          const course = courses.find(c => String(c.id) === String(enr.courseId)); if (!course) return null; const prog = calcProgress(enr, course);
                           return (
                             <div key={enr.id} className={`bg-white rounded-3xl shadow-sm hover:shadow-xl border border-slate-100 hover:border-indigo-100 transition-all duration-300 transform hover:-translate-y-1 p-6 md:p-8 flex flex-col relative overflow-hidden group ${!course.isActive ? 'opacity-70 grayscale-[30%]' : ''}`}>
                               {!course.isActive && <div className="absolute top-5 right-5 z-20"><span className="bg-red-50 text-red-600 text-[10px] font-extrabold px-3 py-1.5 rounded-full uppercase tracking-widest border border-red-200 shadow-sm">Nonaktif</span></div>}
@@ -1474,18 +1504,18 @@
                           </div>
                       )}
 
-                      {myInstructors.filter(i => i.showInfo1 && i.info1).length > 0 && (
+                      {myInstructors.filter(i => i.showInfo3 && i.info3).length > 0 && (
                           <div className="bg-white border border-amber-100 rounded-3xl shadow-sm overflow-hidden">
                               <div className="bg-amber-50 p-5 border-b border-amber-100"><h3 className="font-extrabold text-amber-900 flex items-center"><Article size={20} className="mr-2 text-amber-500" weight="fill"/> Pengumuman Instruktur</h3></div>
                               <div className="p-5 space-y-4">
-                                  {myInstructors.filter(i => i.showInfo1 && i.info1).map(inst => (
-                                      <div key={inst.id} className="relative pl-4 before:content-[''] before:absolute before:left-0 before:top-1 before:bottom-1 before:w-1 before:bg-amber-400 before:rounded-full"><p className="text-[10px] font-extrabold text-amber-500 uppercase tracking-widest mb-1">{inst.name}</p><p className="text-sm text-slate-700 font-medium leading-relaxed">{inst.info1}</p></div>
+                                  {myInstructors.filter(i => i.showInfo3 && i.info3).map(inst => (
+                                      <div key={inst.id} className="relative pl-4 before:content-[''] before:absolute before:left-0 before:top-1 before:bottom-1 before:w-1 before:bg-amber-400 before:rounded-full"><p className="text-[10px] font-extrabold text-amber-500 uppercase tracking-widest mb-1">{inst.name}</p><p className="text-sm text-slate-700 font-medium leading-relaxed">{inst.info3}</p></div>
                                   ))}
                               </div>
                           </div>
                       )}
 
-                      {!(superAdmin?.showInfo2 && superAdmin?.info2) && myInstructors.filter(i => i.showInfo1 && i.info1).length === 0 && (
+                      {!(superAdmin?.showInfo2 && superAdmin?.info2) && myInstructors.filter(i => i.showInfo3 && i.info3).length === 0 && (
                           <div className="bg-white border border-slate-100 rounded-3xl p-8 text-center shadow-sm"><div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300"><Bell size={24}/></div><h3 className="font-bold text-slate-700">Papan Informasi</h3><p className="text-sm text-slate-400 mt-2">Tidak ada pengumuman penting saat ini. Fokus belajar!</p></div>
                       )}
                   </div>
@@ -1497,9 +1527,9 @@
 
       if (appMode === 'classroom' && session && activeCourse) {
         const isStudent = session.role === 'participant';
-        const myEnr = isStudent ? enrollments.find(e => e.participantId === session.data.id && e.courseId === activeCourse.id) : null;
+        const myEnr = isStudent ? enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(activeCourse.id)) : null;
         const prog = isStudent ? calcProgress(myEnr, activeCourse) : 0;
-        const instructorData = admins.find(a => a.id === activeCourse.authorId);
+        const instructorData = admins.find(a => String(a.id) === String(activeCourse.authorId));
 
         return (
           <div className="flex flex-col h-[100dvh] bg-slate-50 animate-[fadeIn_200ms_ease-out]">
@@ -1583,7 +1613,7 @@
                                 </div>
                             );
                         })()}
-                        
+
                         <div className="bg-white rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100">
                             <h2 className="text-2xl md:text-3xl font-extrabold mb-4 text-slate-900">{activeModule.title}</h2>
                             <p className="text-slate-600 text-base md:text-lg leading-relaxed">{activeModule.description}</p>
