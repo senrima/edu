@@ -68,7 +68,6 @@
     const ArrowLeft = (p) => <IconWrapper name="arrow-left" {...p} />;
     const RefreshCw = (p) => <IconWrapper name="arrows-clockwise" {...p} />;
     const UserIcon = (p) => <IconWrapper name="user" {...p} />;
-    const HardDrives = (p) => <IconWrapper name="hard-drives" {...p} />;
     const ShieldCheck = (p) => <IconWrapper name="shield-check" {...p} />;
     const Coffee = (p) => <IconWrapper name="coffee" {...p} />;
     const CheckSquareOffset = (p) => <IconWrapper name="check-square-offset" {...p} />;
@@ -81,14 +80,14 @@
     const MagnifyingGlass = (p) => <IconWrapper name="magnifying-glass" {...p} />;
 
     const initialAdmins = [
-      { id: 'adm_1', username: 'budi_admin', password: 'ADMIN123', name: 'Budi Santoso', email: 'budi@mail.com', isSuper: false, isActive: true, donationLink: 'https://saweria.co/budi', info1: 'Selamat datang di kelas! Cek materi dokumen sebelum menonton.', showInfo1: true, info2: '', showInfo2: false }
+      { id: 'adm_super_rahasia', username: 'super_admin', password: 'Sandy236', name: 'Master System', email: 'senrima.ms@gmail.com', isSuper: true, isActive: true, donationLink: 'https://donation.s-tools.id', info1: 'Haloo Semua', showInfo1: true, info2: 'Semangat Belajar', showInfo2: true }
     ];
     
     const emptyExam = { minScore: 70, questions: Array.from({length: 10}, () => ({ q: '', options: ['','','',''], answer: 0 })) };
 
     const initialCourses = [
       { 
-        id: 'c_1', authorId: 'adm_1', code: 'WEB2026', title: "Mastering Web Development", instructor: "Budi Santoso", isActive: true, docLink: "https://docs.google.com/document/d/1...",
+        id: 'c_1', authorId: 'adm_super_rahasia', code: 'WEB2026', title: "Mastering Web Development", instructor: "Master System", isActive: true, docLink: "",
         exam: { 
             minScore: 80, 
             questions: [
@@ -635,11 +634,7 @@
           const myEnr = enrollments.find(e => e.participantId === session.data.id && e.courseId === courseId);
           if (myEnr) {
             if(myEnr.isGraduated) setClassroomMode('result');
-            else {
-                let compList = Array.isArray(myEnr.completedModules) ? myEnr.completedModules : [];
-                if(typeof myEnr.completedModules === 'string') { try { compList = JSON.parse(myEnr.completedModules); } catch(e) {} }
-                modToOpen = course.modules.find(m => !compList.includes(m.id)) || course.modules[course.modules.length - 1];
-            }
+            else modToOpen = course.modules.find(m => !myEnr.completedModules.includes(m.id)) || course.modules[course.modules.length - 1];
           }
         }
         if(!modToOpen && classroomMode === 'video') return showToast("Belum ada materi!"); 
@@ -757,7 +752,6 @@
         );
       };
 
-      // Fix Anti-Hangs: Eksekusi sebagai fungsi {ManageExamModal()} di UI Dashboard untuk menghentikan Bug Remounting/Scroll Up
       const ManageExamModal = () => {
         if (!examModalOpen) return null;
         return (
@@ -877,7 +871,7 @@
       if (appMode === 'auth') {
         return (
           <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4">
-            <ConfirmModal />
+            {ConfirmModal()}
             <div className="bg-white p-6 sm:p-8 rounded-t-3xl rounded-b-xl shadow-xl w-full max-w-md border border-slate-100 relative z-10">
               <div className="flex flex-col items-center mb-8">
                   <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl flex items-center justify-center text-white mb-6 shadow-lg shadow-indigo-200 transform rotate-3"><BookOpen size={40} /></div>
@@ -1091,7 +1085,6 @@
                     <form onSubmit={handleRegisterAdmin} className="space-y-4">
                       <input name="name" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition shadow-sm text-sm" placeholder="Nama Lengkap"/>
                       <input name="username" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition shadow-sm text-sm" placeholder="Username Khusus"/>
-                      {/* Update: Input Kolom Email untuk Sinkronisasi Sempurna */}
                       <input name="email" type="email" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition shadow-sm text-sm" placeholder="Email Instruktur Aktif"/>
                       <input name="password" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition shadow-sm text-sm" defaultValue="GURU123" placeholder="Password"/>
                       <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-bold transition shadow-md mt-2">Buat Akun Instruktur</button>
@@ -1214,7 +1207,6 @@
                       </div>
                       
                       <form onSubmit={handleCreateCourse} className="space-y-4">
-                        {/* Update: Tombol generator acak dihapus, input murni manual untuk kode kelas */}
                         <input name="code" required maxLength={10} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm font-mono uppercase font-bold" placeholder="Tulis Kode Kelas Unik (Maks 10 Karakter)"/>
                         <input name="title" required maxLength={60} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Judul Kelas Utama"/>
                         <input name="inst" defaultValue={session.data.name} required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Nama Tampil Pengajar"/>
