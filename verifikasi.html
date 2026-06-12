@@ -36,8 +36,8 @@ const _0xDbChunks = [
 ];
     const DEFAULT_SHEETS_URL = atob(_0xDbChunks.join(""));
 
-    const DASHBOARD_LOGIN_BTN_HTML = `<br><br><div style="text-align:center;"><a href="https://s-tools.id/edu/geenkripsi.html" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-family: sans-serif;">Masuk ke Dashboard</a></div>`;
-
+    const EMAIL_BUTTONS_HTML = `<br><br><div style="text-align:center;"><a href="https://s-tools.id/edu/" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-family: sans-serif; margin-right: 10px; margin-bottom: 10px;">Masuk ke Dashboard</a><a href="https://s-tools.id/app/daftar.html" style="background-color: #f8fafc; color: #4f46e5; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-family: sans-serif; border: 2px solid #4f46e5; margin-bottom: 10px;">Daftar Akun S-Tools</a></div>`;
+    
     const IconWrapper = ({ name, size = 24, className = "", weight="regular" }) => (
       <i className={`ph${weight === 'fill' ? '-fill' : weight === 'duotone' ? '-duotone' : weight === 'bold' ? '-bold' : ''} ph-${name} ${className}`} style={{ fontSize: size }}></i>
     );
@@ -289,11 +289,12 @@ const _0xDbChunks = [
 
           await saveToDatabase(finalDb);
 
+          // Email Konfirmasi Pendaftaran
           triggerEmail({
             tujuan: participantObj.email,
             subjek: `Akses Kelas ${courseObj.title} Telah Aktif!`,
             namaPengguna: participantObj.name,
-            isiPesanInti: `Pendaftaran kelas Anda berhasil diverifikasi secara instan.<br><br><b>Detail Akses Masuk:</b><br>• Kelas: <b>${courseObj.title}</b><br>• Email: <b>${participantObj.email}</b><br>• PIN Akses Masuk: <b style="font-size: 16px; color: #4f46e5;">${participantObj.accessCode}</b>` + DASHBOARD_LOGIN_BTN_HTML
+            isiPesanInti: `Pendaftaran kelas Anda berhasil diverifikasi.<br><br><b>Detail Kelas:</b><br>• Kelas: <b>${courseObj.title}</b><br>• Email: <b>${participantObj.email}</b><br><br>Karena EduLearn kini menggunakan keamanan terpusat S-Tools ID, PIN/Password manual tidak lagi dibutuhkan. Silakan klik tombol di bawah untuk masuk ke Dashboard.<br><br><span style="color:#e11d48; font-weight:bold; font-size:15px;">Pastikan mendaftar dengan akun email ➔ ${participantObj.email} , agar tidak salah daftar lagi siapa tau Anda memiliki email lain.</span>` + EMAIL_BUTTONS_HTML
           });
 
           setStatus({ 
