@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,18 +9,21 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
-    .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
-    .glass-input { background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); }
-    .glass-input:focus { border-color: #6366f1; background: rgba(15, 23, 42, 0.8); }
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   </style>
 </head>
 <body>
   <div id="root"></div>
 
   <script type="text/babel">
-    // Komponen pembantu untuk merender ikon dan loading spinner
     const IconWrapper = ({ name, size = 24, className = "", weight="regular" }) => (
       <i className={`ph${weight === 'fill' ? '-fill' : weight === 'duotone' ? '-duotone' : weight === 'bold' ? '-bold' : ''} ph-${name} ${className}`} style={{ fontSize: size }}></i>
     );
@@ -79,7 +82,6 @@
           pin: ""
       });
 
-      // Jalankan Auth Guard S-Tools ID pertama kali dimuat
       React.useEffect(() => {
           async function handleSSO() {
               setSsoChecking(true);
@@ -131,13 +133,18 @@
 
       if (ssoChecking) {
           return (
-              <div className="flex flex-col items-center justify-center h-screen bg-slate-950 text-white">
-                  <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-indigo-600/30 animate-pulse">
-                      <IconWrapper name="shield-check" size={40} className="text-indigo-200" weight="fill" />
+              <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+                  <div className="bg-white p-8 md:p-10 rounded-3xl shadow-xl w-full max-w-md border border-slate-100 text-center relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-full h-1.5 bg-slate-100">
+                          <div className="h-full bg-indigo-600 animate-pulse w-full"></div>
+                      </div>
+                      <div className="w-24 h-24 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner relative">
+                          <IconWrapper name="shield-check" size={48} weight="fill" className="animate-bounce" />
+                          <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-indigo-600 animate-spin"></div>
+                      </div>
+                      <h2 className="text-xl font-bold tracking-wide text-slate-900 mb-2">Memverifikasi Sesi...</h2>
+                      <p className="text-sm text-slate-500">Mengamankan Akses Pembuat Link Sistem</p>
                   </div>
-                  <Loader2 size={36} className="text-indigo-500 mb-4" />
-                  <h2 className="text-xl font-bold tracking-wide animate-pulse">Memverifikasi Sesi S-Tools ID...</h2>
-                  <p className="text-sm text-slate-400 mt-2">Mengamankan Akses Pembuat Link Sistem</p>
               </div>
           );
       }
@@ -145,46 +152,40 @@
       const activeLink = getGeneratedEnrollLink();
 
       return (
-        <div className="min-h-screen p-4 md:p-8 relative flex flex-col justify-between">
+        <div className="min-h-screen bg-slate-50 p-4 md:p-8 flex flex-col justify-between">
           {toast && (
-              <div className="fixed top-4 right-4 z-[100] bg-indigo-600 text-white px-6 py-3.5 rounded-2xl shadow-xl flex items-center space-x-2 border border-indigo-400 transition-all animate-[fadeIn_0.2s_ease-out]">
+              <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3.5 rounded-2xl shadow-xl flex items-center space-x-2 transition-all animate-[fadeIn_0.2s_ease-out]">
                   <IconWrapper name="check-circle" size={20} weight="fill" />
                   <span className="font-bold text-sm">{toast}</span>
               </div>
           )}
 
-          {/* Background Lights */}
-          <div className="absolute inset-0 z-0 opacity-20 pointer-events-none overflow-hidden">
-            <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600 blur-[150px]"></div>
-            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-600 blur-[150px]"></div>
-          </div>
-
-          <div className="relative z-10 w-full max-w-4xl mx-auto flex-1 flex flex-col justify-center py-6">
-            <div className="glass-card rounded-3xl overflow-hidden shadow-2xl p-6 md:p-10">
+          <div className="w-full max-w-5xl mx-auto flex-1 flex flex-col justify-center py-6">
+            <div className="bg-white rounded-3xl overflow-hidden shadow-xl border border-slate-100 p-6 md:p-10 relative">
               
               {/* Header */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between pb-8 border-b border-slate-700/50 gap-4 mb-8">
+              <div className="flex flex-col md:flex-row md:items-center justify-between pb-8 border-b border-slate-100 gap-4 mb-8">
                   <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">
+                      <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shadow-inner">
                           <IconWrapper name="link" size={28} weight="bold" />
                       </div>
                       <div>
-                          <h1 className="text-xl md:text-2xl font-black text-white tracking-tight">EduLearn Link Generator</h1>
-                          <p className="text-slate-400 text-xs md:text-sm">Alat otomatis pembuat tautan pendaftaran siswa tanpa kesalahan</p>
+                          <h1 className="text-xl md:text-2xl font-black text-slate-900 tracking-tight">EduLearn Link Generator</h1>
+                          <p className="text-slate-500 text-xs md:text-sm font-medium">Alat otomatis pembuat tautan pendaftaran siswa</p>
                       </div>
                   </div>
-                  <div className="bg-slate-800/80 px-4 py-2 rounded-xl border border-slate-700 flex items-center text-xs gap-2 self-start md:self-auto">
-                      <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping"></div>
-                      <span className="font-bold text-slate-300">Operator: {ssoUser?.nama || 'S-Tools ID'}</span>
+                  <div className="bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 flex items-center text-xs gap-2 self-start md:self-auto">
+                      <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-sm"></div>
+                      <span className="font-bold text-slate-600">Operator: {ssoUser?.nama || 'S-Tools ID'}</span>
                   </div>
               </div>
 
               {/* Konfigurasi URL Verifikasi */}
-              <div className="bg-slate-900/50 p-4 rounded-2xl border border-slate-800 mb-8">
-                  <label className="text-xs font-bold text-indigo-400 uppercase tracking-wider block mb-2">Alamat URL Target (verifikasi.html)</label>
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 mb-8">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Alamat URL Target (verifikasi.html)</label>
                   <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-500"><IconWrapper name="globe" size={18} /></div>
-                      <input type="text" value={baseUrl} onChange={e => setBaseUrl(e.target.value)} className="w-full pl-11 pr-4 py-3 glass-input rounded-xl outline-none text-slate-300 font-mono text-xs md:text-sm transition-all" placeholder="Masukkan URL lengkap verifikasi.html" />
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400"><IconWrapper name="globe" size={18} /></div>
+                      <input type="text" value={baseUrl} onChange={e => setBaseUrl(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-slate-700 font-mono text-xs md:text-sm transition-all shadow-sm" placeholder="Masukkan URL lengkap verifikasi.html" />
                   </div>
               </div>
 
@@ -192,73 +193,83 @@
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
                   
                   {/* Bagian Input Form */}
-                  <div className="md:col-span-7 space-y-4">
-                      <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-850 flex items-center text-xs text-indigo-300 gap-2 mb-2">
-                          <IconWrapper name="info" size={16} />
-                          <span>Buat tautan otomatis untuk mendaftarkan siswa baru/lama secara langsung.</span>
+                  <div className="md:col-span-7 space-y-5">
+                      <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex items-start text-xs text-indigo-800 gap-2 mb-2">
+                          <IconWrapper name="info" size={18} className="text-indigo-600 shrink-0 mt-0.5" weight="fill" />
+                          <span className="font-bold leading-relaxed">Isi form di bawah untuk membuat tautan yang akan otomatis mendaftarkan siswa ke kelas Anda.</span>
+                      </div>
+                      
+                      <div className="space-y-1">
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nama Lengkap Siswa</label>
+                          <input type="text" value={enrollForm.name} onChange={e => setEnrollForm({...enrollForm, name: e.target.value})} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm text-slate-800 transition-all font-medium" placeholder="Contoh: Budi Wijaya (Boleh kosong)" />
                       </div>
                       <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Nama Lengkap Siswa</label>
-                          <input type="text" value={enrollForm.name} onChange={e => setEnrollForm({...enrollForm, name: e.target.value})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white transition-all" placeholder="Contoh: Budi Wijaya (Boleh kosong)" />
-                      </div>
-                      <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Alamat Email Siswa</label>
-                          <input type="email" value={enrollForm.email} onChange={e => setEnrollForm({...enrollForm, email: e.target.value})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white transition-all" placeholder="Contoh: budi@mail.com (Boleh kosong)" />
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Alamat Email Siswa</label>
+                          <input type="email" value={enrollForm.email} onChange={e => setEnrollForm({...enrollForm, email: e.target.value})} className="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm text-slate-800 transition-all font-medium" placeholder="Contoh: budi@mail.com (Boleh kosong)" />
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div className="space-y-1">
-                              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Kode Kelas Unik <span className="text-red-500">*</span></label>
-                              <input required type="text" value={enrollForm.courseCode} onChange={e => setEnrollForm({...enrollForm, courseCode: e.target.value.toUpperCase()})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white font-mono font-bold transition-all uppercase" placeholder="Contoh: WEB2028" />
+                              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Kode Kelas <span className="text-red-500">*</span></label>
+                              <div className="relative">
+                                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><IconWrapper name="book-open" size={16} /></div>
+                                  <input required type="text" value={enrollForm.courseCode} onChange={e => setEnrollForm({...enrollForm, courseCode: e.target.value.toUpperCase()})} className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm text-slate-800 font-mono font-bold transition-all uppercase" placeholder="WEB2028" />
+                              </div>
                           </div>
                           <div className="space-y-1">
-                              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">PIN Rahasia login (Opsional)</label>
-                              <input type="text" maxLength={6} value={enrollForm.pin} onChange={e => setEnrollForm({...enrollForm, pin: e.target.value.replace(/\D/g, '')})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white font-mono transition-all" placeholder="Contoh: 123456" />
+                              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">PIN Rahasia <span className="text-slate-400 font-normal">(Opsional)</span></label>
+                              <div className="relative">
+                                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><IconWrapper name="key" size={16} /></div>
+                                  <input type="text" maxLength={6} value={enrollForm.pin} onChange={e => setEnrollForm({...enrollForm, pin: e.target.value.replace(/\D/g, '')})} className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm text-slate-800 font-mono font-bold transition-all" placeholder="123456" />
+                              </div>
                           </div>
                       </div>
                       <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Username Instruktur <span className="text-red-500">*</span></label>
-                          <input required type="text" value={enrollForm.instructorUsername} onChange={e => setEnrollForm({...enrollForm, instructorUsername: e.target.value.trim().toLowerCase()})} className="w-full px-4 py-3.5 glass-input rounded-xl outline-none text-sm text-white font-mono transition-all" placeholder="Contoh: sitiaminah (Username unik)" />
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Username Instruktur <span className="text-red-500">*</span></label>
+                          <div className="relative">
+                              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400"><IconWrapper name="user" size={16} /></div>
+                              <input required type="text" value={enrollForm.instructorUsername} onChange={e => setEnrollForm({...enrollForm, instructorUsername: e.target.value.trim().toLowerCase()})} className="w-full pl-10 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm text-slate-800 font-mono font-bold transition-all" placeholder="Contoh: sitiaminah" />
+                          </div>
                       </div>
                   </div>
 
                   {/* Bagian Live Preview & Hasil Link */}
-                  <div className="md:col-span-5 bg-slate-900/80 p-6 rounded-3xl border border-slate-800 flex flex-col justify-between min-h-[360px]">
+                  <div className="md:col-span-5 bg-slate-50 p-6 rounded-3xl border border-slate-200 flex flex-col justify-between min-h-[360px] shadow-inner">
                       <div>
-                          <div className="flex items-center gap-2 mb-4 text-indigo-400 font-bold text-xs uppercase tracking-widest border-b border-slate-800 pb-3">
+                          <div className="flex items-center gap-2 mb-4 text-indigo-600 font-extrabold text-xs uppercase tracking-widest border-b border-slate-200 pb-3">
                               <IconWrapper name="sparkle" size={16} weight="fill" />
                               <span>Live Preview Hasil Tautan</span>
                           </div>
                           
                           {activeLink ? (
-                              <div className="space-y-4">
-                                  <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 select-all overflow-hidden break-all font-mono text-[11px] text-slate-300 leading-normal max-h-40 overflow-y-auto">
+                              <div className="space-y-4 animate-[fadeIn_0.2s_ease-out]">
+                                  <div className="p-4 bg-white rounded-2xl border border-slate-200 select-all overflow-hidden break-all font-mono text-[11px] text-slate-600 leading-relaxed max-h-40 overflow-y-auto shadow-sm">
                                       {activeLink}
                                   </div>
-                                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                                      <IconWrapper name="check-circle" size={14} className="text-emerald-500" />
-                                      <span>Tautan siap dikirimkan kepada calon peserta kelas.</span>
+                                  <div className="flex items-center gap-2 text-xs text-emerald-600 font-bold bg-emerald-50 px-3 py-2 rounded-lg border border-emerald-100">
+                                      <IconWrapper name="check-circle" size={16} weight="fill" />
+                                      <span>Tautan siap dikirimkan kepada calon peserta.</span>
                                   </div>
                               </div>
                           ) : (
-                              <div className="py-12 text-center text-slate-500 text-sm italic">
-                                  Silakan lengkapi parameter berbintang (<span className="text-red-500">*</span>) terlebih dahulu untuk menghasilkan link integrasi pendaftaran.
+                              <div className="py-12 text-center text-slate-400 text-sm font-medium">
+                                  Lengkapi parameter berbintang (<span className="text-red-500 font-bold">*</span>) terlebih dahulu untuk menghasilkan link integrasi pendaftaran.
                               </div>
                           )}
                       </div>
 
                       {activeLink && (
-                          <div className="space-y-3 pt-6 border-t border-slate-800/80 mt-6">
-                              <button onClick={() => handleCopyToClipboard(activeLink)} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 text-sm shadow-lg shadow-indigo-600/20 active:scale-95">
+                          <div className="space-y-3 pt-6 border-t border-slate-200 mt-6 animate-[fadeIn_0.2s_ease-out]">
+                              <button onClick={() => handleCopyToClipboard(activeLink)} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 text-sm shadow-lg shadow-indigo-200 active:scale-95">
                                   <IconWrapper name="copy" size={18} weight="bold" />
                                   <span>Salin Tautan</span>
                               </button>
                               
-                              <button onClick={() => handleCopyToClipboard(getWATemplate(), "Format template WhatsApp disalin!")} className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-400 font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 text-sm active:scale-95">
+                              <button onClick={() => handleCopyToClipboard(getWATemplate(), "Format template WhatsApp disalin!")} className="w-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 text-sm active:scale-95">
                                   <IconWrapper name="whatsapp-logo" size={18} weight="fill" />
                                   <span>Salin Format WhatsApp</span>
                               </button>
 
-                              <a href={activeLink} target="_blank" rel="noopener noreferrer" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 text-sm active:scale-95">
+                              <a href={activeLink} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center gap-2 text-sm active:scale-95 shadow-md">
                                   <IconWrapper name="arrow-square-out" size={18} weight="bold" />
                                   <span>Tes Buka Tautan</span>
                               </a>
@@ -271,7 +282,7 @@
           </div>
 
           {/* Footer */}
-          <footer className="relative z-10 text-center text-xs text-slate-600 font-mono tracking-widest py-4 border-t border-slate-900/50">
+          <footer className="text-center text-xs text-slate-400 font-mono tracking-widest py-4 mt-auto">
               © 2026 S-TOOLS.ID • EDULEARN PLATFORM LINK ENGINE
           </footer>
         </div>
