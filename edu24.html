@@ -36,7 +36,7 @@
     // URL SISTEM & API
     const API_ENDPOINT = "https://api.s-tools.id";
     const LOGIN_PORTAL_URL = "https://s-tools.id/app/index.html";
-    
+
     // URL Google Apps Script yang Di-enkripsi
 const _0xDbChunks = [
     "aHR0cHM6Ly9zY3JpcHQuZ29v",
@@ -179,7 +179,6 @@ const _0xDbChunks = [
       const [quotaModal, setQuotaModal] = React.useState({ isOpen: false, adminId: null, name: "", maxCourses: 0, maxParticipants: 0 });
       const [reqQuotaModal, setReqQuotaModal] = React.useState({ isOpen: false, reason: "", reqCourses: 5, reqParticipants: 50 });
       
-      // State panel dukungan untuk dashboard peserta
       const [showSupportPanel, setShowSupportPanel] = React.useState(false);
 
       React.useEffect(() => {
@@ -244,7 +243,6 @@ const _0xDbChunks = [
         }
       }, [dbMode, appMode]);
 
-      // EFEK SISTEM SSO / KEAMANAN OTOMATIS
       React.useEffect(() => {
           if (appMode === 'auth' && dbReady) {
               const performSSO = async () => {
@@ -266,7 +264,6 @@ const _0xDbChunks = [
                           setAuthStatus("Akses diterima! Membuka gerbang EduLearn...");
                           const ssoEmail = String(result.userData.email || result.userData.username || '').trim().toLowerCase();
                           
-                          // Cek kecocokan di database (Instruktur)
                           const adminFound = admins.find(a => (a.email && String(a.email).trim().toLowerCase() === ssoEmail) || String(a.username).trim().toLowerCase() === ssoEmail);
                           
                           if (adminFound) {
@@ -290,7 +287,6 @@ const _0xDbChunks = [
                               return;
                           }
 
-                          // Cek kecocokan di database (Peserta)
                           const partFound = participants.find(p => p.email.trim().toLowerCase() === ssoEmail);
                           if (partFound) {
                               const sessData = { role: 'participant', data: partFound };
@@ -299,7 +295,6 @@ const _0xDbChunks = [
                               return;
                           }
 
-                          // Jika email tidak terdaftar di EduLearn
                           setAuthStatus(`Akses ditolak: Email (${ssoEmail}) belum didaftarkan di kelas manapun. Silakan hubungi Instruktur Anda.`);
                       } else {
                           throw new Error("Sesi tidak valid");
@@ -316,6 +311,58 @@ const _0xDbChunks = [
               performSSO();
           }
       }, [appMode, dbReady, admins, participants]);
+
+      const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
+      
+      const calcProgress = (enr, crs) => { 
+        if (!crs || !crs.modules || crs.modules.length === 0 || !enr) return 0; 
+        if (enr.isGraduated) return 100;
+        let completedArray = [];
+        if (Array.isArray(enr.completedModules)) { completedArray = enr.completedModules; } 
+        else if (typeof enr.completedModules === 'string') { try { completedArray = JSON.parse(enr.completedModules); } catch (e) { completedArray = []; } }
+        let prog = Math.round((completedArray.length / crs.modules.length) * 100); 
+        return prog > 100 ? 100 : prog;
+      };
+
+      const execDbAction = async (localAction, firebaseAction) => {
+        try {
+          if (dbMode === 'sheets') {
+              localAction(); 
+              const url = localStorage.getItem('edu_sheets_url') || DEFAULT_SHEETS_URL;
+              if (url) {
+                  const currentAdmins = JSON.parse(localStorage.getItem('edu_admins')) || admins;
+                  const uniqueAdmins = Array.from(new Map(currentAdmins.map(a => [a.id, a])).values());
+                  const rawEnrollments = JSON.parse(localStorage.getItem('edu_enrollments')) || enrollments;
+                  const mappedEnrollments = rawEnrollments.map(enr => ({ ...enr, completedModules_json: JSON.stringify(enr.completedModules || []) }));
+                  const payload = {
+                      admins: uniqueAdmins, courses: JSON.parse(localStorage.getItem('edu_courses')) || courses,
+                      participants: JSON.parse(localStorage.getItem('edu_participants')) || participants,
+                      enrollments: mappedEnrollments, notifications: JSON.parse(localStorage.getItem('edu_notifications')) || notifications
+                  };
+                const postUrl = url + (url.includes('?') ? '&' : '?') + 'nocache=' + new Date().getTime();
+                fetch(postUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) }).catch(console.error);
+              }
+          } else { localAction(); }
+        } catch (error) { console.error(error); showToast("Gagal menyimpan."); }
+      };
+
+      const triggerEmail = (emailAction) => {
+          const url = localStorage.getItem('edu_sheets_url') || DEFAULT_SHEETS_URL;
+          if (!url) return;
+          const postUrl = url + (url.includes('?') ? '&' : '?') + 'nocache=' + new Date().getTime();
+          fetch(postUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ emailAction }) }).catch(console.error);
+      };
+
+      const formatVideoUrl = (rawUrl) => {
+        if (!rawUrl) return "";
+        let url = rawUrl.trim();
+        try {
+          if (url.includes('youtu.be/')) { const videoId = url.split('youtu.be/')[1].split('?')[0].split('&')[0]; return `https://www.youtube.com/embed/${videoId}`; }
+          if (url.includes('youtube.com/watch')) { const urlObj = new URL(url); const videoId = urlObj.searchParams.get('v'); if (videoId) return `https://www.youtube.com/embed/${videoId}`; }
+          if (url.includes('youtube.com/shorts/')) { const videoId = url.split('shorts/')[1].split('?')[0].split('&')[0]; return `https://www.youtube.com/embed/${videoId}`; }
+          if (url.includes('drive.google.com/file/d/')) { const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/); if (match && match[1]) { return `https://drive.google.com/file/d/${match[1]}/preview`; } }
+        } catch (e) {} return url;
+      };
 
       const handleSelectRole = (roleId) => {
         if (!loginMatches) return;
@@ -370,7 +417,6 @@ const _0xDbChunks = [
       const handleLogout = () => {
         setSession(null); sessionStorage.removeItem('edu_session'); setLoginMatches(null);
         setClassroomMode('video'); setStudentAnswers({}); setExamModalOpen(false); setShowSupportPanel(false);
-        // Otomatis terlempar ke Gerbang S-Tools ID saat logout
         window.location.href = LOGIN_PORTAL_URL;
       };
 
@@ -646,12 +692,6 @@ const _0xDbChunks = [
         setQuotaModal({ ...quotaModal, isOpen: false }); showToast("Kuota Instruktur Berhasil Diperbarui!");
       };
 
-      const handleGoToUpgradePortal = () => {
-         const myAdmin = admins.find(a => String(a.id) === String(session.data.id));
-         if (!myAdmin) return;
-         window.location.href = `upgrade.html?username=${myAdmin.username}&id=${myAdmin.id}`;
-      };
-
       const jumpToClassroom = (courseId, targetModuleId = null) => {
         const course = courses.find(c => c.id === courseId);
         if (!course.isActive && session.role === 'participant') {
@@ -665,7 +705,6 @@ const _0xDbChunks = [
         if ((session.role === 'admin' || session.role === 'super_admin') && targetModuleId) {
           modToOpen = course.modules.find(m => m.id === targetModuleId) || modToOpen;
         } else if (session.role === 'participant') {
-          // Fix Error Virtual Student dijumpToClassroom
           let myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(courseId));
           if (!myEnr && String(session.data.id).startsWith('p_virtual_')) {
               myEnr = { id: 'enr_v_' + courseId, participantId: session.data.id, courseId: courseId, completedModules: [], isGraduated: false, certDownloaded: false, examScore: null, graduatedAt: null };
@@ -690,7 +729,6 @@ const _0xDbChunks = [
         const authorName = session.role === 'super_admin' ? `${session.data.name} (Super Admin)` : isAdmin ? `${session.data.name} (Instruktur)` : session.data.name;
         const newComment = { id: `cmt_${Date.now()}`, user: authorName, text: commentText, isAdmin, time: "Baru saja" };
         
-        // Ambil data course terbaru untuk mencegah komentar tertimpa bug state usang
         const latestCourse = courses.find(c => c.id === activeCourse.id) || activeCourse;
         const updatedMods = latestCourse.modules.map(m => m.id === activeModule.id ? { ...m, comments: [...m.comments, newComment] } : m);
         
@@ -896,7 +934,7 @@ const _0xDbChunks = [
                             </div>
                             <div className="bg-slate-50 p-3 rounded-xl flex items-center justify-between">
                                 <label className="text-sm font-bold text-slate-600">Jawaban Benar:</label>
-                                <select value={q.answer} onChange={e=>{const newQ = [...examForm.questions]; newQ[idx].answer = parseInt(e.target.value); setExamForm({...examForm, questions: newQ});}} className="p-2 border border-slate-300 rounded-lg text-sm font-bold text-indigo-700 outline-none focus:ring-2 focus:ring-indigo-50 bg-white cursor-pointer transition w-1/2 sm:w-auto">
+                                <select value={q.answer} onChange={e=>{const newQ = [...examForm.questions]; newQ[idx].answer = parseInt(e.target.value); setExamForm({...examForm, questions: newQ});}} className="p-2 border border-slate-300 rounded-lg text-sm font-bold text-indigo-700 outline-none focus:ring-2 focus:ring-indigo-500 bg-white cursor-pointer transition w-1/2 sm:w-auto">
                                     {q.options.map((_, optIdx) => <option key={optIdx} value={optIdx}>Opsi {optIdx+1}</option>)}
                                 </select>
                             </div>
@@ -1195,7 +1233,6 @@ const _0xDbChunks = [
         });
         const filteredMyCourses = myCourses.filter(c => safeLower(c.title).includes(safeLower(searchCourse)) || safeLower(c.code).includes(safeLower(searchCourse)));
         
-        // Fix 6: Memfilter agar notifikasi REQ_UPGRADE tidak tampil di menu Forum Instruktur
         const myNotifs = notifications.filter(n => {
             if (n.courseId === "REQ_UPGRADE") return false; 
             const notifAdmin = admins.find(a => String(a.id) === String(n.adminId));
@@ -1278,7 +1315,6 @@ const _0xDbChunks = [
                             <span>{hasPendingRequest ? "Permintaan Tertunda" : "Ajukan Limit"}</span>
                           </button>
                           
-                          {/* Fix 8: Tombol Beli instan di ubah jadi Traktir SenTools */}
                           <button onClick={() => {
                               const adminEmail = myAdmin ? (myAdmin.email || `${myAdmin.username}@edulearn.local`) : session.data.email;
                               window.location.href = `https://s-tools.id/edu/apresiasi.html?email=${encodeURIComponent(adminEmail)}`;
@@ -1495,11 +1531,9 @@ const _0xDbChunks = [
       }
 
       if (appMode === 'part_dashboard' && session) {
-        // Fokus Peserta mengacu pada EMAIL yang terdaftar di database
         let myEnrs = enrollments.filter(e => String(e.participantId) === String(session.data.id));
         const isVirtual = String(session.data.id).startsWith('p_virtual_');
         
-        // PENGAKSESAN PRATINJAU KELAS OTOMATIS: 
         if (isVirtual) {
             const virtualUsername = String(session.data.id).replace('p_virtual_', '');
             const myAdmin = admins.find(a => String(a.username).trim().toLowerCase() === virtualUsername.toLowerCase());
@@ -1586,7 +1620,6 @@ const _0xDbChunks = [
                   </div>
 
                   <div className="lg:col-span-1 space-y-6">
-                      {/* PAPAN INFORMASI PESERTA (SIDEBAR) */}
                       {superAdmin?.showInfo2 && superAdmin?.info2 && (
                           <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-3xl shadow-lg shadow-blue-200 text-white relative overflow-hidden">
                               <div className="absolute -top-4 -right-4 text-white/10"><Bell size={100} weight="fill"/></div>
@@ -1669,12 +1702,7 @@ const _0xDbChunks = [
 
       if (appMode === 'classroom' && session && activeCourse) {
         const isStudent = session.role === 'participant';
-        
-        let myEnr = isStudent ? enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(activeCourse.id)) : null;
-        if (isStudent && !myEnr && String(session.data.id).startsWith('p_virtual_')) {
-             myEnr = { id: 'enr_v_' + activeCourse.id, participantId: session.data.id, courseId: activeCourse.id, completedModules: [], isGraduated: false, certDownloaded: false, examScore: null, graduatedAt: null };
-        }
-        
+        const myEnr = isStudent ? enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(activeCourse.id)) : null;
         const prog = isStudent ? calcProgress(myEnr, activeCourse) : 0;
         const instructorData = admins.find(a => String(a.id) === String(activeCourse.authorId));
 
