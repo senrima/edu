@@ -1847,7 +1847,7 @@ const _0xDbChunks = [
                           <div className={`absolute top-0 left-0 w-full h-3 ${myEnr.isGraduated ? 'bg-gradient-to-r from-emerald-400 to-teal-500' : 'bg-gradient-to-r from-red-400 to-rose-500'}`}></div>
                           <div className={`w-28 h-28 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner ${myEnr.isGraduated ? 'bg-emerald-50 text-emerald-500' : 'bg-red-50 text-red-500'}`}>{myEnr.isGraduated ? <Award size={56} weight="fill"/> : <X size={56} weight="bold"/>}</div>
                           
-                          <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-3 tracking-tight">{myEnr.isGraduated ? '雌 Luar Biasa, Anda Lulus!' : 'Belum Berhasil, Coba Lagi! 庁'}</h2>
+                          <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-3 tracking-tight">{myEnr.isGraduated ? 'Luar Biasa, Anda Lulus!' : 'Belum Berhasil, Coba Lagi!'}</h2>
                           <p className="text-slate-500 mb-10 text-lg md:text-xl font-medium">Skor Pencapaian Akhir: <span className={`font-black text-3xl ml-2 ${myEnr.isGraduated ? 'text-emerald-600' : 'text-red-600'}`}>{myEnr.examScore}</span><span className="text-slate-400 text-base"> / {(activeCourse.exam?.questions?.length || 10) * 10}</span></p>
                           
                           {!myEnr.isGraduated ? (
