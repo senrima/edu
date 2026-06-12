@@ -34,15 +34,15 @@
     let fbApp = null, fbAuth = null, fbDb = null;
 
     // URL Google Apps Script yang Di-enkripsi
-    const _0xDbChunks = [
-        "aHR0cHM6Ly9zY3JpcHQuZ29v",
-        "Z2xlLmNvbS9tYWNyb3Mvcy9B",
-        "S2Z5Y2J3bEhaamJQMVlOSEI0",
-        "LTFteTY5bWFuelo3SGxMZlE2",
-        "ZkZpcndjSWJWc044Z3J2T1R1",
-        "b3ZfcFVyZ0ZYeW1Tbmtka0Mv",
-        "ZXhlYw=="
-    ];
+const _0xDbChunks = [
+    "aHR0cHM6Ly9zY3JpcHQuZ29v",
+    "Z2xlLmNvbS9tYWNyb3Mvcy9B",
+    "S2Z5Y2J3aHMtNGNYQU9RUFQ3",
+    "dmptcVdtYk9DdU5MMFQyRWY2",
+    "cG9Jc2dfdkRHX2ZZejZPR1V6",
+    "QzF2ZTFwbG5mRWViTEw3cFkv",
+    "ZXhlYw=="
+];
     const DEFAULT_SHEETS_URL = atob(_0xDbChunks.join(""));
 
     if (localStorage.getItem('edu_sheets_url') !== DEFAULT_SHEETS_URL) {
@@ -1634,40 +1634,6 @@
                       {!(superAdmin?.showInfo2 && superAdmin?.info2) && myInstructors.filter(i => i.showInfo3 && i.info3).length === 0 && (
                           <div className="bg-white border border-slate-100 rounded-3xl p-8 text-center shadow-sm"><div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300"><Bell size={24}/></div><h3 className="font-bold text-slate-700">Papan Informasi</h3><p className="text-sm text-slate-400 mt-2">Tidak ada pengumuman penting saat ini. Fokus belajar!</p></div>
                       )}
-                  </div>
-              </div>
-              
-              {/* Fix 7: SECTION SUARA ANDA & APRESIASI */}
-              <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto shadow-sm">
-                  <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-100 shadow-sm flex flex-col">
-                      <h3 className="text-xl font-extrabold text-slate-800 mb-1">Suara Anda</h3>
-                      <p className="text-sm text-slate-500 mb-6">Kirimkan masukan, pertanyaan, atau keluhan langsung ke pengembang sistem.</p>
-                      <form onSubmit={(e) => {
-                          e.preventDefault();
-                          const fd = new FormData(e.target);
-                          triggerEmail({
-                              tujuan: "me@mail.s-tools.id",
-                              subjek: `[Suara Anda EduLearn] ${fd.get('subject')}`,
-                              namaPengguna: session.data.name,
-                              isiPesanInti: `<b>Dari Email:</b> ${fd.get('email')}<br><b>Siswa:</b> ${session.data.name}<br><br><b>Pesan:</b><br>${fd.get('message').replace(/\n/g, '<br>')}`
-                          });
-                          showToast("Pesan berhasil dikirim!");
-                          e.target.reset();
-                      }} className="space-y-4 flex-1 flex flex-col">
-                          <input name="email" required type="email" defaultValue={session.data.email} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Email Anda (untuk balasan)" />
-                          <input name="subject" required type="text" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Subjek / Topik" />
-                          <textarea name="message" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition resize-none text-sm flex-1 min-h-[100px]" placeholder="Tulis pesan Anda di sini..."></textarea>
-                          <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl font-bold transition flex items-center justify-center gap-2"><EnvelopeSimple size={18} weight="bold"/> Kirim Pesan</button>
-                      </form>
-                  </div>
-                  
-                  <div className="bg-slate-900 rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-lg shadow-slate-800/50">
-                      <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-pink-400 mb-6 backdrop-blur-sm z-10"><Heart size={32} weight="fill"/></div>
-                      <h3 className="text-2xl font-extrabold text-white mb-3 z-10 tracking-wide">Dukung SenTools</h3>
-                      <p className="text-sm text-slate-300 mb-8 max-w-xs z-10 leading-relaxed">Dukungan Anda membantu kami terus mengembangkan platform pendidikan yang lebih baik dan dapat diakses oleh semua orang.</p>
-                      <a href="https://s-tools.id/edu/apresiasi.html" target="_blank" rel="noopener noreferrer" className="bg-pink-500 hover:bg-pink-600 text-white px-8 py-3.5 rounded-full font-bold transition shadow-lg shadow-pink-500/30 flex items-center gap-2 z-10 transform hover:scale-105 active:scale-95"><Coffee size={20} weight="fill"/> Berikan Apresiasi</a>
-                      <div className="absolute -bottom-10 -right-10 text-white/5 z-0"><Heart size={150} weight="fill"/></div>
-                      <div className="absolute bottom-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest z-10">© 2026 S-TOOLS.ID</div>
                   </div>
               </div>
 
