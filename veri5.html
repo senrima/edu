@@ -142,7 +142,8 @@ const _0xDbChunks = [
 
         setStatus({ type: "loading", message: "Menghubungkan ke database pusat..." });
         
-        fetch(DEFAULT_SHEETS_URL + '?t=' + new Date().getTime(), { method: 'GET', redirect: 'follow' })
+        // FIX CORS GET: Menambahkan parameter nocache untuk memastikan tidak kena cache browser
+        fetch(DEFAULT_SHEETS_URL + '?nocache=' + new Date().getTime())
           .then(res => { if(!res.ok) throw new Error("Gagal memuat database."); return res.json(); })
           .then(data => {
             if (data.status === 'error') throw new Error(data.message);
@@ -172,20 +173,23 @@ const _0xDbChunks = [
           })
           .catch(err => {
             setLoading(false);
-            setStatus({ type: "error", message: "Gagal terhubung ke server." });
+            setStatus({ type: "error", message: "Gagal terhubung ke server. Pastikan GAS disetting Akses: Siapa Saja (Anyone)." });
           });
       };
 
+      // FIX CORS POST: Menggunakan Content-Type text/plain agar tidak memicu Preflight OPTIONS request yang diblokir Google
       const saveToDatabase = async (updatedDb) => {
-        return fetch(DEFAULT_SHEETS_URL, {
+        return fetch(DEFAULT_SHEETS_URL + '?nocache=' + new Date().getTime(), {
           method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify(updatedDb)
         });
       };
 
       const triggerEmail = (emailAction) => {
-        fetch(DEFAULT_SHEETS_URL, { 
+        fetch(DEFAULT_SHEETS_URL + '?nocache=' + new Date().getTime(), { 
           method: 'POST', 
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ emailAction }) 
         }).catch(console.error);
       };
