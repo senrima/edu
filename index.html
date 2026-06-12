@@ -52,9 +52,8 @@ const _0xDbChunks = [
     if (localStorage.getItem('edu_sheets_url') !== DEFAULT_SHEETS_URL) {
         localStorage.setItem('edu_sheets_url', DEFAULT_SHEETS_URL);
     }
-
-    const DASHBOARD_LOGIN_BTN_HTML = `<br><br><div style="text-align:center;"><a href="https://s-tools.id/edu/geenkripsi.html" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-family: sans-serif;">Masuk ke Dashboard</a></div>`;
-
+    
+    const EMAIL_BUTTONS_HTML = `<br><br><div style="text-align:center;"><a href="https://s-tools.id/edu/" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-family: sans-serif; margin-right: 10px; margin-bottom: 10px;">Masuk ke Dashboard</a><a href="https://s-tools.id/app/daftar.html" style="background-color: #f8fafc; color: #4f46e5; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-family: sans-serif; border: 2px solid #4f46e5; margin-bottom: 10px;">Daftar Akun S-Tools</a></div>`;
     const IconWrapper = ({ name, size = 24, className = "", weight="regular" }) => <i className={`ph${weight === 'fill' ? '-fill' : weight === 'duotone' ? '-duotone' : weight === 'bold' ? '-bold' : ''} ph-${name} ${className}`} style={{ fontSize: size }}></i>;
     const PlayCircle = (p) => <IconWrapper name="play-circle" {...p} />;
     const Download = (p) => <IconWrapper name="download" {...p} />;
@@ -430,19 +429,21 @@ const _0xDbChunks = [
           isSuper: false, isActive: true, donationLink: '', info1: '', showInfo1: false, info2: '', showInfo2: false, 
           info3: '', showInfo3: false, maxCourses: customMaxCourses, maxParticipants: customMaxParticipants
         };
-        await execDbAction( () => {
-            const updatedA = [...admins, { id: `adm_${Date.now()}`, ...newAdminData }];
-            setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
-        }, async () => {} );
-        e.target.reset(); showToast("Instruktur Ditambahkan!");
         
-        triggerEmail({
-            tujuan: email,
-            subjek: "Akun Instruktur EduLearn Berhasil Dibuat",
-            namaPengguna: newAdminData.name,
-            isiPesanInti: `Akun Instruktur Anda telah berhasil dibuat oleh Super Admin.<br><br><b>Username:</b> ${username}<br><b>Password:</b> ${newAdminData.password}<br><br>Silakan login untuk mulai mengelola kelas.` + DASHBOARD_LOGIN_BTN_HTML
-        });
-      };
+        await execDbAction( () => {
+              const updatedA = [...admins, { id: `adm_${Date.now()}`, ...newAdminData }];
+              setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
+          }, async () => {} );
+          e.target.reset(); showToast("Instruktur Ditambahkan!");
+
+          // Menambahkan pengiriman email otomatis untuk instruktur baru
+          triggerEmail({
+              tujuan: email,
+              subjek: "Akun Instruktur EduLearn Berhasil Dibuat",
+              namaPengguna: newAdminData.name,
+              isiPesanInti: `Akun Instruktur Anda telah berhasil dibuat oleh Super Admin.<br><br><b>Email Anda:</b> ${email}<br><br>Karena sistem kini diamankan secara terpusat dengan S-Tools ID, password manual tidak lagi dikirimkan. Silakan login langsung menggunakan S-Tools ID ke Dashboard EduLearn.<br><br><span style="color:#e11d48; font-weight:bold; font-size:15px;">Pastikan mendaftar dengan akun email ➔ ${email} , agar tidak salah daftar lagi siapa tau Anda memiliki email lain.</span>` + EMAIL_BUTTONS_HTML
+          });
+        };
 
       const handleToggleActiveAdmin = async (id, currentStatus) => {
         await execDbAction( () => {
@@ -582,10 +583,10 @@ const _0xDbChunks = [
             setEnrollments([...enrollments, newEnr]); localStorage.setItem('edu_enrollments', JSON.stringify([...enrollments, newEnr]));
         }, async () => {} );
         
-        e.target.reset(); showToast("Peserta terdaftar & kuota siswa dikurangi 1!");
+      e.target.reset(); showToast("Peserta terdaftar & kuota siswa dikurangi 1!");
         triggerEmail({
             tujuan: email, subjek: "Pendaftaran Kelas EduLearn Berhasil", namaPengguna: partData.name,
-            isiPesanInti: `Selamat, Anda telah terdaftar di kelas <b>${courseObj ? courseObj.title : 'Baru'}</b>.<br><br>Masuk ke sistem:<br><b>Email:</b> ${email}<br><b>Kode Akses:</b> ${partData.accessCode}` + DASHBOARD_LOGIN_BTN_HTML
+            isiPesanInti: `Selamat, Anda telah terdaftar di kelas <b>${courseObj ? courseObj.title : 'Baru'}</b>.<br><br>EduLearn kini menggunakan keamanan SSO S-Tools ID.<br>Silakan masuk ke Dashboard. Jika Anda belum memiliki akun S-Tools ID, silakan mendaftar terlebih dahulu.<br><br><span style="color:#e11d48; font-weight:bold; font-size:15px;">Pastikan mendaftar dengan akun email ➔ ${email} , agar tidak salah daftar lagi siapa tau Anda memiliki email lain.</span>` + EMAIL_BUTTONS_HTML
         });
       };
 
