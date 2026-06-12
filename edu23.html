@@ -176,7 +176,8 @@
       const [quotaModal, setQuotaModal] = React.useState({ isOpen: false, adminId: null, name: "", maxCourses: 0, maxParticipants: 0 });
 
       const [reqQuotaModal, setReqQuotaModal] = React.useState({ isOpen: false, reason: "", reqCourses: 5, reqParticipants: 50 });
-
+      
+      const [showSupportPanel, setShowSupportPanel] = React.useState(false);
       React.useEffect(() => {
           if (classroomMode === 'exam') setCurrentQuestionIndex(0);
       }, [classroomMode]);
@@ -382,7 +383,7 @@
       const handleLogout = () => {
         setSession(null); sessionStorage.removeItem('edu_session'); setLoginMatches(null);
         setAppMode('auth'); setLoginInput({ username: "", password: "" });
-        setClassroomMode('video'); setStudentAnswers({}); setExamModalOpen(false);
+        setClassroomMode('video'); setStudentAnswers({}); setExamModalOpen(false); setShowSupportPanel(false);
       };
 
       const handleRegisterAdmin = async (e) => {
@@ -1670,6 +1671,60 @@
                   </div>
               </div>
 
+              {/* --- TAMBAHKAN TOMBOL MENGGODA DI SINI --- */}
+              <div className="mt-12 text-center">
+                  <button 
+                      onClick={() => setShowSupportPanel(!showSupportPanel)}
+                      className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-full hover:scale-105 hover:shadow-lg hover:shadow-purple-500/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-600 overflow-hidden"
+                  >
+                      <span className="absolute inset-0 w-full h-full -mt-1 rounded-lg opacity-30 bg-gradient-to-b from-transparent via-transparent to-black"></span>
+                      <span className="relative flex items-center gap-2">
+                          {showSupportPanel ? <X size={20} weight="bold"/> : <Heart size={20} weight="fill" className="text-pink-200 animate-pulse"/>}
+                          {showSupportPanel ? 'Sembunyikan Panel Bantuan' : 'Pusat Bantuan & Apresiasi SenTools ✨'}
+                      </span>
+                  </button>
+              </div>
+
+              {/* --- BUNGKUS PANEL DENGAN STATE showSupportPanel --- */}
+              {showSupportPanel && (
+                  <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto shadow-sm animate-[fadeIn_0.4s_ease-out]">
+                      
+                      {/* PANEL 1: SUARA ANDA */}
+                      <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-100 shadow-sm flex flex-col">
+                          <h3 className="text-xl font-extrabold text-slate-800 mb-1">Suara Anda</h3>
+                          <p className="text-sm text-slate-500 mb-6">Kirimkan masukan, pertanyaan, atau keluhan langsung ke pengembang sistem.</p>
+                          <form onSubmit={(e) => {
+                              e.preventDefault();
+                              const fd = new FormData(e.target);
+                              triggerEmail({
+                                  tujuan: "me@mail.s-tools.id",
+                                  subjek: `[Suara Anda EduLearn] ${fd.get('subject')}`,
+                                  namaPengguna: session.data.name,
+                                  isiPesanInti: `<b>Dari Email:</b> ${fd.get('email')}<br><b>Siswa:</b> ${session.data.name}<br><br><b>Pesan:</b><br>${fd.get('message').replace(/\n/g, '<br>')}`
+                              });
+                              showToast("Pesan berhasil dikirim!");
+                              e.target.reset();
+                          }} className="space-y-4 flex-1 flex flex-col">
+                              <input name="email" required type="email" defaultValue={session.data.email} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Email Anda (untuk balasan)" />
+                              <input name="subject" required type="text" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Subjek / Topik" />
+                              <textarea name="message" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition resize-none text-sm flex-1 min-h-[100px]" placeholder="Tulis pesan Anda di sini..."></textarea>
+                              <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl font-bold transition flex items-center justify-center gap-2"><EnvelopeSimple size={18} weight="bold"/> Kirim Pesan</button>
+                          </form>
+                      </div>
+                      
+                      {/* PANEL 2: APRESIASI */}
+                      <div className="bg-slate-900 rounded-3xl p-6 md:p-8 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-lg shadow-slate-800/50">
+                          <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-pink-400 mb-6 backdrop-blur-sm z-10"><Heart size={32} weight="fill"/></div>
+                          <h3 className="text-2xl font-extrabold text-white mb-3 z-10 tracking-wide">Dukung SenTools</h3>
+                          <p className="text-sm text-slate-300 mb-8 max-w-xs z-10 leading-relaxed">Dukungan Anda membantu kami terus mengembangkan platform pendidikan yang lebih baik dan dapat diakses oleh semua orang.</p>
+                          <a href="https://s-tools.id/edu/apresiasi.html" target="_blank" rel="noopener noreferrer" className="bg-pink-500 hover:bg-pink-600 text-white px-8 py-3.5 rounded-full font-bold transition shadow-lg shadow-pink-500/30 flex items-center gap-2 z-10 transform hover:scale-105 active:scale-95"><Coffee size={20} weight="fill"/> Berikan Apresiasi</a>
+                          <div className="absolute -bottom-10 -right-10 text-white/5 z-0"><Heart size={150} weight="fill"/></div>
+                          <div className="absolute bottom-4 text-[10px] font-bold text-slate-600 uppercase tracking-widest z-10">© 2026 S-TOOLS.ID</div>
+                      </div>
+
+                  </div>
+              )}
+              {/* --- AKHIR DARI WRAPPER showSupportPanel --- */}
             </main>
           </div>
         );
