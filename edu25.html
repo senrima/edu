@@ -120,7 +120,7 @@
         formattedDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
       }
 
-      return `<div class="cert-container" style="background: #fff; padding: 15px; border-radius: 10px; max-width: 900px; width: 100%; margin: 0 auto; box-sizing: border-box; text-align: center;"><div class="cert-border" style="border: 4px double #0f172a; padding: 40px 60px; min-height: 480px; position: relative; background-color: #ffffff;"><div class="header-brand" style="margin-bottom: 35px; text-align: center;"><span class="brand-edu" style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -0.5px; color: #4f46e5;">EduLearn</span><span class="brand-by" style="font-family: 'Playfair Display', serif; font-style: italic; font-weight: 400; font-size: 18px; color: #64748b; margin-left: 6px;">by SenTools</span></div><div class="title" style="color: #0f172a; font-size: 48px; font-weight: 700; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 4px; font-family: 'Playfair Display', serif;">Sertifikat Kelulusan</div><div class="subtitle" style="color: #475569; font-style: italic; font-size: 18px; margin-bottom: 20px; font-family: 'Playfair Display', serif;">Diberikan dengan bangga kepada:</div><div class="name" style="font-size: 42px; color: #1d4ed8; font-weight: 700; margin: 10px 0; border-bottom: 2px solid #cbd5e1; display: inline-block; padding: 0 40px 10px; font-family: 'Playfair Display', serif;">${pName}</div><div class="course-label" style="color: #475569; font-size: 18px; margin: 30px 0 10px; font-style: italic; font-family: 'Playfair Display', serif;">Atas keberhasilannya menyelesaikan kursus:</div><div class="course-name" style="font-size: 32px; color: #0f172a; font-weight: 700; line-height: 1.3; margin-bottom: 20px; font-family: 'Playfair Display', serif;">${cTitle}</div><div class="date-issued" style="color: #64748b; font-size: 16px; margin-bottom: 40px; font-style: italic; font-family: 'Playfair Display', serif;">Diberikan pada: ${formattedDate}</div><div class="footer" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 50px; padding-bottom: 30px; font-family: 'Playfair Display', serif;"><div class="signature-block" style="width: 250px; text-align: center;"><div class="signature" style="font-family: 'Great Vibes', cursive; font-size: 36px; color: #0f172a; border-bottom: 1px solid #94a3b8; margin-bottom: 5px; padding-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${instName}</div><div class="instructor-name" style="font-size: 16px; font-weight: bold; color: #0f172a;">${instName}</div><div class="instructor-title" style="font-size: 14px; color: #64748b;">Instruktur Utama</div></div><div class="signature-block" style="width: 250px; text-align: center;"><div class="signature" style="font-family: 'Great Vibes', cursive; font-size: 36px; color: #0f172a; border-bottom: 1px solid #94a3b8; margin-bottom: 5px; padding-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">SenTools</div><div class="instructor-name" style="font-size: 16px; font-weight: bold; color: #0f172a;">Sistem Manajemen</div><div class="instructor-title" style="font-size: 14px; color: #64748b;">EduLearn by SenTools</div></div></div><div class="website" style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; color: #64748b; font-family: sans-serif; font-size: 12px; letter-spacing: 1px;">https://s-tools.id/edu/</div></div><script>function adjustSignatureFontSize(){const signatures=document.querySelectorAll('.cert-container .signature');signatures.forEach(signature=>{const parent=signature.parentElement;const parentWidth=parent.offsetWidth;const signatureWidth=signature.offsetWidth;if(signatureWidth>parentWidth){const ratio=parentWidth/signatureWidth;const currentFontSize=parseFloat(window.getComputedStyle(signature).fontSize);signature.style.fontSize=(currentFontSize*ratio)+'px';}});}adjustSignatureFontSize();<\/script></div>`;
+      return `<div class="cert-container" style="background: #fff; padding: 15px; border-radius: 10px; max-width: 900px; width: 100%; margin: 0 auto; box-sizing: border-box; text-align: center;"><div class="cert-border" style="border: 4px double #0f172a; padding: 40px 60px; min-height: 480px; position: relative; background-color: #ffffff;"><div class="header-brand" style="margin-bottom: 35px; text-align: center;"><span class="brand-edu" style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -0.5px; color: #4f46e5;">EduLearn</span><span class="brand-by" style="font-family: 'Playfair Display', serif; font-style: italic; font-weight: 400; font-size: 18px; color: #64748b; margin-left: 6px;">by SenTools</span></div><div class="title" style="color: #0f172a; font-size: 48px; font-weight: 700; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 4px; font-family: 'Playfair Display', serif;">Sertifikat Kelulusan</div><div class="subtitle" style="color: #475569; font-style: italic; font-size: 18px; margin-bottom: 20px; font-family: 'Playfair Display', serif;">Diberikan dengan bangga kepada:</div><div class="name" style="font-size: 42px; color: #1d4ed8; font-weight: 700; margin: 10px 0; border-bottom: 2px solid #cbd5e1; display: inline-block; padding: 0 40px 10px; font-family: 'Playfair Display', serif;">${pName}</div><div class="course-label" style="color: #475569; font-size: 18px; margin: 30px 0 10px; font-style: italic; font-family: 'Playfair Display', serif;">Atas keberhasilannya menyelesaikan kursus:</div><div class="course-name" style="font-size: 32px; color: #0f172a; font-weight: 700; line-height: 1.3; margin-bottom: 20px; font-family: 'Playfair Display', serif;">${cTitle}</div><div class="date-issued" style="color: #64748b; font-size: 16px; margin-bottom: 40px; font-style: italic; font-family: 'Playfair Display', serif;">Diberikan pada: ${formattedDate}</div><div class="footer" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 50px; padding-bottom: 30px; font-family: 'Playfair Display', serif;"><div class="signature-block" style="width: 250px; text-align: center;"><div class="signature" style="font-family: 'Great Vibes', cursive; font-size: 36px; color: #0f172a; border-bottom: 1px solid #94a3b8; margin-bottom: 5px; padding-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${instName}</div><div class="instructor-name" style="font-size: 16px; font-weight: bold; color: #0f172a;">${instName}</div><div class="instructor-title" style="font-size: 14px; color: #64748b;">Instruktur Utama</div></div><div class="signature-block" style="width: 250px; text-align: center;"><div class="signature" style="font-family: 'Great Vibes', cursive; font-size: 36px; color: #0f172a; border-bottom: 1px solid #94a3b8; margin-bottom: 5px; padding-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">SenTools</div><div class="instructor-name" style="font-size: 16px; font-weight: bold; color: #0f172a;">Sistem Manajemen</div><div class="instructor-title" style="font-size: 14px; color: #64748b;">EduLearn by SenTools</div></div></div><div class="website" style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; color: #64748b; font-family: sans-serif; font-size: 12px; letter-spacing: 1px;">https://s-tools.id/edu/</div></div><script>function adjustSignatureFontSize(){const signatures=document.querySelectorAll('.cert-container .signature');signatures.forEach(signature=>{const parent=signature.parentElement;const parentWidth=parent.offsetWidth;const signatureWidth=signature.scrollWidth;if(signatureWidth>parentWidth){const ratio=parentWidth/signatureWidth;const currentFontSize=parseFloat(window.getComputedStyle(signature).fontSize);signature.style.fontSize=(currentFontSize*ratio)+'px';}});}adjustSignatureFontSize();<\/script></div>`;
     };
 
     function App() {
@@ -136,9 +136,6 @@
       const [notifications, setNotifications] = React.useState([]);
 
       const [session, setSession] = React.useState(() => JSON.parse(sessionStorage.getItem('edu_session')) || null);
-      const [loginInput, setLoginInput] = React.useState({ username: "", password: "" });
-      const [loginError, setLoginError] = React.useState("");
-      const [isLoggingIn, setIsLoggingIn] = React.useState(false);
       
       const getInitialAppMode = () => {
         if (!session) return 'auth';
@@ -182,6 +179,7 @@
       const [reqQuotaModal, setReqQuotaModal] = React.useState({ isOpen: false, reason: "", reqCourses: 5, reqParticipants: 50 });
       
       const [showSupportPanel, setShowSupportPanel] = React.useState(false);
+      const [showPricingModal, setShowPricingModal] = React.useState(false);
 
       React.useEffect(() => {
           if (classroomMode === 'exam') setCurrentQuestionIndex(0);
@@ -245,7 +243,6 @@
         }
       }, [dbMode, appMode]);
 
-      // EFEK SISTEM SSO / KEAMANAN OTOMATIS
       React.useEffect(() => {
           if (appMode === 'auth' && dbReady) {
               const performSSO = async () => {
@@ -326,7 +323,7 @@
         let prog = Math.round((completedArray.length / crs.modules.length) * 100); 
         return prog > 100 ? 100 : prog;
       };
-      
+
       const execDbAction = async (localAction, firebaseAction) => {
         try {
           if (dbMode === 'sheets') {
@@ -420,7 +417,7 @@
       const handleLogout = () => {
         setSession(null); sessionStorage.removeItem('edu_session'); setLoginMatches(null);
         setAppMode('auth');
-        setClassroomMode('video'); setStudentAnswers({}); setExamModalOpen(false); setShowSupportPanel(false);
+        setClassroomMode('video'); setStudentAnswers({}); setExamModalOpen(false); setShowSupportPanel(false); setShowPricingModal(false);
         window.location.href = LOGIN_PORTAL_URL;
       };
 
@@ -434,19 +431,20 @@
           isSuper: false, isActive: true, donationLink: '', info1: '', showInfo1: false, info2: '', showInfo2: false, 
           info3: '', showInfo3: false, maxCourses: customMaxCourses, maxParticipants: customMaxParticipants
         };
-        await execDbAction( () => {
-            const updatedA = [...admins, { id: `adm_${Date.now()}`, ...newAdminData }];
-            setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
-        }, async () => {} );
-        e.target.reset(); showToast("Instruktur Ditambahkan!");
         
-        triggerEmail({
-            tujuan: email,
-            subjek: "Akun Instruktur EduLearn Berhasil Dibuat",
-            namaPengguna: newAdminData.name,
-            isiPesanInti: `Akun Instruktur Anda telah berhasil dibuat oleh Super Admin.<br><br><b>Email Anda:</b> ${email}<br><br>Karena sistem kini diamankan secara terpusat dengan S-Tools ID, password manual tidak lagi dikirimkan. Silakan login langsung menggunakan S-Tools ID ke Dashboard EduLearn.<br><br><span style="color:#e11d48; font-weight:bold; font-size:15px;">Pastikan mendaftar dengan akun email ➔ ${email} , agar tidak salah daftar lagi siapa tau Anda memiliki email lain.</span>` + EMAIL_BUTTONS_HTML
-        });
-      };
+        await execDbAction( () => {
+              const updatedA = [...admins, { id: `adm_${Date.now()}`, ...newAdminData }];
+              setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
+          }, async () => {} );
+          e.target.reset(); showToast("Instruktur Ditambahkan!");
+
+          triggerEmail({
+              tujuan: email,
+              subjek: "Akun Instruktur EduLearn Berhasil Dibuat",
+              namaPengguna: newAdminData.name,
+              isiPesanInti: `Akun Instruktur Anda telah berhasil dibuat oleh Super Admin.<br><br><b>Email Anda:</b> ${email}<br><br>Karena sistem kini diamankan secara terpusat dengan S-Tools ID, password manual tidak lagi dikirimkan. Silakan login langsung menggunakan S-Tools ID ke Dashboard EduLearn.<br><br><span style="color:#e11d48; font-weight:bold; font-size:15px;">Pastikan mendaftar dengan akun email ➔ ${email} , agar tidak salah daftar lagi siapa tau Anda memiliki email lain.</span>` + EMAIL_BUTTONS_HTML
+          });
+        };
 
       const handleToggleActiveAdmin = async (id, currentStatus) => {
         await execDbAction( () => {
@@ -469,7 +467,7 @@
         if (!myAdmin) return showToast("Sesi tidak valid!");
 
         if (myAdmin.maxCourses <= 0) {
-            setConfirmDialog({ isOpen: true, message: "Pembuatan kelas ditolak! Kuota kelas Anda habis (0). Silakan ajukan penambahan limit atau beli paket ekstra.", onConfirm: null });
+            setConfirmDialog({ isOpen: true, message: "Pembuatan kelas ditolak! Kuota kelas Anda habis (0). Silakan ajukan penambahan limit.", onConfirm: null });
             return;
         }
 
@@ -586,7 +584,7 @@
             setEnrollments([...enrollments, newEnr]); localStorage.setItem('edu_enrollments', JSON.stringify([...enrollments, newEnr]));
         }, async () => {} );
         
-        e.target.reset(); showToast("Peserta terdaftar & kuota siswa dikurangi 1!");
+      e.target.reset(); showToast("Peserta terdaftar & kuota siswa dikurangi 1!");
         triggerEmail({
             tujuan: email, subjek: "Pendaftaran Kelas EduLearn Berhasil", namaPengguna: partData.name,
             isiPesanInti: `Selamat, Anda telah terdaftar di kelas <b>${courseObj ? courseObj.title : 'Baru'}</b>.<br><br>EduLearn kini menggunakan keamanan SSO S-Tools ID.<br>Silakan masuk ke Dashboard. Jika Anda belum memiliki akun S-Tools ID, silakan mendaftar terlebih dahulu.<br><br><span style="color:#e11d48; font-weight:bold; font-size:15px;">Pastikan mendaftar dengan akun email ➔ ${email} , agar tidak salah daftar lagi siapa tau Anda memiliki email lain.</span>` + EMAIL_BUTTONS_HTML
@@ -665,18 +663,21 @@
         setConfirmDialog({ isOpen: true, message: "Pengajuan penambahan kuota terkirim secara resmi. Menunggu persetujuan Super Admin.", onConfirm: null });
       };
 
-      const handleApproveLimitRequest = async (notifId, instructorId, reqCourses, reqParticipants) => {
+      const handleApproveLimitRequest = async (notifId, instructorId, reqCourses, reqParticipants, isApproved) => {
          const matchedInst = admins.find(a => String(a.id) === String(instructorId));
          if (!matchedInst) return showToast("Instruktur tidak ditemukan!");
          
          const addedCourses = parseInt(reqCourses) || 0;
          const addedParticipants = parseInt(reqParticipants) || 0;
          
-         const updatedA = admins.map(a => String(a.id) === String(instructorId) ? { 
-             ...a, 
-             maxCourses: (a.maxCourses || 0) + addedCourses, 
-             maxParticipants: (a.maxParticipants || 0) + addedParticipants 
-         } : a);
+         let updatedA = admins;
+         if (isApproved) {
+             updatedA = admins.map(a => String(a.id) === String(instructorId) ? { 
+                 ...a, 
+                 maxCourses: (a.maxCourses || 0) + addedCourses, 
+                 maxParticipants: (a.maxParticipants || 0) + addedParticipants 
+             } : a);
+         }
          
          const updatedN = notifications.map(n => String(n.id) === String(notifId) ? { ...n, isRead: true } : n);
          
@@ -684,7 +685,12 @@
              setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
              setNotifications(updatedN); localStorage.setItem('edu_notifications', JSON.stringify(updatedN));
          }, async () => {} );
-         showToast(`Permintaan disetujui! +${addedCourses} Kelas & +${addedParticipants} Siswa ditambahkan ke ${matchedInst.name}.`);
+         
+         if (isApproved) {
+            showToast(`Permintaan disetujui! +${addedCourses} Kelas & +${addedParticipants} Siswa ditambahkan ke ${matchedInst.name}.`);
+         } else {
+            showToast(`Permintaan dari ${matchedInst.name} telah ditolak.`);
+         }
       };
 
       const handleUpdateInstructorQuota = async (e) => {
@@ -694,12 +700,6 @@
             setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
         }, async () => {} );
         setQuotaModal({ ...quotaModal, isOpen: false }); showToast("Kuota Instruktur Berhasil Diperbarui!");
-      };
-
-      const handleGoToUpgradePortal = () => {
-         const myAdmin = admins.find(a => String(a.id) === String(session.data.id));
-         if (!myAdmin) return;
-         window.location.href = `https://s-tools.id/edu/apresiasi.html?email=${encodeURIComponent(myAdmin.email || `${myAdmin.username}@edulearn.local`)}`;
       };
 
       const jumpToClassroom = (courseId, targetModuleId = null) => {
@@ -807,7 +807,7 @@
                 tujuan: session.data.email, 
                 subjek: `Selamat! Kelulusan Kelas: ${activeCourse.title}`, 
                 namaPengguna: session.data.name, 
-                isiPesanInti: `Selamat atas keberhasilan Anda!<br><br>Sertifikat resmi digital Anda telah diterbitkan secara sah oleh pengajar. Anda dapat melihat, mencetak, atau mengunduh lembar sertifikat fisik secara mandiri kapan saja langsung melalui dashboard kelas aktif Anda di dalam platform EduLearn.` 
+                isiPesanInti: `Selamat atas keberhasilan Anda!<br><br>Sertifikat resmi digital Anda telah diterbitkan secara sah oleh pengajar. Anda dapat melihat, mencetak, atau mengunduh lembar sertifikat fisik secara mandiri kapan saja langsung melalui dashboard kelas aktif Anda di dalam platform EduLearn.`  + EMAIL_BUTTONS_HTML
             });
         } else { showToast(`Nilai ${finalScore}. Minimal ${activeCourse.exam.minScore}.`); }
       };
@@ -859,7 +859,7 @@
                          </div>
                          <div className="space-y-1">
                              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Alasan Pengajuan</label>
-                             <textarea required rows="3" value={reqQuotaModal.reason} onChange={e => setReqQuotaModal({ ...reqQuotaModal, reason: e.target.value })} placeholder="Berikan penjelasan logis mengapa Anda memerlukan kuota ekstra..." className="w-full p-3.5 bg-slate-50 border rounded-xl outline-none text-slate-800 focus:bg-white transition-all text-sm resize-none"></textarea>
+                             <textarea required maxLength={300} rows="3" value={reqQuotaModal.reason} onChange={e => setReqQuotaModal({ ...reqQuotaModal, reason: e.target.value })} placeholder="Berikan penjelasan logis mengapa Anda memerlukan kuota ekstra..." className="w-full p-3.5 bg-slate-50 border rounded-xl outline-none text-slate-800 focus:bg-white transition-all text-sm resize-none"></textarea>
                          </div>
                          <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-indigo-100 text-sm uppercase tracking-wider">Kirim Pengajuan Resmi</button>
                      </form>
@@ -916,6 +916,76 @@
             </div>
           </div>
         );
+      };
+
+      const PricingModal = () => {
+          if (!showPricingModal) return null;
+          
+          const getPaymentLink = (amount, item) => {
+              const user = admins.find(a => String(a.id) === String(session.data.id)) || session.data;
+              const email = encodeURIComponent(user.email || `${user.username}@edulearn.local`);
+              const name = encodeURIComponent(user.name || user.username);
+              return `https://s-tools.id/payment/index.html?amount=${amount}&item=${encodeURIComponent(item)}&kode_aplikasi=APP-STOOLS&email=${email}&name=${name}`;
+          };
+
+          return (
+              <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-[fadeIn_200ms_ease-out]">
+                  <div className="bg-white rounded-[2rem] w-full max-w-5xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden">
+                      <div className="p-6 md:p-8 text-center relative border-b border-slate-100 shrink-0">
+                          <button onClick={() => setShowPricingModal(false)} className="absolute top-6 right-6 w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-500 transition"><X size={20} weight="bold"/></button>
+                          <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Upgrade Kapasitas Sistem</h2>
+                          <p className="text-slate-500 mt-2 font-medium text-sm">Tambah batas jumlah kelas dan kapasitas pendaftaran siswa.</p>
+                      </div>
+                      
+                      <div className="p-6 md:p-10 overflow-y-auto bg-slate-50 flex-1">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto items-stretch">
+                              <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm flex flex-col relative overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-lg">
+                                  <h3 className="text-xl font-bold text-slate-800 text-center mb-4">Paket Starter</h3>
+                                  <div className="text-center mb-6">
+                                      <span className="text-3xl font-black text-slate-900">Rp 50.000</span>
+                                      <p className="text-xs text-slate-400 mt-1 font-medium">Pembayaran sekali bayar (One-Time)</p>
+                                  </div>
+                                  <div className="space-y-4 flex-1 mb-8 text-sm font-bold text-slate-700">
+                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +5 Kelas</p>
+                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +50 Siswa</p>
+                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Akses Server Selamanya</p>
+                                  </div>
+                                  <a href={getPaymentLink(50000, "Paket Starter EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-md">Pilih Paket Starter <ChevronRight size={16} weight="bold"/></a>
+                              </div>
+
+                              <div className="bg-indigo-50/50 rounded-3xl p-6 md:p-8 border-2 border-indigo-500 shadow-xl flex flex-col relative overflow-hidden transition-transform hover:-translate-y-1 transform md:scale-105 z-10">
+                                  <div className="absolute top-0 inset-x-0 flex justify-center"><span className="bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-b-xl shadow-sm">Paling Laris</span></div>
+                                  <h3 className="text-xl font-bold text-slate-800 text-center mb-4 mt-4 md:mt-2">Paket Pro</h3>
+                                  <div className="text-center mb-6">
+                                      <span className="text-4xl font-black text-slate-900">Rp 120.000</span>
+                                      <p className="text-xs text-slate-500 mt-1 font-medium">Pembayaran sekali bayar (One-Time)</p>
+                                  </div>
+                                  <div className="space-y-4 flex-1 mb-8 text-sm font-bold text-slate-800">
+                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-indigo-600 shrink-0" weight="fill"/> Tambahan +15 Kelas</p>
+                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-indigo-600 shrink-0" weight="fill"/> Tambahan +200 Siswa</p>
+                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-indigo-600 shrink-0" weight="fill"/> Akses Server Selamanya</p>
+                                  </div>
+                                  <a href={getPaymentLink(120000, "Paket Pro EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-lg shadow-indigo-200">Pilih Paket Pro <ChevronRight size={16} weight="bold"/></a>
+                              </div>
+
+                              <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm flex flex-col relative overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-lg">
+                                  <h3 className="text-xl font-bold text-slate-800 text-center mb-4">Paket Enterprise</h3>
+                                  <div className="text-center mb-6">
+                                      <span className="text-3xl font-black text-slate-900">Rp 250.000</span>
+                                      <p className="text-xs text-slate-400 mt-1 font-medium">Pembayaran sekali bayar (One-Time)</p>
+                                  </div>
+                                  <div className="space-y-4 flex-1 mb-8 text-sm font-bold text-slate-700">
+                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +50 Kelas</p>
+                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +1000 Siswa</p>
+                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Akses Server Selamanya</p>
+                                  </div>
+                                  <a href={getPaymentLink(250000, "Paket Enterprise EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-md">Pilih Paket Enterprise <ChevronRight size={16} weight="bold"/></a>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          );
       };
 
       const ManageExamModal = () => {
@@ -1108,10 +1178,16 @@
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-4 mt-3"><IconWrapper name="clock" size={12} className="inline mr-1 pb-0.5"/>{n.time}</p>
                                 </div>
                                 {!n.isRead && (
-                                    <button onClick={() => handleApproveLimitRequest(n.id, n.moduleId, details.reqCourses, details.reqParticipants)} className="self-start md:self-center shrink-0 w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold transition shadow-md flex items-center justify-center gap-1.5 shadow-sm transform active:scale-95">
-                                        <CheckCircle2 size={16} weight="bold" />
-                                        <span>Setujui Upgrade</span>
-                                    </button>
+                                    <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0 items-center">
+                                        <button onClick={() => handleApproveLimitRequest(n.id, n.moduleId, details.reqCourses, details.reqParticipants, true)} className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-sm flex items-center justify-center gap-1.5 active:scale-95">
+                                            <CheckCircle2 size={16} weight="bold" />
+                                            <span>Setujui</span>
+                                        </button>
+                                        <button onClick={() => handleApproveLimitRequest(n.id, n.moduleId, details.reqCourses, details.reqParticipants, false)} className="flex-1 md:flex-none bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-200 px-5 py-2.5 rounded-xl font-bold transition shadow-sm flex items-center justify-center gap-1.5 active:scale-95">
+                                            <X size={16} weight="bold" />
+                                            <span>Tolak</span>
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                           );
@@ -1157,10 +1233,10 @@
                   <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 h-fit">
                     <h2 className="font-bold text-slate-800 mb-6 flex items-center text-lg"><PlusCircle size={22} className="mr-2 text-indigo-600" />Tambah Instruktur</h2>
                     <form onSubmit={handleRegisterAdmin} className="space-y-4">
-                      <input name="name" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition shadow-sm text-sm" placeholder="Nama Lengkap"/>
-                      <input name="username" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition shadow-sm text-sm" placeholder="Username Khusus"/>
-                      <input name="email" type="email" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition shadow-sm text-sm" placeholder="Email Instruktur Aktif"/>
-                      <input name="password" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition shadow-sm text-sm" defaultValue="GURU123" placeholder="Password"/>
+                      <input name="name" required maxLength={60} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition shadow-sm text-sm" placeholder="Nama Lengkap"/>
+                      <input name="username" required maxLength={30} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition shadow-sm text-sm" placeholder="Username Khusus"/>
+                      <input name="email" type="email" required maxLength={100} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition shadow-sm text-sm" placeholder="Email Instruktur Aktif"/>
+                      <input name="password" required maxLength={30} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition shadow-sm text-sm" defaultValue="GURU123" placeholder="Password"/>
                       <div className="grid grid-cols-2 gap-3 border-t pt-4">
                         <div className="space-y-1">
                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Batas Kelas</label>
@@ -1262,7 +1338,7 @@
         return (
           <div className="min-h-screen flex flex-col bg-slate-50 animate-[fadeIn_200ms_ease-out]">
             {ConfirmModal()}{ManageExamModal()}{RequestQuotaModal()}{toast && <div className="fixed top-4 right-4 z-[100] bg-emerald-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2"><CheckCircle2 size={20}/><span>{toast}</span></div>}
-            
+            {PricingModal()}
             <header className="bg-slate-900 text-white px-4 md:px-6 py-4 flex flex-col md:flex-row items-center justify-between z-20 gap-4 shadow-md">
               <div className="flex items-center space-x-2 w-full md:w-auto justify-center md:justify-start">
                 <Database size={28} className="text-indigo-400" />
@@ -1325,10 +1401,7 @@
                             <span>{hasPendingRequest ? "Permintaan Tertunda" : "Ajukan Limit"}</span>
                           </button>
                           
-                          <button onClick={() => {
-                              const adminEmail = myAdmin ? (myAdmin.email || `${myAdmin.username}@edulearn.local`) : session.data.email;
-                              window.location.href = `https://s-tools.id/edu/apresiasi.html?email=${encodeURIComponent(adminEmail)}`;
-                          }} className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-black py-3 rounded-2xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95">
+                          <button onClick={() => setShowPricingModal(true)} className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-black py-3 rounded-2xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95">
                               <Coffee size={14} weight="bold"/><span>Traktir SenTools</span>
                           </button>
 
@@ -1355,8 +1428,8 @@
                             <button type="button" onClick={()=>{document.getElementById('crscode').value = 'CR' + Math.floor(1000 + Math.random() * 9000).toString()}} className="w-14 h-[50px] bg-slate-100 hover:bg-slate-200 flex items-center justify-center rounded-xl text-slate-500 transition shrink-0" title="Generate Kode Acak"><RefreshCw size={20}/></button>
                         </div>
                         <input name="title" required maxLength={60} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Judul Kelas Utama"/>
-                        <input name="inst" defaultValue={session.data.name} required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Nama Tampil Pengajar"/>
-                        <input name="docLink" type="url" className="w-full p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm text-emerald-800 placeholder-emerald-400" placeholder="Link Materi Ekstra (Drive/PDF) - Opsional"/>
+                        <input name="inst" defaultValue={session.data.name} required maxLength={50} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Nama Tampil Pengajar"/>
+                        <input name="docLink" type="url" maxLength={255} className="w-full p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm text-emerald-800 placeholder-emerald-400" placeholder="Link Materi Ekstra (Drive/PDF) - Opsional"/>
                         <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-bold shadow-md transition mt-2">Posting Kelas</button>
                       </form>
                     </div>
@@ -1366,7 +1439,7 @@
                       <form onSubmit={handleCreateModule} className="space-y-4 relative z-10">
                         <select name="courseId" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm cursor-pointer transition appearance-none" defaultValue=""><option value="" disabled>-- Pilih Kelas Tujuan --</option>{myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
                         <input name="title" required maxLength={60} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Judul Sesi Video"/>
-                        <input name="vidUrl" required type="url" className="w-full p-3.5 bg-rose-50 border border-rose-200 rounded-xl outline-none focus:bg-white focus:border-rose-500 transition text-sm text-rose-800 placeholder-rose-400" placeholder="Link YT / Drive Video"/>
+                        <input name="vidUrl" required type="url" maxLength={255} className="w-full p-3.5 bg-rose-50 border border-rose-200 rounded-xl outline-none focus:bg-white focus:border-rose-500 transition text-sm text-rose-800 placeholder-rose-400" placeholder="Link YT / Drive Video"/>
                         <textarea name="desc" required maxLength={300} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition resize-none text-sm" rows="3" placeholder="Tulis deskripsi / capaian sesi ini..."></textarea>
                         <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl font-bold shadow-lg shadow-indigo-200 transition mt-2 flex justify-center items-center"><PlayCircle size={20} className="mr-2"/> Simpan ke Kurikulum</button>
                       </form>
@@ -1434,11 +1507,11 @@
                     <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100">
                       <h2 className="font-bold text-slate-800 mb-6 text-lg flex items-center"><PlusCircle size={22} className="mr-2 text-emerald-600" />Daftar Siswa Baru</h2>
                       <form onSubmit={handleRegisterParticipant} className="space-y-4">
-                        <input name="name" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm" placeholder="Nama Lengkap"/>
-                        <input name="email" required type="email" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm" placeholder="Email (Akan di-email)"/>
-                        <div className="flex items-center gap-2">
-                            <input name="code" id="ptcode" required className="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm font-mono" placeholder="PIN Angka (6 Digit)"/>
-                            <button type="button" onClick={()=>document.getElementById('ptcode').value = Math.floor(100000 + Math.random() * 900000).toString()} className="w-14 h-[50px] bg-slate-100 hover:bg-slate-200 flex items-center justify-center rounded-xl text-slate-500 transition shrink-0" title="Generate PIN Angka Acak"><RefreshCw size={20}/></button>
+                        <input name="name" required maxLength={60} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm" placeholder="Nama Lengkap"/>
+                        <input name="email" required type="email" maxLength={100} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm" placeholder="Email (Akan di-email)"/>
+                        <div className="flex items-stretch gap-2 w-full">
+                            <input name="code" id="ptcode" required maxLength={6} className="flex-1 min-w-0 p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm font-mono" placeholder="PIN Angka (6 Digit)"/>
+                            <button type="button" onClick={()=>document.getElementById('ptcode').value = Math.floor(100000 + Math.random() * 900000).toString()} className="shrink-0 w-14 bg-slate-100 hover:bg-slate-200 flex items-center justify-center rounded-xl text-slate-500 transition border border-slate-200" title="Generate PIN Angka Acak"><RefreshCw size={20}/></button>
                         </div>
                         <select name="courseId" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-sm cursor-pointer transition appearance-none" defaultValue=""><option value="" disabled>-- Daftarkan ke Kelas --</option>{myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
                         <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold shadow-lg shadow-emerald-200 transition mt-2">Buat & Daftarkan</button>
@@ -1448,7 +1521,7 @@
                       <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
                       <h2 className="font-bold text-slate-800 mb-6 text-lg flex items-center"><Users size={22} className="mr-2 text-indigo-600" />Siswa Tersedia</h2>
                       <form onSubmit={handleEnrollExisting} className="space-y-4">
-                        <input name="email" required type="email" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Ketik Email Siswa" />
+                        <input name="email" required type="email" maxLength={100} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Ketik Email Siswa" />
                         <select name="cId" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm cursor-pointer transition appearance-none" defaultValue=""><option value="" disabled>-- Daftarkan ke Kelas --</option>{myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
                         <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl font-bold shadow-md transition mt-2">Daftarkan Saja</button>
                       </form>
@@ -1521,10 +1594,16 @@
                                 </div>
                                 {isUpgradeRequest ? (
                                     !n.isRead && (
-                                        <button onClick={() => handleApproveLimitRequest(n.id, n.moduleId)} className="self-start sm:self-center shrink-0 w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold transition shadow-md flex items-center gap-1.5">
-                                            <IconWrapper name="check-circle" size={16} weight="bold" />
-                                            <span>Setujui Permintaan</span>
-                                        </button>
+                                        <div className="flex gap-2 w-full md:w-auto mt-4 md:mt-0 items-center">
+                                            <button onClick={() => handleApproveLimitRequest(n.id, n.moduleId, details.reqCourses, details.reqParticipants, true)} className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold transition shadow-sm flex items-center justify-center gap-1.5 active:scale-95">
+                                                <CheckCircle2 size={16} weight="bold" />
+                                                <span>Setujui</span>
+                                            </button>
+                                            <button onClick={() => handleApproveLimitRequest(n.id, n.moduleId, details.reqCourses, details.reqParticipants, false)} className="flex-1 md:flex-none bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-200 px-5 py-2.5 rounded-xl font-bold transition shadow-sm flex items-center justify-center gap-1.5 active:scale-95">
+                                                <X size={16} weight="bold" />
+                                                <span>Tolak</span>
+                                            </button>
+                                        </div>
                                     )
                                 ) : (
                                     n.courseId && <button onClick={() => jumpToClassroom(n.courseId, n.moduleId)} className="self-start sm:self-center shrink-0 w-full sm:w-auto bg-slate-900 hover:bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold transition shadow-md">Balas di Kelas</button>
@@ -1541,29 +1620,8 @@
       }
 
       if (appMode === 'part_dashboard' && session) {
+        // PERBAIKAN 1: Hapus pembuatan "Virtual Student". Instruktur hanya melihat kelas di mana mereka terdaftar riil.
         let myEnrs = enrollments.filter(e => String(e.participantId) === String(session.data.id));
-        const isVirtual = String(session.data.id).startsWith('p_virtual_');
-        
-        if (isVirtual) {
-            const virtualUsername = String(session.data.id).replace('p_virtual_', '');
-            const myAdmin = admins.find(a => String(a.username).trim().toLowerCase() === virtualUsername.toLowerCase());
-            if (myAdmin) {
-                const myAuthoredCourses = courses.filter(c => String(c.authorId) === String(myAdmin.id));
-                const virtualEnrs = myAuthoredCourses.map(c => ({
-                    id: 'enr_v_' + c.id,
-                    participantId: session.data.id,
-                    courseId: c.id,
-                    completedModules: [],
-                    isGraduated: false,
-                    examScore: null,
-                    certDownloaded: false
-                }));
-                const existingCourseIds = myEnrs.map(e => String(e.courseId));
-                virtualEnrs.forEach(ve => {
-                    if (!existingCourseIds.includes(String(ve.courseId))) myEnrs.push(ve);
-                });
-            }
-        }
         
         const superAdmin = admins.find(a => a.isSuper === true || a.isSuper === 'true' || a.isSuper === 'TRUE');
         const myInstructors = admins.filter(a => myEnrs.some(e => { const c = courses.find(crs => String(crs.id) === String(e.courseId)); return c && String(c.authorId) === String(a.id); }));
@@ -1630,7 +1688,6 @@
                   </div>
 
                   <div className="lg:col-span-1 space-y-6">
-                      {/* PAPAN INFORMASI PESERTA (SIDEBAR) */}
                       {superAdmin?.showInfo2 && superAdmin?.info2 && (
                           <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-3xl shadow-lg shadow-blue-200 text-white relative overflow-hidden">
                               <div className="absolute -top-4 -right-4 text-white/10"><Bell size={100} weight="fill"/></div>
@@ -1689,8 +1746,8 @@
                               e.target.reset();
                           }} className="space-y-4 flex-1 flex flex-col">
                               <input name="email" required type="email" defaultValue={session.data.email} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Email Anda (untuk balasan)" />
-                              <input name="subject" required type="text" className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Subjek / Topik" />
-                              <textarea name="message" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition resize-none text-sm flex-1 min-h-[100px]" placeholder="Tulis pesan Anda di sini..."></textarea>
+                              <input name="subject" required type="text" maxLength={100} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Subjek / Topik" />
+                              <textarea name="message" required maxLength={500} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition resize-none text-sm flex-1 min-h-[100px]" placeholder="Tulis pesan Anda di sini..."></textarea>
                               <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-xl font-bold transition flex items-center justify-center gap-2"><EnvelopeSimple size={18} weight="bold"/> Kirim Pesan</button>
                           </form>
                       </div>
@@ -1747,8 +1804,8 @@
                 <div className="overflow-y-auto flex-1 p-3 sm:p-4">
                   <div className="space-y-1.5">
                   {activeCourse.modules.map((mod, index) => {
-                    const isComp = isStudent ? myEnr.completedModules.includes(mod.id) : false;
-                    const isUnlck = !isStudent || index === 0 || myEnr.completedModules.includes(activeCourse.modules[index - 1].id);
+                    const isComp = isStudent ? myEnr?.completedModules.includes(mod.id) : false;
+                    const isUnlck = !isStudent || index === 0 || myEnr?.completedModules.includes(activeCourse.modules[index - 1].id);
                     return (<button key={mod.id} disabled={!isUnlck} onClick={() => { setClassroomMode('video'); setActiveModule(mod); setIsSidebarOpen(false); }} className={`w-full text-left p-4 rounded-2xl flex items-start space-x-3 transition-all border ${!isUnlck ? 'opacity-60 bg-slate-50 border-transparent cursor-not-allowed' : activeModule?.id === mod.id && classroomMode==='video' ? 'bg-indigo-50 border-indigo-200 shadow-sm ring-1 ring-indigo-500/20' : 'bg-white border-slate-100 hover:border-slate-300 hover:shadow-sm'}`}>
                         {!isUnlck ? <Lock size={20} className="text-slate-400 shrink-0" weight="fill" /> : isComp ? <CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill" /> : <PlayCircle size={20} className={`shrink-0 ${activeModule?.id === mod.id && classroomMode==='video' ? 'text-indigo-600' : 'text-slate-400'}`} weight={activeModule?.id === mod.id && classroomMode==='video' ? 'fill' : 'regular'} />}
                         <div className="flex-1 min-w-0"><p className={`text-sm font-bold leading-snug truncate ${!isUnlck ? 'text-slate-500' : activeModule?.id === mod.id && classroomMode==='video' ? 'text-indigo-900' : 'text-slate-700'}`}>{index + 1}. {mod.title}</p></div>
@@ -1756,7 +1813,7 @@
                   })}
                   </div>
                   {isStudent && prog === 100 && activeCourse.exam && (
-                      <button onClick={() => { setIsSidebarOpen(false); setClassroomMode(myEnr.isGraduated ? 'result' : 'exam'); }} className={`w-full mt-6 p-5 rounded-2xl flex items-center space-x-3 font-extrabold border-2 transition hover:shadow-md transform active:scale-95 ${myEnr.isGraduated ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100' : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'}`}>{myEnr.isGraduated ? <Award size={24} className="shrink-0" weight="fill"/> : <CheckSquareOffset size={24} className="shrink-0" weight="fill"/>}<span className="truncate">{myEnr.isGraduated ? 'Sertifikat Anda' : 'Mulai Ujian Akhir!'}</span></button>
+                      <button onClick={() => { setIsSidebarOpen(false); setClassroomMode(myEnr?.isGraduated ? 'result' : 'exam'); }} className={`w-full mt-6 p-5 rounded-2xl flex items-center space-x-3 font-extrabold border-2 transition hover:shadow-md transform active:scale-95 ${myEnr?.isGraduated ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100' : 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'}`}>{myEnr?.isGraduated ? <Award size={24} className="shrink-0" weight="fill"/> : <CheckSquareOffset size={24} className="shrink-0" weight="fill"/>}<span className="truncate">{myEnr?.isGraduated ? 'Sertifikat Anda' : 'Mulai Ujian Akhir!'}</span></button>
                   )}
                 </div>
               </aside>
@@ -1805,9 +1862,9 @@
                             
                             {isStudent && (
                                 <div className="mt-8 md:mt-10 pt-8 border-t border-slate-100 flex justify-end">
-                                    <button onClick={handleCompleteModule} className={`w-full sm:w-auto flex justify-center items-center px-8 py-4 rounded-2xl font-extrabold transition shadow-lg transform active:scale-95 text-sm md:text-base ${myEnr.completedModules.includes(activeModule.id) ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'}`}>
-                                        <span className="mr-2">{myEnr.completedModules.includes(activeModule.id) ? 'Lanjutkan ke Materi Berikut' : 'Tandai Selesai & Lanjutkan'}</span>
-                                        {myEnr.completedModules.includes(activeModule.id) ? <ChevronRight size={20} weight="bold"/> : <CheckCircle2 size={20} weight="bold"/>}
+                                    <button onClick={handleCompleteModule} className={`w-full sm:w-auto flex justify-center items-center px-8 py-4 rounded-2xl font-extrabold transition shadow-lg transform active:scale-95 text-sm md:text-base ${myEnr?.completedModules.includes(activeModule.id) ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'}`}>
+                                        <span className="mr-2">{myEnr?.completedModules.includes(activeModule.id) ? 'Lanjutkan ke Materi Berikut' : 'Tandai Selesai & Lanjutkan'}</span>
+                                        {myEnr?.completedModules.includes(activeModule.id) ? <ChevronRight size={20} weight="bold"/> : <CheckCircle2 size={20} weight="bold"/>}
                                     </button>
                                 </div>
                             )}
@@ -1962,13 +2019,13 @@
 
                   {classroomMode === 'result' && (
                       <div className="bg-white rounded-3xl p-8 md:p-16 shadow-2xl border border-slate-100 text-center max-w-2xl mx-auto mt-6 md:mt-12 relative overflow-hidden animate-[fadeIn_0.5s_ease-out]">
-                          <div className={`absolute top-0 left-0 w-full h-3 ${myEnr.isGraduated ? 'bg-gradient-to-r from-emerald-400 to-teal-500' : 'bg-gradient-to-r from-red-400 to-rose-500'}`}></div>
-                          <div className={`w-28 h-28 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner ${myEnr.isGraduated ? 'bg-emerald-50 text-emerald-500' : 'bg-red-50 text-red-500'}`}>{myEnr.isGraduated ? <Award size={56} weight="fill"/> : <X size={56} weight="bold"/>}</div>
+                          <div className={`absolute top-0 left-0 w-full h-3 ${myEnr?.isGraduated ? 'bg-gradient-to-r from-emerald-400 to-teal-500' : 'bg-gradient-to-r from-red-400 to-rose-500'}`}></div>
+                          <div className={`w-28 h-28 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner ${myEnr?.isGraduated ? 'bg-emerald-50 text-emerald-500' : 'bg-red-50 text-red-500'}`}>{myEnr?.isGraduated ? <Award size={56} weight="fill"/> : <X size={56} weight="bold"/>}</div>
                           
-                          <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-3 tracking-tight">{myEnr.isGraduated ? 'Luar Biasa, Anda Lulus!' : 'Belum Berhasil, Coba Lagi!'}</h2>
-                          <p className="text-slate-500 mb-10 text-lg md:text-xl font-medium">Skor Pencapaian Akhir: <span className={`font-black text-3xl ml-2 ${myEnr.isGraduated ? 'text-emerald-600' : 'text-red-600'}`}>{myEnr.examScore}</span><span className="text-slate-400 text-base"> / {(activeCourse.exam?.questions?.length || 10) * 10}</span></p>
+                          <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-3 tracking-tight">{myEnr?.isGraduated ? 'Luar Biasa, Anda Lulus!' : 'Belum Berhasil, Coba Lagi!'}</h2>
+                          <p className="text-slate-500 mb-10 text-lg md:text-xl font-medium">Skor Pencapaian Akhir: <span className={`font-black text-3xl ml-2 ${myEnr?.isGraduated ? 'text-emerald-600' : 'text-red-600'}`}>{myEnr?.examScore}</span><span className="text-slate-400 text-base"> / {(activeCourse.exam?.questions?.length || 10) * 10}</span></p>
                           
-                          {!myEnr.isGraduated ? (
+                          {!myEnr?.isGraduated ? (
                               <button onClick={()=>{setClassroomMode('exam'); setStudentAnswers({});}} className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 md:py-5 rounded-2xl font-extrabold text-lg shadow-xl shadow-slate-200 transition transform active:scale-95 flex justify-center items-center"><RefreshCw size={24} className="mr-2" weight="bold"/> Kerjakan Ulang Ujian</button>
                           ) : (
                               <div className="space-y-4">
