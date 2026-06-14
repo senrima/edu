@@ -925,7 +925,7 @@
               const user = admins.find(a => String(a.id) === String(session.data.id)) || session.data;
               const email = encodeURIComponent(user.email || `${user.username}@edulearn.local`);
               const name = encodeURIComponent(user.name || user.username);
-              return `https://s-tools.id/payment/index.html?amount=${amount}&item=${encodeURIComponent(item)}&kode_aplikasi=APP-STOOLS&email=${email}&name=${name}`;
+              return `https://s-tools.id/payment/index.html?amount=${amount}&item=${encodeURIComponent(item)}&kode_aplikasi=APP-EDULEARN&email=${email}&name=${name}`;
           };
 
           return (
