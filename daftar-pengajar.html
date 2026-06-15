@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klaim Lisensi Instruktur - EduLearn</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #0f172a; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const IconWrapper = ({ name, size = 24, className = "", weight="regular" }) => (
+      <i className={`ph${weight === 'fill' ? '-fill' : weight === 'duotone' ? '-duotone' : weight === 'bold' ? '-bold' : ''} ph-${name} ${className}`} style={{ fontSize: size }}></i>
+    );
+    const Loader2 = (p) => <IconWrapper name="spinner" className="animate-spin" {...p} />;
+
+    // URL EduLearn Database
+    const _0xDbChunks = ["aHR0cHM6Ly9zY3JpcHQuZ29v","Z2xlLmNvbS9tYWNyb3Mvcy9B","S2Z5Y2J3aHVvNFBmWTZvWnRk","bk5kRHpTdEFLOXlQNEszOW9P","V1JuNHpwSTk2VTA5M0tfcFVL","VllSbUV2V2djc1dPRVNIYkcv","ZXhlYw=="];
+    const DEFAULT_SHEETS_URL = atob(_0xDbChunks.join(""));
+    const API_ENDPOINT = "https://api.s-tools.id";
+    const LOGIN_PORTAL_URL = "https://s-tools.id/app/index.html";
+
+    async function checkEcosystemSession() {
+        const localToken = localStorage.getItem('sessionToken');
+        if (!localToken) return null;
+        try {
+            const res = await fetch(API_ENDPOINT, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', 'x-auth-token': localToken },
+                credentials: 'include', body: JSON.stringify({ kontrol: 'proteksi', action: 'getDashboardData' })
+            });
+            const result = await res.json();
+            return result.status === 'success' ? result.userData : null;
+        } catch (e) { return null; }
+    }
+
+    function App() {
+        const [ssoUser, setSsoUser] = React.useState(null);
+        const [status, setStatus] = React.useState('checking'); // checking, form, success, error, exist
+        const [dbData, setDbData] = React.useState(null);
+        const [username, setUsername] = React.useState('');
+        const [loadingMsg, setLoadingMsg] = React.useState('Memverifikasi Identitas S-Tools...');
+        const [errorMsg, setErrorMsg] = React.useState('');
+
+        React.useEffect(() => {
+            async function init() {
+                const user = await checkEcosystemSession();
+                if (!user) {
+                    window.location.href = LOGIN_PORTAL_URL + "?redirect=" + encodeURIComponent(window.location.href);
+                    return;
+                }
+                setSsoUser(user);
+                setLoadingMsg('Menghubungkan ke Pusat Data EduLearn...');
+                
+                try {
+                    const res = await fetch(DEFAULT_SHEETS_URL + '?nocache=' + new Date().getTime());
+                    const data = await res.json();
+                    setDbData(data);
+                    
+                    // Cek apakah email user sudah jadi admin
+                    const userEmail = String(user.email || user.username).toLowerCase();
+                    const isAlreadyAdmin = data.admins.some(a => String(a.email || '').toLowerCase() === userEmail);
+                    
+                    if (isAlreadyAdmin) {
+                        setStatus('exist');
+                    } else {
+                        setStatus('form');
+                    }
+                } catch (e) {
+                    setErrorMsg("Gagal menghubungi server EduLearn. Coba beberapa saat lagi.");
+                    setStatus('error');
+                }
+            }
+            init();
+        }, []);
+
+        const handleClaim = async (e) => {
+            e.preventDefault();
+            if (!username.trim() || username.includes(' ')) {
+                setErrorMsg("Username tidak boleh kosong atau mengandung spasi.");
+                return;
+            }
+            
+            const lowerUser = username.trim().toLowerCase();
+            if (dbData.admins.some(a => String(a.username).toLowerCase() === lowerUser)) {
+                setErrorMsg("Username ini sudah dipakai pengajar lain. Pilih yang lain.");
+                return;
+            }
+
+            setStatus('checking');
+            setLoadingMsg('Membuat Lisensi Instruktur Anda...');
+            setErrorMsg('');
+
+            const newAdmin = {
+                id: `adm_${Date.now()}`,
+                name: ssoUser.nama || ssoUser.username,
+                username: lowerUser,
+                email: ssoUser.email,
+                password: "SSO-LOGIN",
+                isSuper: false,
+                isActive: true,
+                donationLink: "", info1: "", showInfo1: false, info2: "", showInfo2: false, info3: "", showInfo3: false,
+                maxCourses: 1, // Lisensi Trial
+                maxParticipants: 5
+            };
+
+            const updatedDb = { ...dbData, admins: [...dbData.admins, newAdmin] };
+
+            try {
+                await fetch(DEFAULT_SHEETS_URL + '?nocache=' + new Date().getTime(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(updatedDb)
+                });
+                
+                // Kirim Notifikasi Welcome Email
+                const emailHtml = `<br><br><div style="text-align:center;"><a href="https://s-tools.id/edu/Edu25.html" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">Masuk Dashboard Pengajar</a></div>`;
+                fetch(DEFAULT_SHEETS_URL + '?nocache=' + new Date().getTime(), { 
+                    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ emailAction: {
+                        tujuan: ssoUser.email, subjek: "Lisensi Instruktur EduLearn Aktif", namaPengguna: newAdmin.name,
+                        isiPesanInti: `Selamat! Lisensi Instruktur Trial Anda (1 Kelas, 5 Siswa) telah aktif.<br><br><b>Username EduLearn Anda:</b> ${lowerUser}<br><br>Sekarang Anda bisa mulai membuat kelas, mengupload materi, dan mengundang siswa.` + emailHtml
+                    }}) 
+                }).catch(e=>console.log(e));
+
+                setStatus('success');
+            } catch (e) {
+                setErrorMsg("Gagal menyimpan data ke server.");
+                setStatus('form');
+            }
+        };
+
+        if (status === 'checking') {
+            return (
+                <div className="min-h-screen flex flex-col items-center justify-center text-white">
+                    <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center mb-6 animate-pulse shadow-xl shadow-indigo-500/30">
+                        <IconWrapper name="rocket-launch" size={40} weight="fill" />
+                    </div>
+                    <Loader2 size={32} className="text-indigo-500 mb-4" />
+                    <h2 className="text-xl font-bold tracking-wide">{loadingMsg}</h2>
+                </div>
+            );
+        }
+
+        if (status === 'exist') {
+            return (
+                <div className="min-h-screen flex items-center justify-center p-4">
+                    <div className="bg-slate-900 border border-slate-800 p-8 md:p-10 rounded-3xl shadow-2xl w-full max-w-md text-center text-white">
+                        <div className="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6"><IconWrapper name="check-circle" size={48} weight="fill"/></div>
+                        <h2 className="text-2xl font-black mb-3">Sudah Terdaftar!</h2>
+                        <p className="text-slate-400 text-sm mb-8 leading-relaxed">Email <b>{ssoUser.email}</b> sudah memiliki akses Instruktur di EduLearn. Anda tidak perlu mendaftar ulang.</p>
+                        <a href="Edu25.html" className="block w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-indigo-500/30">Lanjut ke Dashboard <i className="ph-bold ph-arrow-right ml-2"></i></a>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+                <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-indigo-600 blur-[150px] opacity-20 pointer-events-none"></div>
+                <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 p-8 md:p-10 rounded-3xl shadow-2xl w-full max-w-lg text-white relative z-10">
+                    
+                    {status === 'success' ? (
+                        <div className="text-center animate-[fadeIn_0.5s_ease-out]">
+                            <div className="w-24 h-24 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-emerald-500/30"><IconWrapper name="confetti" size={56} weight="fill"/></div>
+                            <h2 className="text-3xl font-black mb-3 text-white">Lisensi Aktif!</h2>
+                            <div className="bg-slate-800/80 border border-slate-700 p-5 rounded-2xl mb-8 text-sm text-slate-300 font-medium">
+                                <p className="mb-2">Selamat datang, <b>{ssoUser.nama}</b>!</p>
+                                <p>Akademi Anda sudah siap. Anda mendapatkan <span className="text-emerald-400 font-bold">Paket Trial (1 Kelas & 5 Siswa)</span> secara gratis untuk mencoba sistem.</p>
+                            </div>
+                            <a href="Edu25.html" className="flex items-center justify-center gap-2 w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-indigo-500/40 transform active:scale-95 text-lg">Buka Ruang Mengajar <IconWrapper name="arrow-right" weight="bold"/></a>
+                        </div>
+                    ) : (
+                        <div className="animate-[fadeIn_0.3s_ease-out]">
+                            <div className="text-center mb-8 border-b border-slate-800 pb-8">
+                                <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-indigo-500/30"><IconWrapper name="rocket-launch" size={32} weight="fill" className="text-white"/></div>
+                                <h1 className="text-2xl md:text-3xl font-black tracking-tight mb-2">Klaim Lisensi Anda</h1>
+                                <p className="text-slate-400 text-sm">Sistem mendeteksi Anda telah terverifikasi sebagai <b>{ssoUser.email}</b>. Lengkapi 1 langkah terakhir di bawah ini.</p>
+                            </div>
+
+                            {errorMsg && (
+                                <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 p-4 rounded-xl mb-6 text-sm font-bold flex items-start gap-3">
+                                    <IconWrapper name="warning-circle" weight="fill" className="shrink-0 mt-0.5" /> <span>{errorMsg}</span>
+                                </div>
+                            )}
+
+                            <form onSubmit={handleClaim} className="space-y-6">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Nama Tampil (Baca Otomatis)</label>
+                                    <input type="text" disabled value={ssoUser.nama || ssoUser.username} className="w-full px-5 py-4 bg-slate-800 border border-slate-700 rounded-xl text-slate-400 text-sm font-bold cursor-not-allowed" />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider pl-1">Buat Username Instruktur Unik <span className="text-rose-500">*</span></label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-500"><IconWrapper name="at" size={20} /></div>
+                                        <input required type="text" maxLength={20} value={username} onChange={e=>setUsername(e.target.value.replace(/\s/g, '').toLowerCase())} className="w-full pl-11 pr-5 py-4 bg-slate-800 border border-slate-700 rounded-xl outline-none focus:border-indigo-500 focus:bg-slate-800/80 text-white font-mono transition shadow-inner placeholder-slate-600" placeholder="contoh: budimentor" />
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 pl-1 mt-1">Hanya huruf/angka kecil, tanpa spasi. Maks 20 Karakter.</p>
+                                </div>
+
+                                <button type="submit" className="w-full bg-white hover:bg-slate-100 text-slate-900 font-black py-4 rounded-xl transition shadow-lg mt-4 flex justify-center items-center gap-2 transform active:scale-95"><IconWrapper name="check-circle" weight="bold"/> Mulai Akademi Saya Sekarang</button>
+                            </form>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
