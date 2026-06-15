@@ -23,15 +23,15 @@
     );
     const Loader2 = (p) => <IconWrapper name="spinner" className="animate-spin" {...p} />;
 
-    const _0xDbChunks = [
+const _0xDbChunks = [
     "aHR0cHM6Ly9zY3JpcHQuZ29v",
     "Z2xlLmNvbS9tYWNyb3Mvcy9B",
-    "S2Z5Y2J4VnpuNE1rUGNqcTNn",
-    "NnhGSi1oOTFkNm9xSlc2UUZ3",
-    "SmUwa0t6aTBUUXJIUmwzTW5Q",
-    "X0RtZjVJdjN4X1dzOEhvTXYv",
+    "S2Z5Y2J4OEl1ZmZsMF9OOU9r",
+    "alV2d1BjYUNkVFlCUUZWdEp1",
+    "WXdLVV90UUktLUpHVFQySXY2",
+    "bW9HVElEeVc4bk5jaHVFMVEv",
     "ZXhlYw=="
-    ];
+];
     
     const DEFAULT_SHEETS_URL = atob(_0xDbChunks.join(""));
     const API_ENDPOINT = "https://api.s-tools.id";
@@ -131,7 +131,7 @@
                     body: JSON.stringify(updatedDb)
                 });
                 
-                const emailHtml = `<br><br><div style="text-align:center;"><a href="https://s-tools.id/edu/Edu25.html" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">Masuk Dashboard Pengajar</a></div>`;
+                const emailHtml = `<br><br><div style="text-align:center;"><a href="https://s-tools.id/edu/dashboard.html" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">Masuk Dashboard Pengajar</a></div>`;
                 fetch(DEFAULT_SHEETS_URL + '?nocache=' + new Date().getTime(), { 
                     method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ emailAction: {
@@ -166,7 +166,7 @@
                         <div className="w-20 h-20 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6"><IconWrapper name="check-circle" size={48} weight="fill"/></div>
                         <h2 className="text-2xl font-black mb-3">Sudah Terdaftar!</h2>
                         <p className="text-slate-400 text-sm mb-8 leading-relaxed">Email <b>{ssoUser.email}</b> sudah memiliki akses Instruktur di EduLearn. Anda tidak perlu mendaftar ulang.</p>
-                        <a href="Edu25.html" className="block w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-indigo-500/30">Lanjut ke Dashboard <i className="ph-bold ph-arrow-right ml-2"></i></a>
+                        <a href="dashboard.html" className="block w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-indigo-500/30">Lanjut ke Dashboard <i className="ph-bold ph-arrow-right ml-2"></i></a>
                     </div>
                 </div>
             );
@@ -185,7 +185,7 @@
                                 <p className="mb-2">Selamat datang, <b>{ssoUser.nama}</b>!</p>
                                 <p>Akademi Anda sudah siap. Anda mendapatkan <span className="text-emerald-400 font-bold">Paket Trial (1 Kelas & 5 Siswa)</span> secara gratis untuk mencoba sistem.</p>
                             </div>
-                            <a href="Edu25.html" className="flex items-center justify-center gap-2 w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-indigo-500/40 transform active:scale-95 text-lg">Buka Ruang Mengajar <IconWrapper name="arrow-right" weight="bold"/></a>
+                            <a href="dashboard.html" className="flex items-center justify-center gap-2 w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-indigo-500/40 transform active:scale-95 text-lg">Buka Ruang Mengajar <IconWrapper name="arrow-right" weight="bold"/></a>
                         </div>
                     ) : (
                         <div className="animate-[fadeIn_0.3s_ease-out]">
