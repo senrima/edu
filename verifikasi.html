@@ -9,7 +9,9 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;500;600;700;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
   </style>
@@ -21,15 +23,15 @@
 const _0xDbChunks = [
     "aHR0cHM6Ly9zY3JpcHQuZ29v",
     "Z2xlLmNvbS9tYWNyb3Mvcy9B",
-    "S2Z5Y2J4VnpuNE1rUGNqcTNn",
-    "NnhGSi1oOTFkNm9xSlc2UUZ3",
-    "SmUwa0t6aTBUUXJIUmwzTW5Q",
-    "X0RtZjVJdjN4X1dzOEhvTXYv",
+    "S2Z5Y2J4OEl1ZmZsMF9OOU9r",
+    "alV2d1BjYUNkVFlCUUZWdEp1",
+    "WXdLVV90UUktLUpHVFQySXY2",
+    "bW9HVElEeVc4bk5jaHVFMVEv",
     "ZXhlYw=="
 ];
     const DEFAULT_SHEETS_URL = atob(_0xDbChunks.join(""));
 
-    const EMAIL_BUTTONS_HTML = `<br><br><div style="text-align:center;"><a href="https://s-tools.id/edu/" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-family: sans-serif; margin-right: 10px; margin-bottom: 10px;">Masuk ke Dashboard</a><a href="https://s-tools.id/app/daftar.html" style="background-color: #f8fafc; color: #4f46e5; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-family: sans-serif; border: 2px solid #4f46e5; margin-bottom: 10px;">Daftar Akun S-Tools</a></div>`;
+    const EMAIL_BUTTONS_HTML = `<br><br><div style="text-align:center;"><a href="https://s-tools.id/edu/" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-family: sans-serif; margin-right: 10px; margin-bottom: 10px;">Masuk ke Dashboard</a></div>`;
     
     const IconWrapper = ({ name, size = 24, className = "", weight="regular" }) => (
       <i className={`ph${weight === 'fill' ? '-fill' : weight === 'duotone' ? '-duotone' : weight === 'bold' ? '-bold' : ''} ph-${name} ${className}`} style={{ fontSize: size }}></i>
@@ -43,11 +45,10 @@ const _0xDbChunks = [
             if (currentHref && !currentHref.startsWith('about:') && !currentHref.startsWith('data:') && currentHref !== 'null') {
                 window.location.href = new URL(target, currentHref).href;
             }
-        } catch (e) { console.error("Gagal melakukan navigasi otomatis:", e); }
+        } catch (e) { console.error("Gagal otomatis:", e); }
     };
 
     const API_ENDPOINT = "https://api.s-tools.id";
-    const LOGIN_PORTAL_URL = "https://s-tools.id/app/index.html";
 
     async function checkEcosystemSession() {
         const localToken = localStorage.getItem('sessionToken');
@@ -70,7 +71,6 @@ const _0xDbChunks = [
       const [ssoChecking, setSsoChecking] = React.useState(true);
       const [loading, setLoading] = React.useState(true);
       const [status, setStatus] = React.useState({ type: "idle", message: "Membaca tautan..." });
-      const [db, setDb] = React.useState({ admins: [], courses: [], participants: [], enrollments: [], notifications: [] });
       
       const [showManualForm, setShowManualForm] = React.useState(false);
       const [formData, setFormData] = React.useState({
@@ -91,7 +91,7 @@ const _0xDbChunks = [
                       initializePage(fallbackUser);
                   }
               } catch (err) {
-                  const fallbackUser = { nama: "Operator Lokal (Offline)", email: "operator@s-tools.id" };
+                  const fallbackUser = { nama: "Offline Mode", email: "operator@s-tools.id" };
                   setSsoUser(fallbackUser);
                   initializePage(fallbackUser);
               } finally {
@@ -115,7 +115,7 @@ const _0xDbChunks = [
             return;
         }
 
-        // --- SISTEM VALIDASI WAKTU KEDALUWARSA (EXPIRED LINK) ---
+        // VALIDASI WAKTU KEDALUWARSA (EXPIRED LINK)
         if (expTimeStr) {
             const expirationTimestamp = parseInt(expTimeStr);
             if (Date.now() > expirationTimestamp) {
@@ -124,49 +124,26 @@ const _0xDbChunks = [
                     type: "error", 
                     message: "Tautan undangan ini telah kedaluwarsa. Demi keamanan, tautan otomatis hangus melewati batas waktu yang ditentukan. Silakan minta tautan baru kepada Instruktur Anda." 
                 });
-                return; // Menghentikan seluruh proses selanjutnya
+                return; 
             }
         }
 
-        setStatus({ type: "loading", message: "Menghubungkan ke database pusat..." });
-        
-        fetch(DEFAULT_SHEETS_URL + '?nocache=' + new Date().getTime())
-          .then(res => { if(!res.ok) throw new Error("Gagal memuat database."); return res.json(); })
-          .then(data => {
-            if (data.status === 'error') throw new Error(data.message);
-            setDb(data);
-            
-            const matchedInstructor = data.admins.find(a => String(a.username || '').toLowerCase() === String(instructor || '').trim().toLowerCase());
+        const initialForm = {
+            name: name || userData.nama || "",
+            email: (email || userData.email || "").trim().toLowerCase(),
+            courseCode: String(course || '').toUpperCase(),
+            instructorUsername: String(instructor || '').trim().toLowerCase(),
+            accessCode: pin || Math.floor(100000 + Math.random() * 900000).toString()
+        };
+        setFormData(initialForm);
 
-            const initialForm = {
-              name: name || userData.nama || "",
-              email: (email || userData.email || "").trim().toLowerCase(),
-              courseCode: String(course || '').toUpperCase(),
-              instructorUsername: matchedInstructor ? matchedInstructor.username : String(instructor || '').trim().toLowerCase(),
-              accessCode: pin || Math.floor(100000 + Math.random() * 900000).toString()
-            };
-            setFormData(initialForm);
-
-            if ((name || userData.nama) && (email || userData.email) && course && instructor) {
-              executeAutoAction(initialForm, data);
-            } else {
-              setLoading(false);
-              setShowManualForm(true);
-              setStatus({ type: "input", message: "Silakan lengkapi data pendaftaran di bawah." });
-            }
-          })
-          .catch(err => {
+        if ((name || userData.nama) && (email || userData.email) && course && instructor) {
+            executeAutoAction(initialForm);
+        } else {
             setLoading(false);
-            setStatus({ type: "error", message: "Gagal terhubung ke server. Pastikan GAS disetting Akses: Siapa Saja." });
-          });
-      };
-
-      const saveToDatabase = async (updatedDb) => {
-        return fetch(DEFAULT_SHEETS_URL + '?nocache=' + new Date().getTime(), {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(updatedDb)
-        });
+            setShowManualForm(true);
+            setStatus({ type: "input", message: "Silakan lengkapi data pendaftaran di bawah." });
+        }
       };
 
       const triggerEmail = (emailAction) => {
@@ -175,70 +152,61 @@ const _0xDbChunks = [
         }).catch(console.error);
       };
 
-      const executeAutoAction = async (form, currentDb) => {
+      // MENDELEGASIKAN PEMROSESAN KE BACKEND (ANTI BENTROK)
+      const executeAutoAction = async (form) => {
         setLoading(true);
-        setStatus({ type: "processing", message: "Sedang memverifikasi data dan mendaftarkan kelas..." });
+        setStatus({ type: "processing", message: "Memasukkan Anda ke dalam antrean pendaftaran aman..." });
+
+        const payload = {
+            action: "enroll_student",
+            name: form.name,
+            email: form.email,
+            courseCode: form.courseCode,
+            instructorUsername: form.instructorUsername,
+            accessCode: form.accessCode
+        };
 
         try {
-          const instructorObj = currentDb.admins.find(a => String(a.username || '').toLowerCase() === String(form.instructorUsername || '').trim().toLowerCase());
-          if (!instructorObj) throw new Error(`Instruktur dengan username "${form.instructorUsername}" tidak terdaftar.`);
+            const response = await fetch(DEFAULT_SHEETS_URL + '?nocache=' + new Date().getTime(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
 
-          const courseObj = currentDb.courses.find(c => String(c.code || '').toUpperCase() === String(form.courseCode || '').toUpperCase());
-          if (!courseObj) throw new Error(`Kode Kelas "${form.courseCode}" tidak ditemukan.`);
-          if (String(courseObj.authorId) !== String(instructorObj.id)) throw new Error("Sesi validasi gagal: Kelas dan instruktur tidak cocok.");
+            if (result.status === "error") {
+                throw new Error(result.message);
+            } 
+            
+            if (result.status === "exist") {
+                setStatus({ type: "success", message: `Pemberitahuan: Anda memang sudah terdaftar aktif di kelas ini. Mengalihkan Anda ke portal utama...` });
+                setTimeout(() => { safeRedirect("Edu25.html"); }, 2000);
+                return;
+            }
 
-          const targetEmail = String(form.email || '').trim().toLowerCase();
-          let participantObj = currentDb.participants.find(p => String(p.email || '').toLowerCase() === targetEmail);
+            // Jika Pendaftaran Sukses, Kirim Email
+            if (result.status === "success") {
+                triggerEmail({
+                    tujuan: result.participantEmail,
+                    subjek: `Akses Kelas ${result.courseTitle} Telah Aktif!`,
+                    namaPengguna: result.participantName,
+                    isiPesanInti: `Pendaftaran kelas Anda berhasil diverifikasi secara otomatis.<br><br><b>Detail Kelas:</b><br>• Kelas: <b>${result.courseTitle}</b><br>• Email Anda: <b>${result.participantEmail}</b><br><br>Gunakan akun S-Tools ID Anda untuk masuk ke Dashboard EduLearn melalui tombol di bawah ini.` + EMAIL_BUTTONS_HTML
+                });
 
-          const isAlreadyEnrolled = participantObj && currentDb.enrollments.some(e => String(e.participantId) === String(participantObj.id) && String(e.courseId) === String(courseObj.id));
-
-          if (isAlreadyEnrolled) {
-            setStatus({ type: "success", message: `Pemberitahuan: Anda memang sudah terdaftar aktif di kelas "${courseObj.title}". Mengalihkan Anda ke portal utama...` });
-            setLoading(false);
-            setTimeout(() => { safeRedirect("dashboard.html"); }, 2000);
-            return;
-          }
-
-          const currentQuota = instructorObj.maxParticipants === null ? 50 : parseInt(instructorObj.maxParticipants);
-          if (currentQuota <= 0) throw new Error(`Pendaftaran Ditolak: Kuota pendaftaran siswa untuk Instruktur kelas ini telah habis (0). Mohon hubungi pengajar Anda.`);
-
-          let updatedParticipants = [...currentDb.participants];
-          if (!participantObj) {
-            participantObj = { id: `p_${Date.now()}`, name: form.name, email: targetEmail, accessCode: form.accessCode };
-            updatedParticipants.push(participantObj);
-          } else {
-            participantObj.name = form.name || participantObj.name;
-            participantObj.email = targetEmail;
-            updatedParticipants = currentDb.participants.map(p => p.id === participantObj.id ? participantObj : p);
-          }
-
-          const newEnrollment = { id: `e_${Date.now()}`, participantId: participantObj.id, courseId: courseObj.id, completedModules: [], isGraduated: false, certDownloaded: false, examScore: null, graduatedAt: null };
-          const updatedEnrollments = [...currentDb.enrollments, newEnrollment];
-          const updatedAdmins = currentDb.admins.map(a => String(a.id) === String(instructorObj.id) ? { ...a, maxParticipants: currentQuota - 1 } : a);
-
-          const finalDb = { ...currentDb, admins: updatedAdmins, participants: updatedParticipants, enrollments: updatedEnrollments };
-          await saveToDatabase(finalDb);
-
-          triggerEmail({
-            tujuan: participantObj.email,
-            subjek: `Akses Kelas ${courseObj.title} Telah Aktif!`,
-            namaPengguna: participantObj.name,
-            isiPesanInti: `Pendaftaran kelas Anda berhasil diverifikasi.<br><br><b>Detail Kelas:</b><br>• Kelas: <b>${courseObj.title}</b><br>• Email: <b>${participantObj.email}</b><br><br>Karena EduLearn menggunakan keamanan terpusat S-Tools ID, klik tombol di bawah untuk masuk ke Dashboard.<br><br><span style="color:#e11d48; font-weight:bold; font-size:15px;">Pastikan login/mendaftar dengan akun email ➔ ${participantObj.email}</span>` + EMAIL_BUTTONS_HTML
-          });
-
-          setStatus({ type: "success", message: `Pendaftaran berhasil! Kelas "${courseObj.title}" siap digunakan. Mengalihkan ke aplikasi...` });
-          setTimeout(() => { safeRedirect("dashboard.html"); }, 3000);
+                setStatus({ type: "success", message: `Pendaftaran berhasil! Kelas "${result.courseTitle}" siap digunakan. Mengalihkan ke aplikasi...` });
+                setTimeout(() => { safeRedirect("Edu25.html"); }, 3000);
+            }
 
         } catch (error) {
-          setStatus({ type: "error", message: error.message });
+            setStatus({ type: "error", message: error.message });
         } finally {
-          setLoading(false);
+            setLoading(false);
         }
       };
 
       const handleSubmitManual = (e) => {
         e.preventDefault();
-        executeAutoAction(formData, db);
+        executeAutoAction(formData);
       };
 
       if (ssoChecking) {
@@ -280,7 +248,7 @@ const _0xDbChunks = [
             {!loading && status.type === "success" && (
               <div className="py-6 text-center animate-[fadeIn_0.5s_ease-out]">
                 <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                  <CheckCircle2 size={48} weight="fill" />
+                  <IconWrapper name="check-circle" size={48} weight="fill" />
                 </div>
                 <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">Verifikasi Berhasil!</h3>
                 <div className="bg-emerald-50 text-emerald-700 p-4 rounded-xl mb-6 text-sm font-bold text-center border border-emerald-100">
