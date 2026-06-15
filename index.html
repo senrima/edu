@@ -138,7 +138,7 @@
             EduLearn mendukung penuh monetisasi keahlian para mentor secara mandiri dan aman. Melalui sistem jembatan terpusat, setiap pendaftaran kelas berbayar diproses secara real-time.
           </p>
           <p class="text-slate-500 text-sm font-medium leading-relaxed">
-            Sistem memanfaatkan Webhook otomatis yang langsung menghubungkan kasir utama dengah database Google Sheets internal milik instruktur.
+            Sistem memanfaatkan integrasi Webhook terenkripsi yang langsung menghubungkan kasir utama dengan pusat data (database) pribadi milik instruktur secara mulus.
           </p>
         </div>
 
@@ -148,7 +148,7 @@
               <i class="ph-bold ph-shield-check text-2xl"></i>
             </div>
             <h4 class="font-extrabold text-slate-900 text-lg mb-1">V2 Enkripsi Scheme</h4>
-            <p class="text-slate-500 text-xs leading-relaxed">URL asli Google Apps Script (GAS) disembunyikan dibalik tabel enkripsi internal menggunakan "Kode Aplikasi" alfanumerik pendek untuk mencegah manipulasi tautan dari luar.</p>
+            <p class="text-slate-500 text-xs leading-relaxed">Titik akhir (endpoint) server disembunyikan di balik lapisan enkripsi internal menggunakan "Kode Aplikasi" alfanumerik pendek untuk mencegah manipulasi tautan dan transaksi dari luar.</p>
           </div>
 
           <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
@@ -164,7 +164,7 @@
               <i class="ph-bold ph-key text-2xl"></i>
             </div>
             <h4 class="font-extrabold text-slate-900 text-lg mb-1">Validasi Token Berlapis</h4>
-            <p class="text-slate-500 text-xs leading-relaxed">Komunikasi antar server dikawal ketat oleh pencocokan <span class="font-mono">HUB_SECRET_TOKEN</span> khusus, menjamin paket data transaksi lunas 100% otentik dan bebas injeksi ilegal.</p>
+            <p class="text-slate-500 text-xs leading-relaxed">Komunikasi antar server dikawal ketat oleh pencocokan <i>Secure Token</i> khusus bermutu korporat, menjamin paket data transaksi lunas 100% otentik dan bebas injeksi ilegal.</p>
           </div>
 
           <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
@@ -172,7 +172,7 @@
               <i class="ph-bold ph-wallet text-2xl"></i>
             </div>
             <h4 class="font-extrabold text-slate-900 text-lg mb-1">Sinkronisasi Kasir Live</h4>
-            <p class="text-slate-500 text-xs leading-relaxed">Mendukung otomatisasi checkout dengan parameter nominal, email konsumen otomatis terkunci (Read-Only), dan nama produk yang fleksibel untuk meminimalkan typo saat bayar.</p>
+            <p class="text-slate-500 text-xs leading-relaxed">Mendukung otomatisasi checkout dengan parameter nominal, email konsumen otomatis terkunci (Read-Only), dan nama produk yang fleksibel untuk meminimalkan salah ketik saat bayar.</p>
           </div>
         </div>
 
@@ -257,8 +257,8 @@
 
   <footer class="bg-slate-50 py-12 border-t border-slate-200 text-center relative z-10">
     <div class="flex items-center justify-center text-indigo-600 mb-4"><i class="ph-fill ph-book-open text-3xl"></i></div>
-    <h3 class="text-xl font-black text-slate-900 mb-2">EduLearn by SenTools</h3>
-    <p class="text-slate-500 text-sm mb-8 font-medium">S-Tools ID Ecosystem</p>
+    <h3 class="text-xl font-black text-slate-900 mb-2">EduLearn Platform</h3>
+    <p class="text-slate-500 text-sm mb-8 font-medium">Powered by S-Tools ID Ecosystem</p>
     <p class="text-xs text-slate-400 font-mono tracking-widest">© 2026 SENRIMA MARGASANDY</p>
   </footer>
 
