@@ -33,20 +33,18 @@
   <script type="text/babel">
     let fbApp = null, fbAuth = null, fbDb = null;
 
-    // URL SISTEM & API SSO
     const API_ENDPOINT = "https://api.s-tools.id";
-    const LOGIN_PORTAL_URL = "https://s-tools.id/edu/index.html";
+    const LOGIN_PORTAL_URL = "https://s-tools.id/app/index.html";
 
-    // URL Google Apps Script yang Di-enkripsi
-    const _0xDbChunks = [
-        "aHR0cHM6Ly9zY3JpcHQuZ29v",
-        "Z2xlLmNvbS9tYWNyb3Mvcy9B",
-        "S2Z5Y2J3aHVvNFBmWTZvWnRk",
-        "bk5kRHpTdEFLOXlQNEszOW9P",
-        "V1JuNHpwSTk2VTA5M0tfcFVL",
-        "VllSbUV2V2djc1dPRVNIYkcv",
-        "ZXhlYw=="
-    ];
+const _0xDbChunks = [
+    "aHR0cHM6Ly9zY3JpcHQuZ29v",
+    "Z2xlLmNvbS9tYWNyb3Mvcy9B",
+    "S2Z5Y2J4OEl1ZmZsMF9OOU9r",
+    "alV2d1BjYUNkVFlCUUZWdEp1",
+    "WXdLVV90UUktLUpHVFQySXY2",
+    "bW9HVElEeVc4bk5jaHVFMVEv",
+    "ZXhlYw=="
+];
     const DEFAULT_SHEETS_URL = atob(_0xDbChunks.join(""));
 
     if (localStorage.getItem('edu_sheets_url') !== DEFAULT_SHEETS_URL) {
@@ -120,7 +118,7 @@
         formattedDate = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
       }
 
-      return `<div class="cert-container" style="background: #fff; padding: 15px; border-radius: 10px; max-width: 900px; width: 100%; margin: 0 auto; box-sizing: border-box; text-align: center;"><div class="cert-border" style="border: 4px double #0f172a; padding: 40px 60px; min-height: 480px; position: relative; background-color: #ffffff;"><div class="header-brand" style="margin-bottom: 35px; text-align: center;"><span class="brand-edu" style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -0.5px; color: #4f46e5;">EduLearn</span><span class="brand-by" style="font-family: 'Playfair Display', serif; font-style: italic; font-weight: 400; font-size: 18px; color: #64748b; margin-left: 6px;">by SenTools</span></div><div class="title" style="color: #0f172a; font-size: 48px; font-weight: 700; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 4px; font-family: 'Playfair Display', serif;">Sertifikat Kelulusan</div><div class="subtitle" style="color: #475569; font-style: italic; font-size: 18px; margin-bottom: 20px; font-family: 'Playfair Display', serif;">Diberikan dengan bangga kepada:</div><div class="name" style="font-size: 42px; color: #1d4ed8; font-weight: 700; margin: 10px 0; border-bottom: 2px solid #cbd5e1; display: inline-block; padding: 0 40px 10px; font-family: 'Playfair Display', serif;">${pName}</div><div class="course-label" style="color: #475569; font-size: 18px; margin: 30px 0 10px; font-style: italic; font-family: 'Playfair Display', serif;">Atas keberhasilannya menyelesaikan kursus:</div><div class="course-name" style="font-size: 32px; color: #0f172a; font-weight: 700; line-height: 1.3; margin-bottom: 20px; font-family: 'Playfair Display', serif;">${cTitle}</div><div class="date-issued" style="color: #64748b; font-size: 16px; margin-bottom: 40px; font-style: italic; font-family: 'Playfair Display', serif;">Diberikan pada: ${formattedDate}</div><div class="footer" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 50px; padding-bottom: 30px; font-family: 'Playfair Display', serif;"><div class="signature-block" style="width: 250px; text-align: center;"><div class="signature" style="font-family: 'Great Vibes', cursive; font-size: 36px; color: #0f172a; border-bottom: 1px solid #94a3b8; margin-bottom: 5px; padding-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${instName}</div><div class="instructor-name" style="font-size: 16px; font-weight: bold; color: #0f172a;">${instName}</div><div class="instructor-title" style="font-size: 14px; color: #64748b;">Instruktur Utama</div></div><div class="signature-block" style="width: 250px; text-align: center;"><div class="signature" style="font-family: 'Great Vibes', cursive; font-size: 36px; color: #0f172a; border-bottom: 1px solid #94a3b8; margin-bottom: 5px; padding-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">SenTools</div><div class="instructor-name" style="font-size: 16px; font-weight: bold; color: #0f172a;">Sistem Manajemen</div><div class="instructor-title" style="font-size: 14px; color: #64748b;">EduLearn by SenTools</div></div></div><div class="website" style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; color: #64748b; font-family: sans-serif; font-size: 12px; letter-spacing: 1px;">https://s-tools.id/edu/</div></div><script>function adjustSignatureFontSize(){const signatures=document.querySelectorAll('.cert-container .signature');signatures.forEach(signature=>{const parent=signature.parentElement;const parentWidth=parent.offsetWidth;const signatureWidth=signature.scrollWidth;if(signatureWidth>parentWidth){const ratio=parentWidth/signatureWidth;const currentFontSize=parseFloat(window.getComputedStyle(signature).fontSize);signature.style.fontSize=(currentFontSize*ratio)+'px';}});}adjustSignatureFontSize();<\/script></div>`;
+      return `<div class="cert-container" style="background: #fff; padding: 15px; border-radius: 10px; max-width: 900px; width: 100%; margin: 0 auto; box-sizing: border-box; text-align: center;"><div class="cert-border" style="border: 4px double #0f172a; padding: 40px 60px; min-height: 480px; position: relative; background-color: #ffffff;"><div class="header-brand" style="margin-bottom: 35px; text-align: center;"><span class="brand-edu" style="font-family: 'Inter', sans-serif; font-weight: 800; font-size: 28px; letter-spacing: -0.5px; color: #4f46e5;">EduLearn</span><span class="brand-by" style="font-family: 'Playfair Display', serif; font-style: italic; font-weight: 400; font-size: 18px; color: #64748b; margin-left: 6px;">by SenTools</span></div><div class="title" style="color: #0f172a; font-size: 48px; font-weight: 700; text-transform: uppercase; margin-bottom: 20px; letter-spacing: 4px; font-family: 'Playfair Display', serif;">Sertifikat Kelulusan</div><div class="subtitle" style="color: #475569; font-style: italic; font-size: 18px; margin-bottom: 20px; font-family: 'Playfair Display', serif;">Diberikan dengan bangga kepada:</div><div class="name" style="font-size: 42px; color: #1d4ed8; font-weight: 700; margin: 10px 0; border-bottom: 2px solid #cbd5e1; display: inline-block; padding: 0 40px 10px; font-family: 'Playfair Display', serif;">${pName}</div><div class="course-label" style="color: #475569; font-size: 18px; margin: 30px 0 10px; font-style: italic; font-family: 'Playfair Display', serif;">Atas keberhasilannya menyelesaikan kursus:</div><div class="course-name" style="font-size: 32px; color: #0f172a; font-weight: 700; line-height: 1.3; margin-bottom: 20px; font-family: 'Playfair Display', serif;">${cTitle}</div><div class="date-issued" style="color: #64748b; font-size: 16px; margin-bottom: 40px; font-style: italic; font-family: 'Playfair Display', serif;">Diberikan pada: ${formattedDate}</div><div class="footer" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 50px; padding-bottom: 30px; font-family: 'Playfair Display', serif;"><div class="signature-block" style="width: 250px; text-align: center;"><div class="signature" style="font-family: 'Great Vibes', cursive; font-size: 36px; color: #0f172a; border-bottom: 1px solid #94a3b8; margin-bottom: 5px; padding-bottom: 5px; white-space: nowrap; overflow: hidden;">${instName}</div><div class="instructor-name" style="font-size: 16px; font-weight: bold; color: #0f172a;">${instName}</div><div class="instructor-title" style="font-size: 14px; color: #64748b;">Instruktur Utama</div></div><div class="signature-block" style="width: 250px; text-align: center;"><div class="signature" style="font-family: 'Great Vibes', cursive; font-size: 36px; color: #0f172a; border-bottom: 1px solid #94a3b8; margin-bottom: 5px; padding-bottom: 5px; white-space: nowrap; overflow: hidden;">SenTools</div><div class="instructor-name" style="font-size: 16px; font-weight: bold; color: #0f172a;">Sistem Manajemen</div><div class="instructor-title" style="font-size: 14px; color: #64748b;">EduLearn by SenTools</div></div></div><div class="website" style="position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; color: #64748b; font-family: sans-serif; font-size: 12px; letter-spacing: 1px;">https://s-tools.id/edu/</div></div><script>function adjustSignatureFontSize(){const signatures=document.querySelectorAll('.cert-container .signature');signatures.forEach(signature=>{const parent=signature.parentElement;const parentWidth=parent.offsetWidth;const signatureWidth=signature.scrollWidth;if(signatureWidth>parentWidth){const ratio=parentWidth/signatureWidth;const currentFontSize=parseFloat(window.getComputedStyle(signature).fontSize);signature.style.fontSize=(currentFontSize*ratio)+'px';}});}adjustSignatureFontSize();<\/script></div>`;
     };
 
     function App() {
@@ -168,7 +166,7 @@
       const [examCourseId, setExamCourseId] = React.useState(null);
       const [examForm, setExamForm] = React.useState(emptyExam);
 
-      const [profileForm, setProfileForm] = React.useState({ donationLink: "" });
+      const [profileForm, setProfileForm] = React.useState({ donationLink: "", whatsapp: "" });
       
       const [infoInstForm, setInfoInstForm] = React.useState({ text: '', show: false }); 
       const [infoSuperForm, setInfoSuperForm] = React.useState({ instText: '', showInst: false, partText: '', showPart: false }); 
@@ -189,12 +187,21 @@
           if (session?.role === 'admin' && admins.length > 0) {
               const currentUsername = String(session.data.username).trim().toLowerCase();
               const me = admins.find(a => String(a.username).trim().toLowerCase() === currentUsername);
-              if(me) setInfoInstForm({ text: me.info3 || '', show: me.showInfo3 || false });
+              if(me) {
+                  setInfoInstForm({ text: me.info3 || '', show: me.showInfo3 || false });
+              }
           }
           if (session?.role === 'super_admin' && admins.length > 0) {
               const currentUsername = String(session.data.username).trim().toLowerCase();
               const sup = admins.find(a => String(a.username).trim().toLowerCase() === currentUsername);
               if(sup) setInfoSuperForm({ instText: sup.info1||'', showInst: sup.showInfo1||false, partText: sup.info2||'', showPart: sup.showInfo2||false });
+          }
+          
+          if (session && (session.role === 'admin' || session.role === 'super_admin') && admins.length > 0) {
+              const myData = admins.find(a => String(a.id) === String(session.data.id));
+              if (myData) {
+                  setProfileForm({ donationLink: myData.donationLink || "", whatsapp: myData.whatsapp || "" });
+              }
           }
       }, [session, admins]);
 
@@ -426,10 +433,13 @@
         if (admins.some(a => a.username === username)) return showToast("Username terpakai!");
         const customMaxCourses = parseInt(fd.get('maxCourses')) || 5;
         const customMaxParticipants = parseInt(fd.get('maxParticipants')) || 50;
+        
+        // PENAMBAHAN FIELD WHATSAPP & ALLOWPROMO DI SINI
         const newAdminData = { 
           name: fd.get('name'), username, email: email, password: fd.get('password'), 
           isSuper: false, isActive: true, donationLink: '', info1: '', showInfo1: false, info2: '', showInfo2: false, 
-          info3: '', showInfo3: false, maxCourses: customMaxCourses, maxParticipants: customMaxParticipants
+          info3: '', showInfo3: false, maxCourses: customMaxCourses, maxParticipants: customMaxParticipants,
+          whatsapp: "", allowPromo: false
         };
         
         await execDbAction( () => {
@@ -451,6 +461,13 @@
             const updatedA = admins.map(a => a.id === id ? { ...a, isActive: !currentStatus } : a);
             setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
         }, async () => {} ); showToast(!currentStatus ? "Akun Diaktifkan" : "Akun Dinonaktifkan");
+      };
+
+      const handleTogglePromo = async (id, currentStatus) => {
+        await execDbAction( () => {
+            const updatedA = admins.map(a => a.id === id ? { ...a, allowPromo: !currentStatus } : a);
+            setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
+        }, async () => {} ); showToast(!currentStatus ? "Hak Promo Diaktifkan" : "Hak Promo Dicabut");
       };
 
       const handleToggleActiveCourse = async (id, currentStatus) => {
@@ -537,9 +554,9 @@
         e.preventDefault();
         await execDbAction( () => {
             const currentUsername = String(session.data.username).trim().toLowerCase();
-            const updatedA = admins.map(a => String(a.username).trim().toLowerCase() === currentUsername ? { ...a, donationLink: profileForm.donationLink } : a);
+            const updatedA = admins.map(a => String(a.username).trim().toLowerCase() === currentUsername ? { ...a, donationLink: profileForm.donationLink, whatsapp: profileForm.whatsapp } : a);
             setAdmins(updatedA); localStorage.setItem('edu_admins', JSON.stringify(updatedA));
-        }, async () => {} ); showToast("Profil diperbarui!");
+        }, async () => {} ); showToast("Profil Publik diperbarui!");
       };
 
       const openExamBuilder = (courseId) => {
@@ -910,7 +927,6 @@
               const user = admins.find(a => String(a.id) === String(session.data.id)) || session.data;
               const email = encodeURIComponent(user.email || `${user.username}@edulearn.local`);
               const name = encodeURIComponent(user.name || user.username);
-              // Link Payment tersambung dengan API S-Tools Payment Hub V3 dengan parameter KODE_APLIKASI
               return `https://s-tools.id/payment/index.html?amount=${amount}&item=${encodeURIComponent(item)}&kode_aplikasi=APP-STOOLS&email=${email}&name=${name}`;
           };
 
@@ -925,7 +941,6 @@
                       
                       <div className="p-6 md:p-10 overflow-y-auto bg-slate-50 flex-1">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto items-stretch">
-                              {/* Paket Starter */}
                               <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm flex flex-col relative overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-lg">
                                   <h3 className="text-xl font-bold text-slate-800 text-center mb-4">Paket Starter</h3>
                                   <div className="text-center mb-6">
@@ -940,7 +955,6 @@
                                   <a href={getPaymentLink(50000, "Paket Starter EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-md">Pilih Paket Starter <ChevronRight size={16} weight="bold"/></a>
                               </div>
 
-                              {/* Paket Pro */}
                               <div className="bg-indigo-50/50 rounded-3xl p-6 md:p-8 border-2 border-indigo-500 shadow-xl flex flex-col relative overflow-hidden transition-transform hover:-translate-y-1 transform md:scale-105 z-10">
                                   <div className="absolute top-0 inset-x-0 flex justify-center"><span className="bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-b-xl shadow-sm">Paling Laris</span></div>
                                   <h3 className="text-xl font-bold text-slate-800 text-center mb-4 mt-4 md:mt-2">Paket Pro</h3>
@@ -951,12 +965,11 @@
                                   <div className="space-y-4 flex-1 mb-8 text-sm font-bold text-slate-800">
                                       <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-indigo-600 shrink-0" weight="fill"/> Tambahan +15 Kelas</p>
                                       <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-indigo-600 shrink-0" weight="fill"/> Tambahan +200 Siswa</p>
-                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-indigo-600 shrink-0" weight="fill"/> Akses Server Selamanya</p>
+                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-indigo-600 shrink-0" weight="fill"/> Etalase Katalog Promo Publik</p>
                                   </div>
                                   <a href={getPaymentLink(120000, "Paket Pro EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-lg shadow-indigo-200">Pilih Paket Pro <ChevronRight size={16} weight="bold"/></a>
                               </div>
 
-                              {/* Paket Enterprise */}
                               <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm flex flex-col relative overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-lg">
                                   <h3 className="text-xl font-bold text-slate-800 text-center mb-4">Paket Enterprise</h3>
                                   <div className="text-center mb-6">
@@ -966,7 +979,7 @@
                                   <div className="space-y-4 flex-1 mb-8 text-sm font-bold text-slate-700">
                                       <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +50 Kelas</p>
                                       <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +1000 Siswa</p>
-                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Akses Server Selamanya</p>
+                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Etalase Katalog Promo Publik</p>
                                   </div>
                                   <a href={getPaymentLink(250000, "Paket Enterprise EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-md">Pilih Paket Enterprise <ChevronRight size={16} weight="bold"/></a>
                               </div>
@@ -1256,6 +1269,12 @@
                                       <span className="text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-1 rounded-lg text-xs">{adm.maxParticipants || 0} S</span>
                                   </td>
                                   <td className="p-4 text-right flex justify-end space-x-2">
+                                      {/* TOMBOL TOGGLE PROMO KATALOG */}
+                                      <button onClick={() => handleTogglePromo(adm.id, adm.allowPromo)} className={`text-xs px-3 py-2 rounded-lg font-bold transition flex items-center gap-1 shadow-sm ${adm.allowPromo ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 border border-amber-200' : 'bg-slate-50 text-slate-400 hover:bg-slate-100 border border-slate-200'}`} title="Akses Etalase Promo Publik">
+                                          <IconWrapper name="crown" size={14} weight={adm.allowPromo ? "fill" : "regular"} />
+                                          <span className="hidden xl:inline">{adm.allowPromo ? 'Cabut Promo' : 'Beri Promo'}</span>
+                                      </button>
+                                      
                                       <button onClick={() => setQuotaModal({ isOpen: true, adminId: adm.id, name: adm.name, maxCourses: adm.maxCourses || 5, maxParticipants: adm.maxParticipants || 50 })} className="text-xs bg-slate-900 text-white hover:bg-indigo-600 font-bold px-3 py-2 rounded-lg transition flex items-center gap-1 shadow-sm"><IconWrapper name="sliders" size={14} /><span>Kelola Kuota</span></button>
                                       <button onClick={()=>handleToggleActiveAdmin(adm.id, adm.isActive)} className={`text-xs px-3 py-2 rounded-lg font-bold transition ${adm.isActive ? 'bg-white border border-red-200 text-red-600 hover:bg-red-50' : 'bg-emerald-600 text-white hover:bg-emerald-700'}`}>{adm.isActive ? 'Nonaktifkan' : 'Aktifkan Akun'}</button>
                                   </td>
@@ -1493,8 +1512,6 @@
               {adminTab === 'participants' && (
                 <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 md:gap-8">
                   <div className="xl:col-span-1 space-y-6 md:space-y-8">
-
-                    {/* --- KODE TOMBOL MENUJU LINK.HTML BARU --- */}
                     <div className="bg-gradient-to-br from-indigo-600 to-blue-700 p-6 sm:p-8 rounded-3xl shadow-lg border border-indigo-500 text-white relative overflow-hidden">
                         <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10"><IconWrapper name="link" size={100} weight="fill"/></div>
                         <div className="relative z-10">
@@ -1505,13 +1522,8 @@
                             </a>
                         </div>
                     </div>
-                    {/* ----------------------------------------- */}
-
-
-
-                    
                     <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100">
-                      <h2 className="font-bold text-slate-800 mb-6 text-lg flex items-center"><PlusCircle size={22} className="mr-2 text-emerald-600" />Daftar Siswa Baru</h2>
+                      <h2 className="font-bold text-slate-800 mb-6 text-lg flex items-center"><PlusCircle size={22} className="mr-2 text-emerald-600" />Daftar Siswa Manual</h2>
                       <form onSubmit={handleRegisterParticipant} className="space-y-4">
                         <input name="name" required maxLength={60} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm" placeholder="Nama Lengkap"/>
                         <input name="email" required type="email" maxLength={100} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm" placeholder="Email (Akan di-email)"/>
@@ -1574,14 +1586,32 @@
 
               {adminTab === 'profile' && (
                 <div className="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-slate-100 max-w-2xl mx-auto">
-                  <h2 className="font-extrabold text-slate-800 mb-3 text-2xl flex items-center"><Coffee size={28} className="mr-3 text-amber-500" /> Tautan Apresiasi</h2>
-                  <p className="text-sm text-slate-500 mb-8 leading-relaxed">Masukkan link Trakteer/Saweria/KaryaKarsa Anda. Tombol apresiasi ekstra ini akan muncul eksklusif di layar hasil ujian bagi siswa yang berhasil lulus.</p>
-                  <form onSubmit={handleUpdateProfile} className="bg-amber-50 p-6 md:p-8 rounded-3xl border border-amber-100">
-                      <div className="relative mb-6">
-                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-amber-400"><Heart size={20} weight="fill"/></div>
-                          <input type="url" maxLength={255} value={profileForm.donationLink} onChange={e=>setProfileForm({donationLink: e.target.value})} className="pl-12 w-full p-4 border-0 rounded-2xl outline-none focus:ring-4 focus:ring-amber-200 bg-white shadow-sm text-amber-900 font-medium transition" placeholder="https://trakteer.id/nama-anda" />
+                  <h2 className="font-extrabold text-slate-800 mb-3 text-2xl flex items-center"><UserIcon size={28} className="mr-3 text-indigo-600" /> Profil Publik & Apresiasi</h2>
+                  <p className="text-sm text-slate-500 mb-8 leading-relaxed">Lengkapi nomor WhatsApp untuk keperluan fitur Promo Katalog Publik dan link Apresiasi untuk layar kelulusan siswa.</p>
+                  
+                  <form onSubmit={handleUpdateProfile} className="space-y-6">
+                      
+                      {/* Form Input WhatsApp */}
+                      <div className="bg-emerald-50 p-6 md:p-8 rounded-3xl border border-emerald-100">
+                          <label className="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-3 block"><IconWrapper name="whatsapp-logo" size={16} weight="fill" className="inline mr-1"/> Nomor WhatsApp Interaksi</label>
+                          <div className="relative">
+                              <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-emerald-400"><IconWrapper name="phone" size={20} weight="fill"/></div>
+                              <input type="text" maxLength={15} value={profileForm.whatsapp} onChange={e=>setProfileForm({...profileForm, whatsapp: e.target.value.replace(/[^0-9]/g, '')})} className="pl-12 w-full p-4 border-0 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-200 bg-white shadow-sm text-emerald-900 font-medium transition" placeholder="Cth: 628123456789 (Mulai dengan 62)" />
+                          </div>
+                          <p className="text-[10px] text-emerald-600 mt-2 font-medium">* Digunakan saat siswa menghubungi Anda via Katalog Promo Publik.</p>
                       </div>
-                      <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 py-4 rounded-xl font-extrabold shadow-lg shadow-amber-200 transition">Update Tautan</button>
+
+                      {/* Form Input Trakteer/Saweria */}
+                      <div className="bg-amber-50 p-6 md:p-8 rounded-3xl border border-amber-100">
+                          <label className="text-xs font-bold text-amber-800 uppercase tracking-wider mb-3 block"><IconWrapper name="heart" size={16} weight="fill" className="inline mr-1"/> Tautan Apresiasi Kreator</label>
+                          <div className="relative">
+                              <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-amber-400"><IconWrapper name="link" size={20} weight="bold"/></div>
+                              <input type="url" maxLength={255} value={profileForm.donationLink} onChange={e=>setProfileForm({...profileForm, donationLink: e.target.value})} className="pl-12 w-full p-4 border-0 rounded-2xl outline-none focus:ring-4 focus:ring-amber-200 bg-white shadow-sm text-amber-900 font-medium transition" placeholder="https://trakteer.id/nama-anda" />
+                          </div>
+                          <p className="text-[10px] text-amber-600 mt-2 font-medium">* Akan muncul otomatis di layar hasil saat siswa lulus ujian.</p>
+                      </div>
+
+                      <button type="submit" className="w-full bg-slate-900 hover:bg-indigo-600 text-white py-4 rounded-xl font-extrabold shadow-lg transition">Simpan Profil Publik</button>
                   </form>
                 </div>
               )}
