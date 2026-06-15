@@ -3,332 +3,248 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ruang Belajar Siswa - EduLearn by SenTools</title>
+  <title>Etalase Akademi - EduLearn</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-    .scrollbar-hide::-webkit-scrollbar { display: none; }
-    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    .hero-gradient { background: radial-gradient(circle at top right, #e0e7ff, transparent 45%), radial-gradient(circle at bottom left, #ecfdf5, transparent 45%); }
   </style>
 </head>
-<body>
+<body class="text-slate-800 antialiased overflow-x-hidden">
   <div id="root"></div>
 
   <script type="text/babel">
-    const API_ENDPOINT = "https://api.s-tools.id";
-    const LOGIN_PORTAL_URL = "https://s-tools.id/app/index.html";
-    const _0xDbChunks = ["aHR0cHM6Ly9zY3JpcHQuZ29v","Z2xlLmNvbS9tYWNyb3Mvcy9B","S2Z5Y2J3aHVvNFBmWTZvWnRk","bk5kRHpTdEFLOXlQNEszOW9P","V1JuNHpwSTk2VTA5M0tfcFVL","VllSbUV2V2djc1dPRVNIYkcv","ZXhlYw=="];
+    const IconWrapper = ({ name, size = 24, className = "", weight="regular" }) => (
+      <i className={`ph${weight === 'fill' ? '-fill' : weight === 'duotone' ? '-duotone' : weight === 'bold' ? '-bold' : ''} ph-${name} ${className}`} style={{ fontSize: size }}></i>
+    );
+    const Loader2 = (p) => <IconWrapper name="spinner" className="animate-spin" {...p} />;
+
+    // Dekripsi Database EduLearn Terpusat
+const _0xDbChunks = [
+    "aHR0cHM6Ly9zY3JpcHQuZ29v",
+    "Z2xlLmNvbS9tYWNyb3Mvcy9B",
+    "S2Z5Y2J4OEl1ZmZsMF9OOU9r",
+    "alV2d1BjYUNkVFlCUUZWdEp1",
+    "WXdLVV90UUktLUpHVFQySXY2",
+    "bW9HVElEeVc4bk5jaHVFMVEv",
+    "ZXhlYw=="
+];
     const DEFAULT_SHEETS_URL = atob(_0xDbChunks.join(""));
 
-    const IconWrapper = ({ name, size = 24, className = "", weight="regular" }) => <i className={`ph${weight === 'fill' ? '-fill' : weight === 'duotone' ? '-duotone' : weight === 'bold' ? '-bold' : ''} ph-${name} ${className}`} style={{ fontSize: size }}></i>;
-    const PlayCircle = (p) => <IconWrapper name="play-circle" {...p} />;
-    const Download = (p) => <IconWrapper name="download" {...p} />;
-    const Menu = (p) => <IconWrapper name="list" {...p} />;
-    const X = (p) => <IconWrapper name="x" {...p} />;
-    const BookOpen = (p) => <IconWrapper name="book-open" {...p} />;
-    const Video = (p) => <IconWrapper name="video" {...p} />;
-    const CheckCircle2 = (p) => <IconWrapper name="check-circle" {...p} />;
-    const ChevronRight = (p) => <IconWrapper name="caret-right" {...p} />;
-    const MessageSquare = (p) => <IconWrapper name="chat-circle" {...p} />;
-    const Lock = (p) => <IconWrapper name="lock" {...p} />;
-    const LogOut = (p) => <IconWrapper name="sign-out" {...p} />;
-    const Award = (p) => <IconWrapper name="medal" {...p} />;
-    const Bell = (p) => <IconWrapper name="bell" {...p} />;
-    const Book = (p) => <IconWrapper name="book" {...p} />;
-    const ArrowLeft = (p) => <IconWrapper name="arrow-left" {...p} />;
-    const RefreshCw = (p) => <IconWrapper name="arrows-clockwise" {...p} />;
-    const UserIcon = (p) => <IconWrapper name="user" {...p} />;
-    const ShieldCheck = (p) => <IconWrapper name="shield-check" {...p} />;
-    const Coffee = (p) => <IconWrapper name="coffee" {...p} />;
-    const CheckSquareOffset = (p) => <IconWrapper name="check-square-offset" {...p} />;
-    const Sparkle = (p) => <IconWrapper name="sparkle" {...p} />;
-
-    const generateCertHtml = (pName, cTitle, instName, graduatedAt) => {
-        let formattedDate = graduatedAt ? new Date(graduatedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-        return `<div style="text-align:center; padding:40px; border:4px double #0f172a;"><h1>EduLearn by SenTools</h1><h2>Sertifikat Kelulusan</h2><p>Diberikan kepada:</p><h3>${pName}</h3><p>Atas penyelesaian kursus: ${cTitle}</p><p>Tanggal: ${formattedDate}</p></div>`;
-    };
-
     function App() {
-      const [dbReady, setDbReady] = React.useState(false);
-      const [appMode, setAppMode] = React.useState('auth');
-      const [authStatus, setAuthStatus] = React.useState("Menginisiasi Keamanan Sistem...");
+      const [loading, setLoading] = React.useState(true);
+      const [error, setError] = React.useState(null);
+      const [searchTerm, setSearchTerm] = React.useState("");
       
-      const [courses, setCourses] = React.useState([]);
-      const [participants, setParticipants] = React.useState([]);
-      const [enrollments, setEnrollments] = React.useState([]);
-      const [admins, setAdmins] = React.useState([]);
-      
-      const [session, setSession] = React.useState(null);
-      const [activeCourse, setActiveCourse] = React.useState(null);
-      const [activeModule, setActiveModule] = React.useState(null);
-      const [classroomMode, setClassroomMode] = React.useState('video');
-      const [studentAnswers, setStudentAnswers] = React.useState({});
-      const [currentQuestionIndex, setCurrentQuestionIndex] = React.useState(0);
-      const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
-      const [commentText, setCommentText] = React.useState("");
+      const [instructorData, setInstructorData] = React.useState(null);
+      const [instructorCourses, setInstructorCourses] = React.useState([]);
 
       React.useEffect(() => {
-        const fetchUrl = DEFAULT_SHEETS_URL + '?nocache=' + new Date().getTime();
-        fetch(fetchUrl)
-          .then(res => res.json())
-          .then(data => {
-              if(data.courses) setCourses(data.courses);
-              if(data.participants) setParticipants(data.participants);
-              if(data.enrollments) setEnrollments(data.enrollments);
-              if(data.admins) setAdmins(data.admins);
-              setDbReady(true);
-          }).catch(e => { setAuthStatus("Database gagal dimuat."); });
+          // 1. Ambil Parameter ?instructor=username dari URL
+          const queryParams = new URLSearchParams(window.location.search);
+          const targetUsername = queryParams.get("instructor");
+
+          if (!targetUsername) {
+              setError({ type: "invalid_url", message: "Tautan tidak valid. Format yang benar: promo.html?instructor=username" });
+              setLoading(false);
+              return;
+          }
+
+          // 2. Fetch Data dari Database
+          fetch(DEFAULT_SHEETS_URL + '?nocache=' + new Date().getTime())
+            .then(res => { if(!res.ok) throw new Error(); return res.json(); })
+            .then(data => {
+                const admins = data.admins || [];
+                const courses = data.courses || [];
+
+                // 3. Cari Data Instrukturnya
+                const inst = admins.find(a => String(a.username).toLowerCase() === targetUsername.toLowerCase());
+
+                if (!inst) {
+                    setError({ type: "not_found", message: `Instruktur dengan username "@${targetUsername}" tidak ditemukan.` });
+                    setLoading(false);
+                    return;
+                }
+
+                // 4. Validasi Hak Akses Etalase Promo (Hanya jika allowPromo === true)
+                const isPremium = inst.allowPromo === true || String(inst.allowPromo).toLowerCase() === 'true';
+                if (!isPremium) {
+                    setError({ type: "locked", message: "Halaman Katalog Pribadi ini belum diaktifkan oleh Pemilik Akun. Upgrade lisensi diperlukan." });
+                    setLoading(false);
+                    return;
+                }
+
+                // 5. Jika lolos, ambil HANYA kelas milik Instruktur ini yang berstatus Aktif
+                const myCourses = courses.filter(c => String(c.authorId) === String(inst.id) && c.isActive).map(c => ({
+                    ...c,
+                    totalModules: c.modules ? c.modules.length : 0
+                }));
+
+                setInstructorData(inst);
+                setInstructorCourses(myCourses);
+                setLoading(false);
+                
+                // Update Judul Web
+                document.title = `Akademi ${inst.name} - EduLearn`;
+            })
+            .catch(() => {
+                setError({ type: "network", message: "Gagal memuat pusat data. Periksa koneksi internet Anda." });
+                setLoading(false);
+            });
       }, []);
 
-      React.useEffect(() => {
-          if (appMode === 'auth' && dbReady) {
-              const verifySSO = async () => {
-                  const localToken = localStorage.getItem('sessionToken');
-                  if (!localToken) {
-                      window.location.href = LOGIN_PORTAL_URL + "?redirect=" + encodeURIComponent(window.location.href);
-                      return;
-                  }
-                  try {
-                      const response = await fetch(API_ENDPOINT, {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json', 'x-auth-token': localToken },
-                          body: JSON.stringify({ kontrol: 'proteksi', action: 'getDashboardData' })
-                      });
-                      const result = await response.json();
-                      
-                      if (result.status === 'success' && result.userData) {
-                          const ssoEmail = String(result.userData.email).trim().toLowerCase();
-                          const partFound = participants.find(p => p.email.trim().toLowerCase() === ssoEmail);
-                          
-                          if (partFound) {
-                              setSession({ role: 'participant', data: partFound });
-                              setAppMode('part_dashboard');
-                          } else {
-                              setAuthStatus(`Akses ditolak: Email (${ssoEmail}) belum didaftarkan sebagai siswa.`);
-                          }
-                      } else { throw new Error("Sesi tidak valid"); }
-                  } catch (error) {
-                      localStorage.removeItem('sessionToken');
-                      window.location.href = LOGIN_PORTAL_URL + "?redirect=" + encodeURIComponent(window.location.href);
-                  }
-              };
-              verifySSO();
-          }
-      }, [appMode, dbReady, participants]);
+      if (loading) {
+          return (
+              <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+                  <div className="w-20 h-20 bg-indigo-100 text-indigo-600 rounded-3xl flex items-center justify-center mb-6 shadow-inner animate-pulse">
+                      <IconWrapper name="storefront" size={40} weight="fill" />
+                  </div>
+                  <Loader2 size={32} className="text-indigo-500 mb-4" />
+                  <p className="text-sm font-bold text-slate-500 tracking-wide">Mempersiapkan Halaman Etalase...</p>
+              </div>
+          );
+      }
 
-      const formatVideoUrl = (rawUrl) => {
-          if (!rawUrl) return "";
-          let url = rawUrl.trim();
-          try {
-            if (url.includes('youtu.be/')) return `https://www.youtube.com/embed/${url.split('youtu.be/')[1].split('?')[0]}`;
-            if (url.includes('youtube.com/watch')) return `https://www.youtube.com/embed/${new URL(url).searchParams.get('v')}`;
-          } catch (e) {}
-          return url;
-      };
+      if (error) {
+          return (
+              <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-6">
+                  <div className="bg-white p-10 rounded-3xl shadow-xl border border-slate-100 max-w-md w-full text-center">
+                      <div className={`w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-6 shadow-inner ${error.type === 'locked' ? 'bg-amber-50 text-amber-500' : 'bg-rose-50 text-rose-500'}`}>
+                          <IconWrapper name={error.type === 'locked' ? 'lock-key' : 'warning-octagon'} size={40} weight="fill" />
+                      </div>
+                      <h2 className="text-2xl font-black text-slate-900 mb-3">{error.type === 'locked' ? 'Akses Terkunci' : 'Terjadi Kesalahan'}</h2>
+                      <p className="text-slate-500 text-sm font-medium leading-relaxed mb-8">{error.message}</p>
+                      <a href="page.html" className="inline-block w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl transition shadow-md">Kembali ke Beranda</a>
+                  </div>
+              </div>
+          );
+      }
 
-      const calcProgress = (enr, crs) => { 
-          if (!crs || !crs.modules || crs.modules.length === 0 || !enr) return 0; 
-          if (enr.isGraduated) return 100;
-          let compList = Array.isArray(enr.completedModules) ? enr.completedModules : [];
-          if (typeof enr.completedModules === 'string') { try { compList = JSON.parse(enr.completedModules); } catch (e) {} }
-          return Math.round((compList.length / crs.modules.length) * 100); 
-      };
+      // Filter Pencarian
+      const filteredCourses = instructorCourses.filter(c => 
+          c.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+          c.code.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
-      const execDbAction = async (payload) => {
-          const postUrl = DEFAULT_SHEETS_URL + '?nocache=' + new Date().getTime();
-          fetch(postUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) }).catch(console.error);
-      };
-
-      const jumpToClassroom = (courseId) => {
-          const course = courses.find(c => c.id === courseId);
-          if (!course.isActive) return alert("Kelas telah ditutup.");
-          
-          let myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(courseId));
-          let compList = Array.isArray(myEnr.completedModules) ? myEnr.completedModules : [];
-          
-          let modToOpen = course.modules.find(m => !compList.includes(m.id)) || course.modules[course.modules.length - 1];
-          setActiveCourse(course); 
-          setActiveModule(modToOpen);
-          setClassroomMode(myEnr.isGraduated ? 'result' : 'video');
-          setAppMode('classroom');
-      };
-
-      const handleCompleteModule = () => {
-          const cMods = activeCourse.modules; 
-          const cIdx = cMods.findIndex(m => m.id === activeModule.id); 
-          const isLast = cIdx === cMods.length - 1;
-          
-          let myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(activeCourse.id));
-          let compList = Array.isArray(myEnr.completedModules) ? myEnr.completedModules : [];
-          
-          if (!compList.includes(activeModule.id)) {
-              compList.push(activeModule.id);
-              const updatedE = enrollments.map(en => String(en.id) === String(myEnr.id) ? { ...en, completedModules: compList } : en);
-              setEnrollments(updatedE);
+      return (
+          <div className="min-h-screen bg-slate-50 flex flex-col justify-between overflow-x-hidden hero-gradient">
               
-              execDbAction({ 
-                  admins, courses, participants, notifications: [], 
-                  enrollments: updatedE.map(enr => ({ ...enr, completedModules_json: JSON.stringify(enr.completedModules) })) 
-              });
-          }
-          if (!isLast) setActiveModule(cMods[cIdx + 1]); else setClassroomMode('exam');
-      };
-
-      const submitExam = () => {
-          let correct = 0; 
-          activeCourse.exam.questions.forEach((q, i) => { if(studentAnswers[i] === q.answer) correct++; });
-          const finalScore = correct * 10; 
-          const isPassed = finalScore >= activeCourse.exam.minScore;
-          
-          let myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(activeCourse.id));
-          const updatedE = enrollments.map(en => String(en.id) === String(myEnr.id) ? { ...en, examScore: finalScore, isGraduated: isPassed, graduatedAt: isPassed ? new Date().toISOString() : en.graduatedAt } : en);
-          
-          setEnrollments(updatedE);
-          execDbAction({ admins, courses, participants, notifications: [], enrollments: updatedE });
-          setClassroomMode('result');
-      };
-
-      const handleDownloadCert = () => {
-          const myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(activeCourse.id));
-          const certContent = generateCertHtml(session.data.name, activeCourse.title, activeCourse.instructor, myEnr.graduatedAt);
-          const blob = new Blob([certContent], { type: 'text/html' }); 
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a'); 
-          link.href = url; link.download = `Sertifikat-${activeCourse.title}.html`;
-          document.body.appendChild(link); link.click(); document.body.removeChild(link);
-      };
-
-      const handleLogout = () => {
-          setSession(null); 
-          localStorage.removeItem('sessionToken');
-          window.location.href = LOGIN_PORTAL_URL;
-      };
-
-      if (appMode === 'auth') {
-          return (
-              <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-                  <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md text-center">
-                      <ShieldCheck size={48} className="text-indigo-600 mx-auto animate-bounce mb-4" />
-                      <h1 className="text-xl font-bold">Verifikasi Siswa</h1>
-                      <p className="text-sm text-slate-500 mt-2">{authStatus}</p>
+              {/* Navbar */}
+              <nav className="w-full bg-white/80 backdrop-blur-md border-b sticky top-0 z-50">
+                <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+                  <div className="flex items-center text-indigo-600">
+                    <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center mr-3 shadow-inner">
+                      <IconWrapper name="book-open" size={22} weight="fill" />
+                    </div>
+                    <span className="font-extrabold text-xl tracking-tight text-slate-900">EduLearn</span>
                   </div>
-              </div>
-          );
-      }
+                  <a href="page-siswa.html" className="text-xs sm:text-sm font-bold text-slate-600 hover:text-indigo-600 transition flex items-center gap-1.5"><IconWrapper name="arrow-right" size={16} weight="bold" /> <span className="hidden sm:inline">Portal Siswa</span></a>
+                </div>
+              </nav>
 
-      if (appMode === 'part_dashboard') {
-          let myEnrs = enrollments.filter(e => String(e.participantId) === String(session.data.id));
-          return (
-              <div className="min-h-screen bg-slate-50 flex flex-col">
-                  <header className="bg-white p-4 border-b flex justify-between items-center shadow-sm">
-                      <div className="font-bold text-indigo-600 flex items-center"><BookOpen size={24} className="mr-2"/> EduLearn Siswa</div>
-                      <div className="flex items-center gap-4">
-                          <span className="text-sm font-bold">{session.data.name}</span>
-                          <button onClick={handleLogout} className="text-red-500"><LogOut size={20}/></button>
-                      </div>
-                  </header>
-                  <main className="p-6 max-w-5xl mx-auto w-full">
-                      <h2 className="text-2xl font-bold mb-6">Kelas Tersedia</h2>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {myEnrs.map(enr => {
-                              const course = courses.find(c => String(c.id) === String(enr.courseId));
-                              if (!course) return null;
-                              return (
-                                  <div key={enr.id} className="bg-white p-6 rounded-2xl shadow border">
-                                      <h3 className="font-bold text-lg mb-2">{course.title}</h3>
-                                      <div className="w-full bg-slate-200 h-2 rounded-full mb-4">
-                                          <div className="bg-emerald-500 h-2 rounded-full" style={{width: `${calcProgress(enr, course)}%`}}></div>
-                                      </div>
-                                      <button onClick={() => jumpToClassroom(course.id)} className="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold">Buka Kelas</button>
-                                  </div>
-                              );
-                          })}
-                      </div>
-                  </main>
-              </div>
-          );
-      }
+              {/* Hero Banner Khusus Instruktur */}
+              <header className="max-w-7xl mx-auto px-6 pt-12 pb-10 text-center w-full">
+                  <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-blue-600 text-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl shadow-indigo-200 text-3xl font-black border-4 border-white">
+                      {instructorData.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 font-bold text-[10px] sm:text-xs mb-4 shadow-sm uppercase tracking-widest">
+                      <IconWrapper name="seal-check" size={14} weight="fill" /> Kreator Terverifikasi
+                  </div>
+                  <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight mb-3">
+                      Akademi <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">{instructorData.name}</span>
+                  </h1>
+                  <p className="text-sm md:text-base text-slate-500 font-medium mb-8">
+                      @{instructorData.username}
+                  </p>
 
-      if (appMode === 'classroom') {
-          const myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(activeCourse.id));
-          
-          return (
-              <div className="min-h-screen flex flex-col bg-slate-50">
-                  <header className="bg-white p-4 border-b flex justify-between items-center shadow-sm">
-                      <h1 className="font-bold text-lg">{activeCourse.title}</h1>
-                      <button onClick={() => setAppMode('part_dashboard')} className="bg-slate-900 text-white px-4 py-2 rounded-lg font-bold text-sm">Kembali</button>
-                  </header>
-                  
-                  <div className="flex flex-1">
-                      <aside className="w-80 bg-white border-r p-4 hidden md:block">
-                          <h3 className="font-bold mb-4">Kurikulum</h3>
-                          <div className="space-y-2">
-                              {activeCourse.modules.map((mod, i) => (
-                                  <button key={mod.id} onClick={() => { setActiveModule(mod); setClassroomMode('video'); }} className={`w-full text-left p-3 rounded-xl border ${activeModule?.id === mod.id ? 'bg-indigo-50 border-indigo-200' : ''}`}>{i+1}. {mod.title}</button>
-                              ))}
-                              {calcProgress(myEnr, activeCourse) === 100 && (
-                                  <button onClick={() => setClassroomMode(myEnr.isGraduated ? 'result' : 'exam')} className="w-full p-3 bg-amber-100 text-amber-800 rounded-xl font-bold mt-4">Ujian Akhir</button>
-                              )}
+                  {/* Search Bar */}
+                  <div className="max-w-md mx-auto relative shadow-sm">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 pointer-events-none">
+                          <IconWrapper name="magnifying-glass" size={18} weight="bold" />
+                      </div>
+                      <input 
+                          type="text" 
+                          value={searchTerm}
+                          onChange={e => setSearchTerm(e.target.value)}
+                          placeholder="Cari kelas yang tersedia..." 
+                          className="w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all font-medium text-sm text-slate-800 shadow-sm"
+                      />
+                  </div>
+              </header>
+
+              {/* Daftar Kelas Instruktur */}
+              <main className="max-w-7xl mx-auto px-6 pb-24 flex-1 w-full">
+                  <div className="flex items-center justify-between mb-6 border-b border-slate-200 pb-4">
+                      <h2 className="font-extrabold text-xl text-slate-800 flex items-center gap-2"><IconWrapper name="stack" size={24} className="text-indigo-500" weight="fill"/> Etalase Kelas Aktif</h2>
+                      <span className="text-sm font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-lg">{instructorCourses.length} Kelas</span>
+                  </div>
+
+                  {filteredCourses.length === 0 ? (
+                      <div className="text-center py-20 bg-white/60 backdrop-blur-sm rounded-[2rem] border-2 border-dashed border-slate-200 max-w-xl mx-auto shadow-inner">
+                          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mx-auto mb-4">
+                              <IconWrapper name="book-open" size={28} />
                           </div>
-                      </aside>
-                      
-                      <main className="flex-1 p-6">
-                          {classroomMode === 'video' && activeModule && (
-                              <div className="max-w-3xl mx-auto">
-                                  <iframe src={formatVideoUrl(activeModule.videoUrl)} className="w-full aspect-video rounded-xl shadow-lg mb-6" allowFullScreen></iframe>
-                                  <h2 className="text-2xl font-bold mb-2">{activeModule.title}</h2>
-                                  <p className="text-slate-600 mb-6">{activeModule.description}</p>
-                                  <button onClick={handleCompleteModule} className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold">Tandai Selesai</button>
-                              </div>
-                          )}
+                          <h4 className="font-extrabold text-slate-700 text-lg">Belum Ada Kelas</h4>
+                          <p className="text-slate-400 text-xs mt-1 max-w-xs mx-auto">Instruktur ini belum mempublikasikan kelas atau tidak ada yang cocok dengan pencarian Anda.</p>
+                      </div>
+                  ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                          {filteredCourses.map(course => (
+                              <div key={course.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between h-full p-6 md:p-8 overflow-hidden relative group">
+                                  <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-6 -mt-6 z-0 transition-transform group-hover:scale-105"></div>
+                                  
+                                  <div className="relative z-10 flex-1">
+                                      <div className="flex items-center gap-2 mb-4">
+                                          <span className="font-mono text-xs font-black tracking-widest bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg uppercase border border-indigo-100 shadow-sm">{course.code}</span>
+                                          <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2.5 py-1.5 rounded-lg flex items-center gap-1"><IconWrapper name="video-camera" size={12} weight="fill"/> {course.totalModules} Modul</span>
+                                      </div>
 
-                          {classroomMode === 'exam' && (
-                              <div className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow">
-                                  <h2 className="text-2xl font-bold mb-6">Soal {currentQuestionIndex + 1}</h2>
-                                  <p className="mb-6">{activeCourse.exam.questions[currentQuestionIndex].q}</p>
-                                  <div className="space-y-3">
-                                      {activeCourse.exam.questions[currentQuestionIndex].options.map((opt, i) => (
-                                          <button key={i} onClick={() => setStudentAnswers({...studentAnswers, [currentQuestionIndex]: i})} className={`w-full text-left p-4 border rounded-xl ${studentAnswers[currentQuestionIndex] === i ? 'bg-indigo-100 border-indigo-500' : ''}`}>{opt}</button>
-                                      ))}
+                                      <h3 className="text-xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight mb-6 pr-6">{course.title}</h3>
                                   </div>
-                                  <div className="mt-8 flex justify-between">
-                                      <button onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))} className="px-6 py-2 bg-slate-200 rounded-xl font-bold">Sebelumnya</button>
-                                      {currentQuestionIndex < activeCourse.exam.questions.length - 1 ? (
-                                          <button onClick={() => setCurrentQuestionIndex(prev => prev + 1)} className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold">Selanjutnya</button>
+
+                                  <div className="space-y-3 relative z-10 pt-4 border-t border-slate-100 mt-auto">
+                                      {instructorData.whatsapp ? (
+                                          <a 
+                                              href={`https://wa.me/${instructorData.whatsapp.replace(/[^0-9]/g, '')}?text=Halo%20Mentor%20${encodeURIComponent(instructorData.name)},%20saya%20tertarik%20untuk%20mendaftar%20kelas%20*${encodeURIComponent(course.title)}*%20(${encodeURIComponent(course.code)}).%20Bagaimana%20prosedurnya?`}
+                                              target="_blank" 
+                                              rel="noopener noreferrer" 
+                                              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl text-sm font-black flex justify-center items-center gap-2 shadow-md shadow-emerald-100 transition transform active:scale-95"
+                                          >
+                                              <IconWrapper name="whatsapp-logo" size={20} weight="fill" />
+                                              <span>Hubungi Mentor via WA</span>
+                                          </a>
                                       ) : (
-                                          <button onClick={submitExam} className="px-6 py-2 bg-slate-900 text-white rounded-xl font-bold">Selesai Ujian</button>
+                                          <button disabled className="w-full bg-slate-100 text-slate-400 py-3.5 rounded-xl text-sm font-bold flex justify-center items-center gap-2 cursor-not-allowed">
+                                              <IconWrapper name="whatsapp-logo" size={20} />
+                                              <span>Nomor WA Belum Disetting</span>
+                                          </button>
                                       )}
+                                      <p className="text-center text-[10px] text-slate-400 font-medium">Klik tombol di atas untuk info harga dan pendaftaran.</p>
                                   </div>
-                              </div>
-                          )}
 
-                          {classroomMode === 'result' && (
-                              <div className="max-w-lg mx-auto bg-white p-10 rounded-2xl shadow text-center mt-10">
-                                  <h2 className="text-3xl font-bold mb-4">{myEnr.isGraduated ? 'Selamat, Anda Lulus!' : 'Belum Lulus'}</h2>
-                                  <p className="text-xl mb-6">Skor: {myEnr.examScore}</p>
-                                  {myEnr.isGraduated ? (
-                                      <button onClick={handleDownloadCert} className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold w-full">Unduh Sertifikat</button>
-                                  ) : (
-                                      <button onClick={() => { setClassroomMode('exam'); setStudentAnswers({}); }} className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold w-full">Ulangi Ujian</button>
-                                  )}
                               </div>
-                          )}
-                      </main>
-                  </div>
-              </div>
-          );
-      }
-      return null;
+                          ))}
+                      </div>
+                  )}
+              </main>
+
+              {/* Footer */}
+              <footer className="w-full bg-slate-900 py-10 text-center text-white text-xs font-mono tracking-widest shrink-0 border-t border-slate-800">
+                  © 2026 S-TOOLS.ID • EDULEARN CREATOR SHOWCASE
+              </footer>
+
+          </div>
+      );
     }
+
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
