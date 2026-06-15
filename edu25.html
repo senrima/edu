@@ -444,7 +444,7 @@
               namaPengguna: newAdminData.name,
               isiPesanInti: `Akun Instruktur Anda telah berhasil dibuat oleh Super Admin.<br><br><b>Email Anda:</b> ${email}<br><br>Karena sistem kini diamankan secara terpusat dengan S-Tools ID, password manual tidak lagi dikirimkan. Silakan login langsung menggunakan S-Tools ID ke Dashboard EduLearn.<br><br><span style="color:#e11d48; font-weight:bold; font-size:15px;">Pastikan mendaftar dengan akun email ➔ ${email} , agar tidak salah daftar lagi siapa tau Anda memiliki email lain.</span>` + EMAIL_BUTTONS_HTML
           });
-        };
+      };
 
       const handleToggleActiveAdmin = async (id, currentStatus) => {
         await execDbAction( () => {
@@ -716,9 +716,6 @@
           modToOpen = course.modules.find(m => m.id === targetModuleId) || modToOpen;
         } else if (session.role === 'participant') {
           let myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(courseId));
-          if (!myEnr && String(session.data.id).startsWith('p_virtual_')) {
-              myEnr = { id: 'enr_v_' + courseId, participantId: session.data.id, courseId: courseId, completedModules: [], isGraduated: false, certDownloaded: false, examScore: null, graduatedAt: null };
-          }
           
           if (myEnr) {
             if(myEnr.isGraduated) setClassroomMode('result');
@@ -761,12 +758,6 @@
         const cMods = activeCourse.modules; const cIdx = cMods.findIndex(m => m.id === activeModule.id); const isLast = cIdx === cMods.length - 1;
         let myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(activeCourse.id));
         
-        if (!myEnr && String(session.data.id).startsWith('p_virtual_')) {
-            showToast("Mode Pratinjau Virtual: Progres tidak disimpan.");
-            if (!isLast) setActiveModule(cMods[cIdx + 1]); else setClassroomMode('exam');
-            return;
-        }
-        
         let compList = Array.isArray(myEnr.completedModules) ? myEnr.completedModules : [];
         if(typeof myEnr.completedModules === 'string') { try { compList = JSON.parse(myEnr.completedModules); } catch(e) {} }
 
@@ -787,12 +778,6 @@
         const finalScore = correct * 10; const isPassed = finalScore >= activeCourse.exam.minScore;
         let myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(activeCourse.id));
         
-        if (!myEnr && String(session.data.id).startsWith('p_virtual_')) {
-            showToast("Mode Pratinjau Virtual: Ujian tidak disimpan.");
-            setClassroomMode('result');
-            return;
-        }
-
         const todayDateStr = new Date().toISOString(); 
         
         await execDbAction( () => {
@@ -859,7 +844,7 @@
                          </div>
                          <div className="space-y-1">
                              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Alasan Pengajuan</label>
-                             <textarea required maxLength={300} rows="3" value={reqQuotaModal.reason} onChange={e => setReqQuotaModal({ ...reqQuotaModal, reason: e.target.value })} placeholder="Berikan penjelasan logis mengapa Anda memerlukan kuota ekstra..." className="w-full p-3.5 bg-slate-50 border rounded-xl outline-none text-slate-800 focus:bg-white transition-all text-sm resize-none"></textarea>
+                             <textarea required maxLength={300} rows="3" value={reqQuotaModal.reason} onChange={e => setReqQuotaModal({ ...reqQuotaModal, reason: e.target.value })} placeholder="Berikan penjelasan logis mengapa Anda memerlukan kuota ekstra... (Maks 300 Karakter)" className="w-full p-3.5 bg-slate-50 border rounded-xl outline-none text-slate-800 focus:bg-white transition-all text-sm resize-none"></textarea>
                          </div>
                          <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-indigo-100 text-sm uppercase tracking-wider">Kirim Pengajuan Resmi</button>
                      </form>
@@ -925,7 +910,8 @@
               const user = admins.find(a => String(a.id) === String(session.data.id)) || session.data;
               const email = encodeURIComponent(user.email || `${user.username}@edulearn.local`);
               const name = encodeURIComponent(user.name || user.username);
-              return `https://s-tools.id/payment/index.html?amount=${amount}&item=${encodeURIComponent(item)}&kode_aplikasi=APP-EDULEARN&email=${email}&name=${name}`;
+              // Link Payment tersambung dengan API S-Tools Payment Hub V3 dengan parameter KODE_APLIKASI
+              return `https://s-tools.id/payment/index.html?amount=${amount}&item=${encodeURIComponent(item)}&kode_aplikasi=APP-STOOLS&email=${email}&name=${name}`;
           };
 
           return (
@@ -939,6 +925,7 @@
                       
                       <div className="p-6 md:p-10 overflow-y-auto bg-slate-50 flex-1">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto items-stretch">
+                              {/* Paket Starter */}
                               <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm flex flex-col relative overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-lg">
                                   <h3 className="text-xl font-bold text-slate-800 text-center mb-4">Paket Starter</h3>
                                   <div className="text-center mb-6">
@@ -953,6 +940,7 @@
                                   <a href={getPaymentLink(50000, "Paket Starter EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-md">Pilih Paket Starter <ChevronRight size={16} weight="bold"/></a>
                               </div>
 
+                              {/* Paket Pro */}
                               <div className="bg-indigo-50/50 rounded-3xl p-6 md:p-8 border-2 border-indigo-500 shadow-xl flex flex-col relative overflow-hidden transition-transform hover:-translate-y-1 transform md:scale-105 z-10">
                                   <div className="absolute top-0 inset-x-0 flex justify-center"><span className="bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-b-xl shadow-sm">Paling Laris</span></div>
                                   <h3 className="text-xl font-bold text-slate-800 text-center mb-4 mt-4 md:mt-2">Paket Pro</h3>
@@ -968,6 +956,7 @@
                                   <a href={getPaymentLink(120000, "Paket Pro EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-lg shadow-indigo-200">Pilih Paket Pro <ChevronRight size={16} weight="bold"/></a>
                               </div>
 
+                              {/* Paket Enterprise */}
                               <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm flex flex-col relative overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-lg">
                                   <h3 className="text-xl font-bold text-slate-800 text-center mb-4">Paket Enterprise</h3>
                                   <div className="text-center mb-6">
@@ -1006,7 +995,7 @@
                     {examForm.questions.map((q, idx) => (
                         <div key={idx} className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
                             <label className="font-bold text-slate-800 block mb-3 text-sm sm:text-base">Soal {idx+1}</label>
-                            <textarea maxLength={200} value={q.q} onChange={e=>{const newQ = [...examForm.questions]; newQ[idx].q = e.target.value; setExamForm({...examForm, questions: newQ});}} className="w-full p-3 mb-4 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition resize-none" placeholder="Tulis pertanyaan..." required rows="2"></textarea>
+                            <textarea maxLength={200} value={q.q} onChange={e=>{const newQ = [...examForm.questions]; newQ[idx].q = e.target.value; setExamForm({...examForm, questions: newQ});}} className="w-full p-3 mb-4 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition resize-none" placeholder="Tulis pertanyaan... (Maks 200 Karakter)" required rows="2"></textarea>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
                                 {q.options.map((opt, optIdx) => (
                                     <input key={optIdx} type="text" maxLength={100} value={opt} onChange={e=>{const newQ = [...examForm.questions]; newQ[idx].options[optIdx] = e.target.value; setExamForm({...examForm, questions: newQ});}} className="w-full p-3 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 text-sm transition" placeholder={`Opsi Jawaban ${optIdx+1}`} required />
@@ -1209,7 +1198,7 @@
                                     {infoSuperForm.showInst ? 'Aktif' : 'Sembunyi'}
                                 </button>
                             </div>
-                            <textarea value={infoSuperForm.instText} onChange={e => setInfoSuperForm({...infoSuperForm, instText: e.target.value})} className="w-full p-4 border rounded-xl resize-none outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 bg-white transition text-base" rows="3" placeholder="Tulis informasi..."></textarea>
+                            <textarea value={infoSuperForm.instText} onChange={e => setInfoSuperForm({...infoSuperForm, instText: e.target.value})} maxLength={1000} className="w-full p-4 border rounded-xl resize-none outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 bg-white transition text-base" rows="3" placeholder="Tulis informasi... (Maks 1000 Karakter)"></textarea>
                         </div>
                         <div className="bg-slate-50 p-5 md:p-6 rounded-2xl border border-slate-200">
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
@@ -1219,7 +1208,7 @@
                                     {infoSuperForm.showPart ? 'Aktif' : 'Sembunyi'}
                                 </button>
                             </div>
-                            <textarea value={infoSuperForm.partText} onChange={e => setInfoSuperForm({...infoSuperForm, partText: e.target.value})} className="w-full p-4 border rounded-xl resize-none outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 bg-white transition text-base" rows="3" placeholder="Tulis informasi umum..."></textarea>
+                            <textarea value={infoSuperForm.partText} onChange={e => setInfoSuperForm({...infoSuperForm, partText: e.target.value})} maxLength={1000} className="w-full p-4 border rounded-xl resize-none outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 bg-white transition text-base" rows="3" placeholder="Tulis informasi umum... (Maks 1000 Karakter)"></textarea>
                         </div>
                         <div className="pt-6 border-t flex justify-end">
                             <button onClick={() => handleUpdateAdminInfo('super')} className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-8 py-3.5 rounded-xl shadow-lg transition">Simpan Papan Informasi</button>
@@ -1427,7 +1416,7 @@
                             <input name="code" id="crscode" required maxLength={10} className="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm font-mono uppercase font-bold" placeholder="Kode Unik (Maks 10)"/>
                             <button type="button" onClick={()=>{document.getElementById('crscode').value = 'CR' + Math.floor(1000 + Math.random() * 9000).toString()}} className="w-14 h-[50px] bg-slate-100 hover:bg-slate-200 flex items-center justify-center rounded-xl text-slate-500 transition shrink-0" title="Generate Kode Acak"><RefreshCw size={20}/></button>
                         </div>
-                        <input name="title" required maxLength={60} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Judul Kelas Utama"/>
+                        <input name="title" required maxLength={100} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Judul Kelas Utama (Maks 100 Karakter)"/>
                         <input name="inst" defaultValue={session.data.name} required maxLength={50} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Nama Tampil Pengajar"/>
                         <input name="docLink" type="url" maxLength={255} className="w-full p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl outline-none focus:bg-white focus:border-emerald-500 transition text-sm text-emerald-800 placeholder-emerald-400" placeholder="Link Materi Ekstra (Drive/PDF) - Opsional"/>
                         <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-xl font-bold shadow-md transition mt-2">Posting Kelas</button>
@@ -1438,9 +1427,9 @@
                       <h2 className="font-bold text-slate-800 mb-6 text-lg flex items-center relative z-10"><Video size={22} className="mr-2 text-indigo-600" />Upload Video Modul</h2>
                       <form onSubmit={handleCreateModule} className="space-y-4 relative z-10">
                         <select name="courseId" required className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-indigo-500 text-sm cursor-pointer transition appearance-none" defaultValue=""><option value="" disabled>-- Pilih Kelas Tujuan --</option>{myCourses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
-                        <input name="title" required maxLength={60} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Judul Sesi Video"/>
+                        <input name="title" required maxLength={100} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition text-sm" placeholder="Judul Sesi Video (Maks 100 Karakter)"/>
                         <input name="vidUrl" required type="url" maxLength={255} className="w-full p-3.5 bg-rose-50 border border-rose-200 rounded-xl outline-none focus:bg-white focus:border-rose-500 transition text-sm text-rose-800 placeholder-rose-400" placeholder="Link YT / Drive Video"/>
-                        <textarea name="desc" required maxLength={300} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition resize-none text-sm" rows="3" placeholder="Tulis deskripsi / capaian sesi ini..."></textarea>
+                        <textarea name="desc" required maxLength={500} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:bg-white focus:border-indigo-500 transition resize-none text-sm" rows="3" placeholder="Tulis deskripsi / capaian sesi ini... (Maks 500 Karakter)"></textarea>
                         <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl font-bold shadow-lg shadow-indigo-200 transition mt-2 flex justify-center items-center"><PlayCircle size={20} className="mr-2"/> Simpan ke Kurikulum</button>
                       </form>
                     </div>
@@ -1560,7 +1549,7 @@
                             </button>
                         </div>
                         <label className="font-bold text-slate-700 text-sm mb-3 block uppercase tracking-wider">Isi Papan Pengumuman</label>
-                        <textarea value={infoInstForm.text} onChange={e => setInfoInstForm({...infoInstForm, text: e.target.value})} className="w-full p-5 border border-slate-200 rounded-2xl outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 bg-white text-base transition resize-none shadow-inner mb-6" rows="5" placeholder="Cth: Selamat datang angkatan baru! Jangan lupa kerjakan Quiz minggu ini..."></textarea>
+                        <textarea value={infoInstForm.text} onChange={e => setInfoInstForm({...infoInstForm, text: e.target.value})} maxLength={1000} className="w-full p-5 border border-slate-200 rounded-2xl outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 bg-white text-base transition resize-none shadow-inner mb-6" rows="5" placeholder="Cth: Selamat datang angkatan baru! Jangan lupa kerjakan Quiz minggu ini... (Maks 1000 Karakter)"></textarea>
                         <button onClick={() => handleUpdateAdminInfo('inst')} className="w-full bg-slate-900 hover:bg-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg transition">Terapkan Perubahan</button>
                     </div>
                 </div>
@@ -1573,7 +1562,7 @@
                   <form onSubmit={handleUpdateProfile} className="bg-amber-50 p-6 md:p-8 rounded-3xl border border-amber-100">
                       <div className="relative mb-6">
                           <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-amber-400"><Heart size={20} weight="fill"/></div>
-                          <input type="url" value={profileForm.donationLink} onChange={e=>setProfileForm({donationLink: e.target.value})} className="pl-12 w-full p-4 border-0 rounded-2xl outline-none focus:ring-4 focus:ring-amber-200 bg-white shadow-sm text-amber-900 font-medium transition" placeholder="https://trakteer.id/nama-anda" />
+                          <input type="url" maxLength={255} value={profileForm.donationLink} onChange={e=>setProfileForm({donationLink: e.target.value})} className="pl-12 w-full p-4 border-0 rounded-2xl outline-none focus:ring-4 focus:ring-amber-200 bg-white shadow-sm text-amber-900 font-medium transition" placeholder="https://trakteer.id/nama-anda" />
                       </div>
                       <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 py-4 rounded-xl font-extrabold shadow-lg shadow-amber-200 transition">Update Tautan</button>
                   </form>
@@ -1620,7 +1609,6 @@
       }
 
       if (appMode === 'part_dashboard' && session) {
-        // PERBAIKAN 1: Hapus pembuatan "Virtual Student". Instruktur hanya melihat kelas di mana mereka terdaftar riil.
         let myEnrs = enrollments.filter(e => String(e.participantId) === String(session.data.id));
         
         const superAdmin = admins.find(a => a.isSuper === true || a.isSuper === 'true' || a.isSuper === 'TRUE');
@@ -1872,7 +1860,7 @@
                             <div className="mt-12 md:mt-16 pt-8 md:pt-12 border-t border-slate-100">
                                 <h3 className="text-xl md:text-2xl font-extrabold mb-6 flex items-center text-slate-900"><MessageSquare className="mr-3 text-indigo-600" weight="fill"/> Ruang Diskusi</h3>
                                 <form onSubmit={handlePostComment} className="mb-8 flex flex-col sm:flex-row gap-3 md:gap-4">
-                                    <input type="text" maxLength={500} value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder={!isStudent ? "Balas pertanyaan siswa..." : "Ada yang kurang jelas? Tanyakan di sini..."} className="flex-1 px-5 py-4 rounded-2xl border border-slate-200 bg-slate-50 outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition text-base" />
+                                    <input type="text" maxLength={500} value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder={!isStudent ? "Balas pertanyaan siswa... (Maks 500 Karakter)" : "Ada yang kurang jelas? Tanyakan di sini... (Maks 500 Karakter)"} className="flex-1 px-5 py-4 rounded-2xl border border-slate-200 bg-slate-50 outline-none focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition text-base" />
                                     <button type="submit" disabled={!commentText.trim()} className="bg-slate-900 hover:bg-indigo-600 text-white px-8 py-4 rounded-2xl font-bold disabled:bg-slate-200 disabled:text-slate-400 transition shadow-md w-full sm:w-auto flex justify-center items-center shrink-0">Kirim</button>
                                 </form>
                                 <div className="space-y-4">
