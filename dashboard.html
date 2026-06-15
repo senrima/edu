@@ -1493,6 +1493,23 @@
               {adminTab === 'participants' && (
                 <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 md:gap-8">
                   <div className="xl:col-span-1 space-y-6 md:space-y-8">
+
+                    {/* --- KODE TOMBOL MENUJU LINK.HTML BARU --- */}
+                    <div className="bg-gradient-to-br from-indigo-600 to-blue-700 p-6 sm:p-8 rounded-3xl shadow-lg border border-indigo-500 text-white relative overflow-hidden">
+                        <div className="absolute top-0 right-0 -mr-4 -mt-4 text-white/10"><IconWrapper name="link" size={100} weight="fill"/></div>
+                        <div className="relative z-10">
+                            <h2 className="font-extrabold text-lg mb-2 flex items-center"><IconWrapper name="sparkle" size={20} className="mr-2 text-indigo-200" weight="fill"/> Generator Link</h2>
+                            <p className="text-xs text-indigo-100 mb-5 leading-relaxed font-medium">Buat tautan undangan otomatis berbatas waktu agar siswa dapat mendaftar mandiri ke kelas Anda.</p>
+                            <a href="link.html" target="_blank" rel="noopener noreferrer" className="w-full bg-white hover:bg-slate-50 text-indigo-700 font-black py-3.5 rounded-xl shadow-md transition transform active:scale-95 flex items-center justify-center gap-2">
+                                <IconWrapper name="link" size={18} weight="bold"/> Buka Alat Pembuat Link
+                            </a>
+                        </div>
+                    </div>
+                    {/* ----------------------------------------- */}
+
+
+
+                    
                     <div className="bg-white p-6 sm:p-8 rounded-3xl shadow-sm border border-slate-100">
                       <h2 className="font-bold text-slate-800 mb-6 text-lg flex items-center"><PlusCircle size={22} className="mr-2 text-emerald-600" />Daftar Siswa Baru</h2>
                       <form onSubmit={handleRegisterParticipant} className="space-y-4">
