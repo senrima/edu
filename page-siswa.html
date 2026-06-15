@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ruang Belajar Siswa - EduLearn</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+    .glass-nav { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(226, 232, 240, 0.8); }
+    .hero-bg { background: radial-gradient(circle at top left, #eef2ff, transparent 50%), radial-gradient(circle at bottom right, #f0fdf4, transparent 50%); }
+  </style>
+</head>
+<body class="text-slate-800 antialiased overflow-x-hidden">
+
+  <nav class="fixed w-full z-40 glass-nav transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center text-indigo-600">
+        <div class="w-8 h-8 sm:w-10 sm:h-10 bg-indigo-100 rounded-xl flex items-center justify-center mr-3 shadow-inner">
+          <i class="ph-fill ph-student text-xl sm:text-2xl"></i>
+        </div>
+        <span class="font-extrabold text-xl sm:text-2xl tracking-tight text-slate-900">EduLearn <span class="text-sm font-bold text-slate-400 ml-1">Student</span></span>
+      </div>
+      <div class="flex items-center gap-2 sm:gap-3">
+        <a href="page.html" class="hidden sm:inline-block text-sm font-bold text-slate-500 hover:text-indigo-600 transition px-4 py-2">Untuk Instruktur</a>
+        <a href="https://s-tools.id/edu/Edu25.html" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold px-5 sm:px-6 py-2.5 rounded-full shadow-lg shadow-indigo-200 transition transform hover:-translate-y-0.5 flex items-center gap-2">
+          Masuk Kelas <i class="ph-bold ph-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden hero-bg">
+    <div class="max-w-7xl mx-auto px-6 relative z-10">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold text-xs sm:text-sm mb-6">
+            <i class="ph-fill ph-graduation-cap"></i> Portal Pembelajaran Eksklusif
+          </div>
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight leading-[1.1] mb-6">
+            Fokus Belajar, <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">Raih Prestasimu.</span>
+          </h1>
+          <p class="text-base sm:text-lg text-slate-500 mb-8 font-medium leading-relaxed max-w-lg">
+            Akses semua materi kelas, ikuti ujian, dan unduh sertifikat kelulusan Anda dari satu dashboard terpadu yang aman dan mudah digunakan.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4">
+            <a href="https://s-tools.id/edu/Edu25.html" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-base px-8 py-4 rounded-2xl shadow-xl transition flex items-center justify-center gap-2">
+              <i class="ph-bold ph-monitor-play"></i> Buka Dashboard Saya
+            </a>
+            <a href="#panduan" class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold text-base px-8 py-4 rounded-2xl shadow-sm transition flex items-center justify-center gap-2">
+              <i class="ph-bold ph-question"></i> Cara Masuk Kelas
+            </a>
+          </div>
+        </div>
+        
+        <div class="relative hidden lg:block">
+          <div class="absolute inset-0 bg-gradient-to-tr from-indigo-100 to-emerald-50 rounded-[3rem] transform rotate-3 scale-105 z-0"></div>
+          <div class="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-2xl relative z-10 transform -rotate-2 hover:rotate-0 transition-transform duration-500">
+            <div class="flex items-center gap-4 mb-6 border-b border-slate-100 pb-6">
+              <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner"><i class="ph-fill ph-check-circle text-3xl"></i></div>
+              <div>
+                <h3 class="font-extrabold text-slate-800 text-lg">Ujian Akhir Lulus!</h3>
+                <p class="text-sm font-bold text-emerald-600">Nilai Anda: 100/100</p>
+              </div>
+            </div>
+            <div class="space-y-4 mb-6">
+              <div class="h-12 bg-slate-50 rounded-xl border border-slate-100 flex items-center px-4 gap-3"><i class="ph-fill ph-video text-indigo-400"></i><div class="h-2 w-32 bg-slate-200 rounded-full"></div></div>
+              <div class="h-12 bg-slate-50 rounded-xl border border-slate-100 flex items-center px-4 gap-3"><i class="ph-fill ph-video text-indigo-400"></i><div class="h-2 w-48 bg-slate-200 rounded-full"></div></div>
+              <div class="h-12 bg-slate-50 rounded-xl border border-slate-100 flex items-center px-4 gap-3"><i class="ph-fill ph-file-text text-amber-400"></i><div class="h-2 w-24 bg-slate-200 rounded-full"></div></div>
+            </div>
+            <button class="w-full bg-indigo-600 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-200">
+              <i class="ph-bold ph-download-simple"></i> Unduh Sertifikat Resmi
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-black text-slate-900 mb-4">Pengalaman Belajar Tanpa Hambatan</h2>
+        <p class="text-slate-500 font-medium">Sistem dirancang agar Anda bisa fokus menyerap ilmu dari Instruktur Anda.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+          <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4"><i class="ph-fill ph-play-circle text-2xl"></i></div>
+          <h3 class="font-extrabold text-slate-800 mb-2">Materi Terstruktur</h3>
+          <p class="text-sm text-slate-600 leading-relaxed">Tonton video pembelajaran langkah demi langkah. Sistem akan menyimpan progres belajar Anda secara otomatis.</p>
+        </div>
+        <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+          <div class="w-12 h-12 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center mb-4"><i class="ph-fill ph-chats text-2xl"></i></div>
+          <h3 class="font-extrabold text-slate-800 mb-2">Diskusi Interaktif</h3>
+          <p class="text-sm text-slate-600 leading-relaxed">Ada yang kurang jelas? Tanyakan langsung di forum diskusi kelas dan dapatkan jawaban dari pengajar Anda.</p>
+        </div>
+        <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+          <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-4"><i class="ph-fill ph-exam text-2xl"></i></div>
+          <h3 class="font-extrabold text-slate-800 mb-2">Evaluasi Terpadu</h3>
+          <p class="text-sm text-slate-600 leading-relaxed">Uji pemahaman Anda dengan soal-soal pilihan ganda interaktif di akhir sesi pembelajaran kelas.</p>
+        </div>
+        <div class="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+          <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-4"><i class="ph-fill ph-certificate text-2xl"></i></div>
+          <h3 class="font-extrabold text-slate-800 mb-2">Sertifikat Kelulusan</h3>
+          <p class="text-sm text-slate-600 leading-relaxed">Selesaikan kelas dan lulus ujian untuk mendapatkan sertifikat digital resmi yang diakui oleh instruktur Anda.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="panduan" class="py-20 bg-slate-900 text-white overflow-hidden relative">
+    <div class="absolute top-0 right-0 w-96 h-96 bg-indigo-600 rounded-full blur-[100px] opacity-20 pointer-events-none"></div>
+    <div class="max-w-7xl mx-auto px-6 relative z-10">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl lg:text-4xl font-black mb-4">Bagaimana Cara Mengakses Kelas?</h2>
+        <p class="text-slate-400 font-medium max-w-2xl mx-auto">EduLearn adalah platform tertutup (private). Anda memerlukan akses langsung dari Instruktur untuk bisa mulai belajar.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-slate-800/50 p-8 rounded-3xl border border-slate-700 relative">
+          <div class="absolute -top-5 -left-5 w-12 h-12 bg-indigo-500 rounded-xl font-black flex items-center justify-center text-xl shadow-lg">1</div>
+          <div class="w-16 h-16 bg-slate-700 rounded-2xl flex items-center justify-center mb-6 text-indigo-400"><i class="ph-fill ph-link text-3xl"></i></div>
+          <h3 class="text-xl font-bold mb-3">Dapatkan Tautan</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Instruktur Anda akan memberikan <b>Tautan Undangan (Link)</b> khusus. Tautan ini bersifat rahasia dan hanya berlaku untuk Anda.</p>
+        </div>
+        
+        <div class="bg-slate-800/50 p-8 rounded-3xl border border-slate-700 relative">
+          <div class="absolute -top-5 -left-5 w-12 h-12 bg-indigo-500 rounded-xl font-black flex items-center justify-center text-xl shadow-lg">2</div>
+          <div class="w-16 h-16 bg-slate-700 rounded-2xl flex items-center justify-center mb-6 text-emerald-400"><i class="ph-fill ph-shield-check text-3xl"></i></div>
+          <h3 class="text-xl font-bold mb-3">Verifikasi S-Tools ID</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Saat mengklik link, Anda akan diminta <b>Login/Daftar di S-Tools ID</b> menggunakan email yang sama saat Anda mendaftar ke Instruktur.</p>
+        </div>
+
+        <div class="bg-slate-800/50 p-8 rounded-3xl border border-slate-700 relative">
+          <div class="absolute -top-5 -left-5 w-12 h-12 bg-indigo-500 rounded-xl font-black flex items-center justify-center text-xl shadow-lg">3</div>
+          <div class="w-16 h-16 bg-slate-700 rounded-2xl flex items-center justify-center mb-6 text-amber-400"><i class="ph-fill ph-monitor-play text-3xl"></i></div>
+          <h3 class="text-xl font-bold mb-3">Mulai Belajar</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Selesai! Sistem akan otomatis mengenali Anda dan kelas akan langsung terbuka di dalam Dashboard EduLearn Anda kapan saja.</p>
+        </div>
+      </div>
+
+      <div class="mt-16 text-center">
+        <a href="https://s-tools.id/app/index.html" class="inline-block bg-white text-slate-900 font-bold px-8 py-4 rounded-xl shadow-lg hover:bg-slate-100 transition transform active:scale-95">
+          Login ke S-Tools ID Sekarang
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="bg-slate-50 py-12 border-t border-slate-200 text-center">
+    <div class="flex items-center justify-center text-indigo-600 mb-4"><i class="ph-fill ph-book-open text-3xl"></i></div>
+    <h3 class="text-xl font-black text-slate-900 mb-2">EduLearn Student</h3>
+    <p class="text-slate-500 text-sm mb-8 font-medium">Platform LMS Private Terintegrasi S-Tools ID</p>
+    <p class="text-xs text-slate-400 font-mono tracking-widest">© 2026 SENRIMA MARGASANDY</p>
+  </footer>
+
+</body>
+</html>
