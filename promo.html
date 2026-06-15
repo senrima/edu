@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Katalog Kelas Unggulan - EduLearn Marketplace</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .hero-gradient { background: radial-gradient(circle at top right, #e0e7ff, transparent 45%), radial-gradient(circle at bottom left, #ecfdf5, transparent 45%); }
+  </style>
+</head>
+<body class="text-slate-800 antialiased overflow-x-hidden">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const IconWrapper = ({ name, size = 24, className = "", weight="regular" }) => (
+      <i className={`ph${weight === 'fill' ? '-fill' : weight === 'duotone' ? '-duotone' : weight === 'bold' ? '-bold' : ''} ph-${name} ${className}`} style={{ fontSize: size }}></i>
+    );
+    const Loader2 = (p) => <IconWrapper name="spinner" className="animate-spin" {...p} />;
+
+    // Dekripsi Database EduLearn Terpusat
+const _0xDbChunks = [
+    "aHR0cHM6Ly9zY3JpcHQuZ29v",
+    "Z2xlLmNvbS9tYWNyb3Mvcy9B",
+    "S2Z5Y2J4VnpuNE1rUGNqcTNn",
+    "NnhGSi1oOTFkNm9xSlc2UUZ3",
+    "SmUwa0t6aTBUUXJIUmwzTW5Q",
+    "X0RtZjVJdjN4X1dzOEhvTXYv",
+    "ZXhlYw=="
+];
+    const DEFAULT_SHEETS_URL = atob(_0xDbChunks.join(""));
+
+    function App() {
+      const [loading, setLoading] = React.useState(true);
+      const [error, setError] = React.useState("");
+      const [searchTerm, setSearchTerm] = React.useState("");
+      
+      const [displayCourses, setDisplayCourses] = React.useState([]);
+      const [rawAdmins, setRawAdmins] = React.useState([]);
+
+      React.useEffect(() => {
+          fetch(DEFAULT_SHEETS_URL + '?nocache=' + new Date().getTime())
+            .then(res => { if(!res.ok) throw new Error(); return res.json(); })
+            .then(data => {
+                setRawAdmins(data.admins || []);
+                
+                // FILTER STRATEGIS:
+                // 1. Ambil semua kelas yang aktif (isActive === true)
+                // 2. Cocokkan pengajarnya di tabel admins
+                // 3. Hanya tampilkan jika pengajar berstatus premium (allowPromo === true atau bernilai string 'true')
+                const activePremiumCourses = (data.courses || []).filter(course => {
+                    if (!course.isActive) return false;
+                    
+                    const instructor = (data.admins || []).find(a => String(a.id) === String(course.authorId));
+                    // Memastikan instruktur ditemukan dan diizinkan masuk ke katalog promo publik
+                    return instructor && (instructor.allowPromo === true || String(instructor.allowPromo).toLowerCase() === 'true');
+                }).map(course => {
+                    const inst = (data.admins || []).find(a => String(a.id) === String(course.authorId));
+                    return {
+                        ...course,
+                        instName: inst?.name || course.instructor,
+                        instWa: inst?.whatsapp || "",
+                        totalModules: course.modules ? course.modules.length : 0
+                    };
+                });
+
+                setDisplayCourses(activePremiumCourses);
+                setLoading(false);
+            })
+            .catch(() => {
+                setError("Gagal memuat katalog kelas publik. Mohon coba beberapa saat lagi.");
+                setLoading(false);
+            });
+      }, []);
+
+      // Filter Pencarian Dinamis (Berdasarkan Judul Kelas atau Nama Instruktur)
+      const filteredCourses = displayCourses.filter(c => 
+          c.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+          c.instName.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      if (loading) {
+          return (
+              <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+                  <Loader2 size={40} className="text-indigo-600 mb-4" />
+                  <p className="text-sm font-bold text-slate-500 tracking-wide">Menyusun Etalase Kelas Unggulan...</p>
+              </div>
+          );
+      }
+
+      return (
+          <div className="min-h-screen bg-slate-50 flex flex-col justify-between overflow-x-hidden hero-gradient">
+              
+              {/* Header / Navigation */}
+              <nav class="w-full bg-white/80 backdrop-blur-md border-b sticky top-0 z-50">
+                <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+                  <div class="flex items-center text-indigo-600">
+                    <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center mr-3 shadow-inner">
+                      <IconWrapper name="sparkle" size={22} weight="fill" />
+                    </div>
+                    <span class="font-extrabold text-xl tracking-tight text-slate-900">EduLearn <span class="text-xs bg-indigo-600 text-white px-2 py-0.5 rounded-full font-bold ml-1 uppercase">Showcase</span></span>
+                  </div>
+                  <a href="page-siswa.html" class="text-sm font-bold text-slate-600 hover:text-indigo-600 transition flex items-center gap-1.5"><IconWrapper name="arrow-left" size={16} weight="bold" /> Kembali ke Portal</a>
+                </div>
+              </nav>
+
+              {/* Hero Banner Section */}
+              <header className="max-w-7xl mx-auto px-6 pt-16 pb-12 text-center w-full">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-xs mb-4 shadow-sm">
+                      <IconWrapper name="crown" size={14} weight="fill" className="text-amber-500" /> Kelas Premium & Terverifikasi
+                  </div>
+                  <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight mb-4 max-w-3xl mx-auto">
+                      Jelajahi Kelas Private Terbaik Bersama <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">Para Ahlinya</span>
+                  </h1>
+                  <p className="text-sm md:text-base text-slate-500 max-w-xl mx-auto font-medium mb-8 leading-relaxed">
+                      Pilih akademi online eksklusif Anda. Pelajari modul video berkualitas, lakukan konsultasi langsung via WhatsApp, dan dapatkan sertifikat resmi.
+                  </p>
+
+                  {/* Search Bar Input */}
+                  <div className="max-w-md mx-auto relative shadow-sm">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 pointer-events-none">
+                          <IconWrapper name="magnifying-glass" size={18} weight="bold" />
+                      </div>
+                      <input 
+                          type="text" 
+                          value={searchTerm}
+                          onChange={e => setSearchTerm(e.target.value)}
+                          placeholder="Cari materi pembelajaran atau nama mentor..." 
+                          className="w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 transition-all font-medium text-sm text-slate-800"
+                      />
+                  </div>
+              </header>
+
+              {/* Main Catalog Grid */}
+              <main className="max-w-7xl mx-auto px-6 pb-24 flex-1 w-full">
+                  {error ? (
+                      <div className="bg-red-50 border border-red-100 p-5 rounded-2xl text-center text-sm font-bold text-red-600 max-w-md mx-auto">{error}</div>
+                  ) : filteredCourses.length === 0 ? (
+                      <div className="text-center py-20 bg-white/60 backdrop-blur-sm rounded-[2rem] border-2 border-dashed border-slate-200 max-w-xl mx-auto shadow-inner">
+                          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mx-auto mb-4">
+                              <IconWrapper name="book-open" size={28} />
+                          </div>
+                          <h4 className="font-extrabold text-slate-700 text-lg">Belum Ada Kelas Unggulan</h4>
+                          <p className="text-slate-400 text-xs mt-1 max-w-xs mx-auto">Tidak ada materi premium terverifikasi yang cocok dengan kata kunci pencarian Anda saat ini.</p>
+                      </div>
+                  ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                          {filteredCourses.map(course => (
+                              <div key={course.id} className="bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between h-full p-6 md:p-8 overflow-hidden relative group">
+                                  <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -mr-6 -mt-6 z-0 transition-transform group-hover:scale-105"></div>
+                                  
+                                  <div className="relative z-10 flex-1">
+                                      {/* Course Meta */}
+                                      <div className="flex items-center gap-2 mb-4">
+                                          <span className="font-mono text-xs font-black tracking-widest bg-indigo-50 text-indigo-700 px-3 py-1 rounded-lg uppercase border border-indigo-100 shadow-sm">{course.code}</span>
+                                          <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-md flex items-center gap-1"><IconWrapper name="video-camera" size={12} weight="fill"/> {course.totalModules} Sesi Modul</span>
+                                      </div>
+
+                                      {/* Title */}
+                                      <h3 className="text-xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors leading-tight mb-2 pr-12">{course.title}</h3>
+                                      
+                                      {/* Mentor Profile */}
+                                      <div className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-6 uppercase tracking-wider">
+                                          <IconWrapper name="user-circle" size={16} weight="fill" className="text-indigo-400" />
+                                          <span>Mentor: {course.instName}</span>
+                                      </div>
+                                  </div>
+
+                                  {/* Call to Action Buttons */}
+                                  <div className="space-y-2 relative z-10 pt-4 border-t border-slate-100 mt-6">
+                                      {course.instWa ? (
+                                          <a 
+                                              href={`https://wa.me/${course.instWa.replace(/[^0-9]/g, '')}?text=Halo%20Mentor%20${encodeURIComponent(course.instName)},%20saya%20tertarik%20untuk%20bergabung%20dengan%20kelas%20EduLearn%20Anda:%20*${encodeURIComponent(course.title)}*`}
+                                              target="_blank" 
+                                              rel="noopener noreferrer" 
+                                              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl text-sm font-black flex justify-center items-center gap-2 shadow-md shadow-emerald-100 transition transform active:scale-95"
+                                          >
+                                              <IconWrapper name="whatsapp-logo" size={18} weight="fill" />
+                                              <span>Hubungi via WhatsApp</span>
+                                          </a>
+                                      ) : (
+                                          <button disabled className="w-full bg-slate-100 text-slate-400 py-3.5 rounded-xl text-sm font-bold flex justify-center items-center gap-2 cursor-not-allowed">
+                                              <IconWrapper name="whatsapp-logo" size={18} />
+                                              <span>WA Mentor Belum Set</span>
+                                          </button>
+                                      )}
+                                  </div>
+
+                              </div>
+                          ))}
+                      </div>
+                  )}
+              </main>
+
+              {/* Footer */}
+              <footer className="w-full bg-slate-900 py-10 text-center text-white text-xs font-mono tracking-widest shrink-0 border-t border-slate-800">
+                  © 2026 S-TOOLS.ID • EDULEARN COMMERCIAL MARKETPLACE
+              </footer>
+
+          </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
