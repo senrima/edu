@@ -1,3 +1,336 @@
-<body style="margin:0; padding:0;">
-    <iframe src="https://script.google.com/macros/s/AKfycbwhs-4cXAOQPT7vjmqWmbOCuNL0T2Ef6poIsg_vDG_fYz6OGUzC1ve1plnfEebLL7pY/exec" style="width:100%; height:100vh; border:none;"></iframe>
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ruang Belajar Siswa - EduLearn by SenTools</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const API_ENDPOINT = "https://api.s-tools.id";
+    const LOGIN_PORTAL_URL = "https://s-tools.id/app/index.html";
+    const _0xDbChunks = ["aHR0cHM6Ly9zY3JpcHQuZ29v","Z2xlLmNvbS9tYWNyb3Mvcy9B","S2Z5Y2J3aHVvNFBmWTZvWnRk","bk5kRHpTdEFLOXlQNEszOW9P","V1JuNHpwSTk2VTA5M0tfcFVL","VllSbUV2V2djc1dPRVNIYkcv","ZXhlYw=="];
+    const DEFAULT_SHEETS_URL = atob(_0xDbChunks.join(""));
+
+    const IconWrapper = ({ name, size = 24, className = "", weight="regular" }) => <i className={`ph${weight === 'fill' ? '-fill' : weight === 'duotone' ? '-duotone' : weight === 'bold' ? '-bold' : ''} ph-${name} ${className}`} style={{ fontSize: size }}></i>;
+    const PlayCircle = (p) => <IconWrapper name="play-circle" {...p} />;
+    const Download = (p) => <IconWrapper name="download" {...p} />;
+    const Menu = (p) => <IconWrapper name="list" {...p} />;
+    const X = (p) => <IconWrapper name="x" {...p} />;
+    const BookOpen = (p) => <IconWrapper name="book-open" {...p} />;
+    const Video = (p) => <IconWrapper name="video" {...p} />;
+    const CheckCircle2 = (p) => <IconWrapper name="check-circle" {...p} />;
+    const ChevronRight = (p) => <IconWrapper name="caret-right" {...p} />;
+    const MessageSquare = (p) => <IconWrapper name="chat-circle" {...p} />;
+    const Lock = (p) => <IconWrapper name="lock" {...p} />;
+    const LogOut = (p) => <IconWrapper name="sign-out" {...p} />;
+    const Award = (p) => <IconWrapper name="medal" {...p} />;
+    const Bell = (p) => <IconWrapper name="bell" {...p} />;
+    const Book = (p) => <IconWrapper name="book" {...p} />;
+    const ArrowLeft = (p) => <IconWrapper name="arrow-left" {...p} />;
+    const RefreshCw = (p) => <IconWrapper name="arrows-clockwise" {...p} />;
+    const UserIcon = (p) => <IconWrapper name="user" {...p} />;
+    const ShieldCheck = (p) => <IconWrapper name="shield-check" {...p} />;
+    const Coffee = (p) => <IconWrapper name="coffee" {...p} />;
+    const CheckSquareOffset = (p) => <IconWrapper name="check-square-offset" {...p} />;
+    const Sparkle = (p) => <IconWrapper name="sparkle" {...p} />;
+
+    const generateCertHtml = (pName, cTitle, instName, graduatedAt) => {
+        let formattedDate = graduatedAt ? new Date(graduatedAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        return `<div style="text-align:center; padding:40px; border:4px double #0f172a;"><h1>EduLearn by SenTools</h1><h2>Sertifikat Kelulusan</h2><p>Diberikan kepada:</p><h3>${pName}</h3><p>Atas penyelesaian kursus: ${cTitle}</p><p>Tanggal: ${formattedDate}</p></div>`;
+    };
+
+    function App() {
+      const [dbReady, setDbReady] = React.useState(false);
+      const [appMode, setAppMode] = React.useState('auth');
+      const [authStatus, setAuthStatus] = React.useState("Menginisiasi Keamanan Sistem...");
+      
+      const [courses, setCourses] = React.useState([]);
+      const [participants, setParticipants] = React.useState([]);
+      const [enrollments, setEnrollments] = React.useState([]);
+      const [admins, setAdmins] = React.useState([]);
+      
+      const [session, setSession] = React.useState(null);
+      const [activeCourse, setActiveCourse] = React.useState(null);
+      const [activeModule, setActiveModule] = React.useState(null);
+      const [classroomMode, setClassroomMode] = React.useState('video');
+      const [studentAnswers, setStudentAnswers] = React.useState({});
+      const [currentQuestionIndex, setCurrentQuestionIndex] = React.useState(0);
+      const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+      const [commentText, setCommentText] = React.useState("");
+
+      React.useEffect(() => {
+        const fetchUrl = DEFAULT_SHEETS_URL + '?nocache=' + new Date().getTime();
+        fetch(fetchUrl)
+          .then(res => res.json())
+          .then(data => {
+              if(data.courses) setCourses(data.courses);
+              if(data.participants) setParticipants(data.participants);
+              if(data.enrollments) setEnrollments(data.enrollments);
+              if(data.admins) setAdmins(data.admins);
+              setDbReady(true);
+          }).catch(e => { setAuthStatus("Database gagal dimuat."); });
+      }, []);
+
+      React.useEffect(() => {
+          if (appMode === 'auth' && dbReady) {
+              const verifySSO = async () => {
+                  const localToken = localStorage.getItem('sessionToken');
+                  if (!localToken) {
+                      window.location.href = LOGIN_PORTAL_URL + "?redirect=" + encodeURIComponent(window.location.href);
+                      return;
+                  }
+                  try {
+                      const response = await fetch(API_ENDPOINT, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'x-auth-token': localToken },
+                          body: JSON.stringify({ kontrol: 'proteksi', action: 'getDashboardData' })
+                      });
+                      const result = await response.json();
+                      
+                      if (result.status === 'success' && result.userData) {
+                          const ssoEmail = String(result.userData.email).trim().toLowerCase();
+                          const partFound = participants.find(p => p.email.trim().toLowerCase() === ssoEmail);
+                          
+                          if (partFound) {
+                              setSession({ role: 'participant', data: partFound });
+                              setAppMode('part_dashboard');
+                          } else {
+                              setAuthStatus(`Akses ditolak: Email (${ssoEmail}) belum didaftarkan sebagai siswa.`);
+                          }
+                      } else { throw new Error("Sesi tidak valid"); }
+                  } catch (error) {
+                      localStorage.removeItem('sessionToken');
+                      window.location.href = LOGIN_PORTAL_URL + "?redirect=" + encodeURIComponent(window.location.href);
+                  }
+              };
+              verifySSO();
+          }
+      }, [appMode, dbReady, participants]);
+
+      const formatVideoUrl = (rawUrl) => {
+          if (!rawUrl) return "";
+          let url = rawUrl.trim();
+          try {
+            if (url.includes('youtu.be/')) return `https://www.youtube.com/embed/${url.split('youtu.be/')[1].split('?')[0]}`;
+            if (url.includes('youtube.com/watch')) return `https://www.youtube.com/embed/${new URL(url).searchParams.get('v')}`;
+          } catch (e) {}
+          return url;
+      };
+
+      const calcProgress = (enr, crs) => { 
+          if (!crs || !crs.modules || crs.modules.length === 0 || !enr) return 0; 
+          if (enr.isGraduated) return 100;
+          let compList = Array.isArray(enr.completedModules) ? enr.completedModules : [];
+          if (typeof enr.completedModules === 'string') { try { compList = JSON.parse(enr.completedModules); } catch (e) {} }
+          return Math.round((compList.length / crs.modules.length) * 100); 
+      };
+
+      const execDbAction = async (payload) => {
+          const postUrl = DEFAULT_SHEETS_URL + '?nocache=' + new Date().getTime();
+          fetch(postUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) }).catch(console.error);
+      };
+
+      const jumpToClassroom = (courseId) => {
+          const course = courses.find(c => c.id === courseId);
+          if (!course.isActive) return alert("Kelas telah ditutup.");
+          
+          let myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(courseId));
+          let compList = Array.isArray(myEnr.completedModules) ? myEnr.completedModules : [];
+          
+          let modToOpen = course.modules.find(m => !compList.includes(m.id)) || course.modules[course.modules.length - 1];
+          setActiveCourse(course); 
+          setActiveModule(modToOpen);
+          setClassroomMode(myEnr.isGraduated ? 'result' : 'video');
+          setAppMode('classroom');
+      };
+
+      const handleCompleteModule = () => {
+          const cMods = activeCourse.modules; 
+          const cIdx = cMods.findIndex(m => m.id === activeModule.id); 
+          const isLast = cIdx === cMods.length - 1;
+          
+          let myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(activeCourse.id));
+          let compList = Array.isArray(myEnr.completedModules) ? myEnr.completedModules : [];
+          
+          if (!compList.includes(activeModule.id)) {
+              compList.push(activeModule.id);
+              const updatedE = enrollments.map(en => String(en.id) === String(myEnr.id) ? { ...en, completedModules: compList } : en);
+              setEnrollments(updatedE);
+              
+              execDbAction({ 
+                  admins, courses, participants, notifications: [], 
+                  enrollments: updatedE.map(enr => ({ ...enr, completedModules_json: JSON.stringify(enr.completedModules) })) 
+              });
+          }
+          if (!isLast) setActiveModule(cMods[cIdx + 1]); else setClassroomMode('exam');
+      };
+
+      const submitExam = () => {
+          let correct = 0; 
+          activeCourse.exam.questions.forEach((q, i) => { if(studentAnswers[i] === q.answer) correct++; });
+          const finalScore = correct * 10; 
+          const isPassed = finalScore >= activeCourse.exam.minScore;
+          
+          let myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(activeCourse.id));
+          const updatedE = enrollments.map(en => String(en.id) === String(myEnr.id) ? { ...en, examScore: finalScore, isGraduated: isPassed, graduatedAt: isPassed ? new Date().toISOString() : en.graduatedAt } : en);
+          
+          setEnrollments(updatedE);
+          execDbAction({ admins, courses, participants, notifications: [], enrollments: updatedE });
+          setClassroomMode('result');
+      };
+
+      const handleDownloadCert = () => {
+          const myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(activeCourse.id));
+          const certContent = generateCertHtml(session.data.name, activeCourse.title, activeCourse.instructor, myEnr.graduatedAt);
+          const blob = new Blob([certContent], { type: 'text/html' }); 
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a'); 
+          link.href = url; link.download = `Sertifikat-${activeCourse.title}.html`;
+          document.body.appendChild(link); link.click(); document.body.removeChild(link);
+      };
+
+      const handleLogout = () => {
+          setSession(null); 
+          localStorage.removeItem('sessionToken');
+          window.location.href = LOGIN_PORTAL_URL;
+      };
+
+      if (appMode === 'auth') {
+          return (
+              <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+                  <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md text-center">
+                      <ShieldCheck size={48} className="text-indigo-600 mx-auto animate-bounce mb-4" />
+                      <h1 className="text-xl font-bold">Verifikasi Siswa</h1>
+                      <p className="text-sm text-slate-500 mt-2">{authStatus}</p>
+                  </div>
+              </div>
+          );
+      }
+
+      if (appMode === 'part_dashboard') {
+          let myEnrs = enrollments.filter(e => String(e.participantId) === String(session.data.id));
+          return (
+              <div className="min-h-screen bg-slate-50 flex flex-col">
+                  <header className="bg-white p-4 border-b flex justify-between items-center shadow-sm">
+                      <div className="font-bold text-indigo-600 flex items-center"><BookOpen size={24} className="mr-2"/> EduLearn Siswa</div>
+                      <div className="flex items-center gap-4">
+                          <span className="text-sm font-bold">{session.data.name}</span>
+                          <button onClick={handleLogout} className="text-red-500"><LogOut size={20}/></button>
+                      </div>
+                  </header>
+                  <main className="p-6 max-w-5xl mx-auto w-full">
+                      <h2 className="text-2xl font-bold mb-6">Kelas Tersedia</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {myEnrs.map(enr => {
+                              const course = courses.find(c => String(c.id) === String(enr.courseId));
+                              if (!course) return null;
+                              return (
+                                  <div key={enr.id} className="bg-white p-6 rounded-2xl shadow border">
+                                      <h3 className="font-bold text-lg mb-2">{course.title}</h3>
+                                      <div className="w-full bg-slate-200 h-2 rounded-full mb-4">
+                                          <div className="bg-emerald-500 h-2 rounded-full" style={{width: `${calcProgress(enr, course)}%`}}></div>
+                                      </div>
+                                      <button onClick={() => jumpToClassroom(course.id)} className="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold">Buka Kelas</button>
+                                  </div>
+                              );
+                          })}
+                      </div>
+                  </main>
+              </div>
+          );
+      }
+
+      if (appMode === 'classroom') {
+          const myEnr = enrollments.find(e => String(e.participantId) === String(session.data.id) && String(e.courseId) === String(activeCourse.id));
+          
+          return (
+              <div className="min-h-screen flex flex-col bg-slate-50">
+                  <header className="bg-white p-4 border-b flex justify-between items-center shadow-sm">
+                      <h1 className="font-bold text-lg">{activeCourse.title}</h1>
+                      <button onClick={() => setAppMode('part_dashboard')} className="bg-slate-900 text-white px-4 py-2 rounded-lg font-bold text-sm">Kembali</button>
+                  </header>
+                  
+                  <div className="flex flex-1">
+                      <aside className="w-80 bg-white border-r p-4 hidden md:block">
+                          <h3 className="font-bold mb-4">Kurikulum</h3>
+                          <div className="space-y-2">
+                              {activeCourse.modules.map((mod, i) => (
+                                  <button key={mod.id} onClick={() => { setActiveModule(mod); setClassroomMode('video'); }} className={`w-full text-left p-3 rounded-xl border ${activeModule?.id === mod.id ? 'bg-indigo-50 border-indigo-200' : ''}`}>{i+1}. {mod.title}</button>
+                              ))}
+                              {calcProgress(myEnr, activeCourse) === 100 && (
+                                  <button onClick={() => setClassroomMode(myEnr.isGraduated ? 'result' : 'exam')} className="w-full p-3 bg-amber-100 text-amber-800 rounded-xl font-bold mt-4">Ujian Akhir</button>
+                              )}
+                          </div>
+                      </aside>
+                      
+                      <main className="flex-1 p-6">
+                          {classroomMode === 'video' && activeModule && (
+                              <div className="max-w-3xl mx-auto">
+                                  <iframe src={formatVideoUrl(activeModule.videoUrl)} className="w-full aspect-video rounded-xl shadow-lg mb-6" allowFullScreen></iframe>
+                                  <h2 className="text-2xl font-bold mb-2">{activeModule.title}</h2>
+                                  <p className="text-slate-600 mb-6">{activeModule.description}</p>
+                                  <button onClick={handleCompleteModule} className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold">Tandai Selesai</button>
+                              </div>
+                          )}
+
+                          {classroomMode === 'exam' && (
+                              <div className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow">
+                                  <h2 className="text-2xl font-bold mb-6">Soal {currentQuestionIndex + 1}</h2>
+                                  <p className="mb-6">{activeCourse.exam.questions[currentQuestionIndex].q}</p>
+                                  <div className="space-y-3">
+                                      {activeCourse.exam.questions[currentQuestionIndex].options.map((opt, i) => (
+                                          <button key={i} onClick={() => setStudentAnswers({...studentAnswers, [currentQuestionIndex]: i})} className={`w-full text-left p-4 border rounded-xl ${studentAnswers[currentQuestionIndex] === i ? 'bg-indigo-100 border-indigo-500' : ''}`}>{opt}</button>
+                                      ))}
+                                  </div>
+                                  <div className="mt-8 flex justify-between">
+                                      <button onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))} className="px-6 py-2 bg-slate-200 rounded-xl font-bold">Sebelumnya</button>
+                                      {currentQuestionIndex < activeCourse.exam.questions.length - 1 ? (
+                                          <button onClick={() => setCurrentQuestionIndex(prev => prev + 1)} className="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold">Selanjutnya</button>
+                                      ) : (
+                                          <button onClick={submitExam} className="px-6 py-2 bg-slate-900 text-white rounded-xl font-bold">Selesai Ujian</button>
+                                      )}
+                                  </div>
+                              </div>
+                          )}
+
+                          {classroomMode === 'result' && (
+                              <div className="max-w-lg mx-auto bg-white p-10 rounded-2xl shadow text-center mt-10">
+                                  <h2 className="text-3xl font-bold mb-4">{myEnr.isGraduated ? 'Selamat, Anda Lulus!' : 'Belum Lulus'}</h2>
+                                  <p className="text-xl mb-6">Skor: {myEnr.examScore}</p>
+                                  {myEnr.isGraduated ? (
+                                      <button onClick={handleDownloadCert} className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold w-full">Unduh Sertifikat</button>
+                                  ) : (
+                                      <button onClick={() => { setClassroomMode('exam'); setStudentAnswers({}); }} className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold w-full">Ulangi Ujian</button>
+                                  )}
+                              </div>
+                          )}
+                      </main>
+                  </div>
+              </div>
+          );
+      }
+      return null;
+    }
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
 </body>
+</html>
