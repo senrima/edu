@@ -195,7 +195,7 @@ const _0xDbChunks = [
           if (isAlreadyEnrolled) {
             setStatus({ type: "success", message: `Pemberitahuan: Anda memang sudah terdaftar aktif di kelas "${courseObj.title}". Mengalihkan Anda ke portal utama...` });
             setLoading(false);
-            setTimeout(() => { safeRedirect("Edu25.html"); }, 2000);
+            setTimeout(() => { safeRedirect("dashboard.html"); }, 2000);
             return;
           }
 
@@ -227,7 +227,7 @@ const _0xDbChunks = [
           });
 
           setStatus({ type: "success", message: `Pendaftaran berhasil! Kelas "${courseObj.title}" siap digunakan. Mengalihkan ke aplikasi...` });
-          setTimeout(() => { safeRedirect("Edu25.html"); }, 3000);
+          setTimeout(() => { safeRedirect("dashboard.html"); }, 3000);
 
         } catch (error) {
           setStatus({ type: "error", message: error.message });
