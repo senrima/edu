@@ -180,7 +180,7 @@ const _0xDbChunks = [
             
             if (result.status === "exist") {
                 setStatus({ type: "success", message: `Pemberitahuan: Anda memang sudah terdaftar aktif di kelas ini. Mengalihkan Anda ke portal utama...` });
-                setTimeout(() => { safeRedirect("Edu25.html"); }, 2000);
+                setTimeout(() => { safeRedirect("page-siswa.html"); }, 2000);
                 return;
             }
 
@@ -194,7 +194,7 @@ const _0xDbChunks = [
                 });
 
                 setStatus({ type: "success", message: `Pendaftaran berhasil! Kelas "${result.courseTitle}" siap digunakan. Mengalihkan ke aplikasi...` });
-                setTimeout(() => { safeRedirect("Edu25.html"); }, 3000);
+                setTimeout(() => { safeRedirect("page-siswa.html"); }, 3000);
             }
 
         } catch (error) {
