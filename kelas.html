@@ -76,7 +76,7 @@ const _0xDbChunks = [
           const targetUsername = (queryParams.get("instructor") || "").trim();
 
           if (!targetUsername) {
-              setError({ type: "invalid_url", message: "Tautan tidak valid. Format yang benar: promo.html?instructor=username" });
+              setError({ type: "invalid_url", message: "Tautan tidak valid. Format yang benar: kelas.html?instructor=username" });
               setLoading(false);
               return;
           }
@@ -144,7 +144,7 @@ const _0xDbChunks = [
                       </div>
                       <h2 className="text-2xl font-black text-slate-900 mb-3">{error.type === 'locked' ? 'Akses Terkunci' : 'Terjadi Kesalahan'}</h2>
                       <p className="text-slate-500 text-sm font-medium leading-relaxed mb-8">{error.message}</p>
-                      <a href="page.html" className="inline-block w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl transition shadow-md">Kembali ke Beranda</a>
+                      <a href="page-instruktur.html" className="inline-block w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl transition shadow-md">Kembali ke Beranda</a>
                   </div>
               </div>
           );
