@@ -920,14 +920,14 @@ const _0xDbChunks = [
         );
       };
 
-      const PricingModal = () => {
+const PricingModal = () => {
           if (!showPricingModal) return null;
           
           const getPaymentLink = (amount, item) => {
               const user = admins.find(a => String(a.id) === String(session.data.id)) || session.data;
               const email = encodeURIComponent(user.email || `${user.username}@edulearn.local`);
               const name = encodeURIComponent(user.name || user.username);
-              return `https://s-tools.id/payment/index.html?amount=${amount}&item=${encodeURIComponent(item)}&kode_aplikasi=APP-STOOLS&email=${email}&name=${name}`;
+              return `https://s-tools.id/payment/index.html?amount=${amount}&item=${encodeURIComponent(item)}&kode_aplikasi=APP-EDULEARN&email=${email}&name=${name}`;
           };
 
           return (
@@ -941,47 +941,55 @@ const _0xDbChunks = [
                       
                       <div className="p-6 md:p-10 overflow-y-auto bg-slate-50 flex-1">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto items-stretch">
+                              {/* PAKET STARTER */}
                               <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm flex flex-col relative overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-lg">
                                   <h3 className="text-xl font-bold text-slate-800 text-center mb-4">Paket Starter</h3>
                                   <div className="text-center mb-6">
                                       <span className="text-3xl font-black text-slate-900">Rp 50.000</span>
-                                      <p className="text-xs text-slate-400 mt-1 font-medium">Pembayaran sekali bayar (One-Time)</p>
+                                      <p className="text-xs text-slate-400 mt-1 font-medium">Sekali bayar (One-Time)</p>
                                   </div>
                                   <div className="space-y-4 flex-1 mb-8 text-sm font-bold text-slate-700">
                                       <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +5 Kelas</p>
                                       <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +50 Siswa</p>
+                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Link Pendaftaran Siswa</p>
                                       <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Akses Server Selamanya</p>
                                   </div>
                                   <a href={getPaymentLink(50000, "Paket Starter EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-md">Pilih Paket Starter <ChevronRight size={16} weight="bold"/></a>
                               </div>
 
+                              {/* PAKET PRO */}
                               <div className="bg-indigo-50/50 rounded-3xl p-6 md:p-8 border-2 border-indigo-500 shadow-xl flex flex-col relative overflow-hidden transition-transform hover:-translate-y-1 transform md:scale-105 z-10">
                                   <div className="absolute top-0 inset-x-0 flex justify-center"><span className="bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-b-xl shadow-sm">Paling Laris</span></div>
                                   <h3 className="text-xl font-bold text-slate-800 text-center mb-4 mt-4 md:mt-2">Paket Pro</h3>
                                   <div className="text-center mb-6">
                                       <span className="text-4xl font-black text-slate-900">Rp 120.000</span>
-                                      <p className="text-xs text-slate-500 mt-1 font-medium">Pembayaran sekali bayar (One-Time)</p>
+                                      <p className="text-xs text-slate-500 mt-1 font-medium">Sekali bayar (One-Time)</p>
                                   </div>
                                   <div className="space-y-4 flex-1 mb-8 text-sm font-bold text-slate-800">
                                       <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-indigo-600 shrink-0" weight="fill"/> Tambahan +15 Kelas</p>
                                       <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-indigo-600 shrink-0" weight="fill"/> Tambahan +200 Siswa</p>
-                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-indigo-600 shrink-0" weight="fill"/> Etalase Katalog Promo Publik</p>
+                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-indigo-600 shrink-0" weight="fill"/> Link Pendaftaran Siswa</p>
+                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-indigo-600 shrink-0" weight="fill"/> Akses Server Selamanya</p>
+                                      <p className="flex items-center gap-3 text-slate-400"><X size={20} className="text-slate-300 shrink-0" weight="bold"/> <span className="line-through">Etalase Promo Publik</span></p>
                                   </div>
                                   <a href={getPaymentLink(120000, "Paket Pro EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-lg shadow-indigo-200">Pilih Paket Pro <ChevronRight size={16} weight="bold"/></a>
                               </div>
 
+                              {/* PAKET ENTERPRISE */}
                               <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm flex flex-col relative overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-lg">
                                   <h3 className="text-xl font-bold text-slate-800 text-center mb-4">Paket Enterprise</h3>
                                   <div className="text-center mb-6">
                                       <span className="text-3xl font-black text-slate-900">Rp 250.000</span>
-                                      <p className="text-xs text-slate-400 mt-1 font-medium">Pembayaran sekali bayar (One-Time)</p>
+                                      <p className="text-xs text-slate-400 mt-1 font-medium">Sekali bayar (One-Time)</p>
                                   </div>
                                   <div className="space-y-4 flex-1 mb-8 text-sm font-bold text-slate-700">
                                       <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +50 Kelas</p>
                                       <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +1000 Siswa</p>
+                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Link Pendaftaran Siswa</p>
+                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Akses Server Selamanya</p>
                                       <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Etalase Katalog Promo Publik</p>
                                   </div>
-                                  <a href={getPaymentLink(250000, "Paket Enterprise EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-md">Pilih Paket Enterprise <ChevronRight size={16} weight="bold"/></a>
+                                  <a href={getPaymentLink(250000, "Paket Enterprise EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-md">Pilih Enterprise <ChevronRight size={16} weight="bold"/></a>
                               </div>
                           </div>
                       </div>
@@ -1589,8 +1597,26 @@ const _0xDbChunks = [
                   <h2 className="font-extrabold text-slate-800 mb-3 text-2xl flex items-center"><UserIcon size={28} className="mr-3 text-indigo-600" /> Profil Publik & Apresiasi</h2>
                   <p className="text-sm text-slate-500 mb-8 leading-relaxed">Lengkapi nomor WhatsApp untuk keperluan fitur Promo Katalog Publik dan link Apresiasi untuk layar kelulusan siswa.</p>
                   
+                  {/* BOX BARU: LINK KATALOG PROMO */}
+                  <div className="bg-indigo-50 p-6 md:p-8 rounded-3xl border border-indigo-100 mb-6">
+                      <label className="text-xs font-bold text-indigo-800 uppercase tracking-wider mb-3 block">
+                          <IconWrapper name="storefront" size={16} weight="fill" className="inline mr-1"/> Link Etalase Katalog Promo Anda
+                      </label>
+                      <div className="flex flex-col sm:flex-row gap-3">
+                          <input type="text" readOnly value={`https://s-tools.id/edu/kelas.html?instructor=${session.data.username}`} className="flex-1 p-4 bg-white border border-indigo-200 rounded-2xl text-indigo-900 font-medium text-sm outline-none" />
+                          <div className="flex gap-2 shrink-0">
+                              <button type="button" onClick={() => { navigator.clipboard.writeText(`https://s-tools.id/edu/kelas.html?instructor=${session.data.username}`); showToast("Link Katalog disalin!"); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-4 rounded-2xl font-bold transition flex items-center justify-center gap-2 shadow-md flex-1">
+                                  <IconWrapper name="copy" size={18} weight="bold" /> <span className="hidden sm:inline">Salin</span>
+                              </button>
+                              <a href={`https://s-tools.id/edu/kelas.html?instructor=${session.data.username}`} target="_blank" rel="noopener noreferrer" className="bg-white hover:bg-slate-50 text-indigo-600 border border-indigo-200 px-5 py-4 rounded-2xl font-bold transition flex items-center justify-center gap-2 shadow-sm flex-1">
+                                  <IconWrapper name="arrow-square-out" size={18} weight="bold" /> <span className="hidden sm:inline">Buka</span>
+                              </a>
+                          </div>
+                      </div>
+                      <p className="text-[10px] text-indigo-500 mt-3 font-medium leading-relaxed">* Fitur Etalase Publik ini hanya akan bisa diakses dan memunculkan kelas Anda jika Anda berlangganan <b>Paket Enterprise</b>.</p>
+                  </div>
+                  
                   <form onSubmit={handleUpdateProfile} className="space-y-6">
-                      
                       {/* Form Input WhatsApp */}
                       <div className="bg-emerald-50 p-6 md:p-8 rounded-3xl border border-emerald-100">
                           <label className="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-3 block"><IconWrapper name="whatsapp-logo" size={16} weight="fill" className="inline mr-1"/> Nomor WhatsApp Interaksi</label>
