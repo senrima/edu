@@ -116,8 +116,8 @@ const _0xDbChunks = [
                 isSuper: false,
                 isActive: true,
                 donationLink: "", info1: "", showInfo1: false, info2: "", showInfo2: false, info3: "", showInfo3: false,
-                maxCourses: 1, 
-                maxParticipants: 5,
+                maxCourses: 2, 
+                maxParticipants: 25,
                 whatsapp: "",
                 allowPromo: false
             };
@@ -136,7 +136,7 @@ const _0xDbChunks = [
                     method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ emailAction: {
                         tujuan: ssoUser.email, subjek: "Lisensi Instruktur EduLearn Aktif", namaPengguna: newAdmin.name,
-                        isiPesanInti: `Selamat! Lisensi Instruktur Trial Anda (1 Kelas, 5 Siswa) telah aktif.<br><br><b>Username EduLearn Anda:</b> ${lowerUser}<br><br>Sekarang Anda bisa mulai membuat kelas, mengupload materi, dan mengundang siswa.` + emailHtml
+                        isiPesanInti: `Selamat! Lisensi Instruktur Trial Anda (2 Kelas, 25 Siswa) telah aktif.<br><br><b>Username EduLearn Anda:</b> ${lowerUser}<br><br>Sekarang Anda bisa mulai membuat kelas, mengupload materi, dan mengundang siswa.` + emailHtml
                     }}) 
                 }).catch(e=>console.log(e));
 
