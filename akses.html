@@ -2,35 +2,46 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Ujicoba Registrasi</title>
+  <title>Ujicoba Unggah R2</title>
 </head>
 <body>
-  <h2>Daftar Pengguna Baru</h2>
-  <form id="formDaftar">
-    <input type="text" id="username" placeholder="Nama Pengguna" required><br><br>
-    <input type="password" id="password" placeholder="Kata Sandi" required><br><br>
-    <button type="submit">Daftar</button>
+  <h2>Unggah Aset Digital ke R2</h2>
+  <form id="formUnggah">
+    <input type="file" id="pilihFile" required><br><br>
+    <button type="submit">Unggah File</button>
   </form>
   <p id="pesan" style="color: blue;"></p>
 
   <script>
-    document.getElementById('formDaftar').addEventListener('submit', async (e) => {
+    document.getElementById('formUnggah').addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+      const fileInput = document.getElementById('pilihFile');
+      const file = fileInput.files[0];
+      if (!file) return;
 
-      // Ganti URL di bawah ini dengan alamat Cloudflare Worker Anda
-      const urlWorker = "https://api-registrasi.senrima-ms.workers.dev";
+      // Ganti URL di bawah ini dengan URL Worker api-storage Anda sendiri
+      const urlWorkerR2 = "https://api-registrasi.senrima-ms.workers.dev/"; 
+      
+      // Menggabungkan URL Worker dengan nama file asli
+      const urlTujuan = urlWorkerR2 + file.name;
 
-      const response = await fetch(urlWorker, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
-      });
+      document.getElementById('pesan').innerText = "Sedang mengunggah...";
 
-      const result = await response.json();
-      document.getElementById('pesan').innerText = result.message;
+      try {
+        const response = await fetch(urlTujuan, {
+          method: "PUT",
+          body: file,
+          headers: {
+            "Content-Type": file.type
+          }
+        });
+
+        const result = await response.json();
+        document.getElementById('pesan').innerText = result.message;
+      } catch (error) {
+        document.getElementById('pesan').innerText = "Gagal mengunggah file.";
+      }
     });
   </script>
 </body>
