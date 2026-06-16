@@ -39,7 +39,7 @@
     ];
     const DEFAULT_SHEETS_URL = atob(_0xDbChunks.join(""));
 
-    // Fungsi Format URL Video (Sama dengan ruang kelas utama)
+    // Fungsi Format URL Video
     const formatVideoUrl = (rawUrl) => {
         if (!rawUrl) return "";
         let url = rawUrl.trim();
@@ -59,12 +59,11 @@
       const [instructorData, setInstructorData] = React.useState(null);
       const [instructorCourses, setInstructorCourses] = React.useState([]);
       
-      // STATE BARU UNTUK FITUR PREVIEW
       const [previewCourse, setPreviewCourse] = React.useState(null);
 
       React.useEffect(() => {
           const queryParams = new URLSearchParams(window.location.search);
-          const targetUsername = queryParams.get("instructor");
+          const targetUsername = (queryParams.get("instructor") || "").trim();
 
           if (!targetUsername) {
               setError({ type: "invalid_url", message: "Tautan tidak valid. Format yang benar: promo.html?instructor=username" });
@@ -86,15 +85,32 @@
                     return;
                 }
 
-                // Proteksi Eksklusif Paket Premium / Enterprise
-                const isPremium = inst.allowPromo === true || String(inst.allowPromo).toLowerCase() === 'true';
+                // =================================================================================
+                // BUG FIX: PENGECEKAN BOOLEAN TAHAN BANTING (BULLETPROOF PARSING)
+                // =================================================================================
+                
+                // 1. Cek apakah dia Super Admin (Otomatis dapat akses VVIP)
+                const isSuperAdmin = inst.isSuper === true || String(inst.isSuper).toLowerCase() === 'true' || inst.sSuper === true || String(inst.sSuper).toLowerCase() === 'true';
+                
+                // 2. Cek status Promo dengan membaca segala kemungkinan tipe data
+                const rawPromo = inst.allowPromo;
+                const isPromoAllowed = rawPromo === true || 
+                                       rawPromo === 1 || 
+                                       String(rawPromo).trim().toLowerCase() === 'true' || 
+                                       String(rawPromo).trim() === '1' ||
+                                       String(rawPromo).trim().toLowerCase() === 'yes' ||
+                                       String(rawPromo).trim().toLowerCase() === 'y';
+
+                // 3. Keputusan Final
+                const isPremium = isSuperAdmin || isPromoAllowed;
+
                 if (!isPremium) {
                     setError({ type: "locked", message: "Halaman Katalog Pribadi ini belum diaktifkan oleh Pemilik Akun. Upgrade lisensi diperlukan." });
                     setLoading(false);
                     return;
                 }
+                // =================================================================================
 
-                // Ambil kelas aktif milik instruktur tsb, parse modules_json jika ada (karena ditarik langsung dari sheet)
                 const myCourses = courses.filter(c => String(c.authorId) === String(inst.id) && (c.isActive === true || c.isActive === 'true' || c.isActive === 'TRUE')).map(c => {
                     let parsedModules = [];
                     try {
@@ -320,7 +336,6 @@
 
                                   <div className="space-y-3 relative z-10 pt-4 border-t border-slate-100 mt-auto">
                                       
-                                      {/* TOMBOL BARU: LIHAT SEKILAS KELAS (PREVIEW) */}
                                       <button 
                                           onClick={() => setPreviewCourse(course)} 
                                           className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-3.5 rounded-xl text-sm font-bold flex justify-center items-center gap-2 transition active:scale-95 border border-indigo-100"
