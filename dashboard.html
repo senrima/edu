@@ -962,14 +962,17 @@ const PricingModal = () => {
               const user = admins.find(a => String(a.id) === String(session.data.id)) || session.data;
               const email = encodeURIComponent(user.email || `${user.username}@edulearn.local`);
               const name = encodeURIComponent(user.name || user.username);
-              return `https://s-tools.id/payment/index.html?amount=${amount}&item=${encodeURIComponent(item)}&kode_aplikasi=APP-EDULEARN&email=${email}&name=${name}`;
+              return `https://s-tools.id/payment/index.html?amount=${amount}&item=${encodeURIComponent(item)}&kode_aplikasi=APP-STOOLS&email=${email}&name=${name}`;
           };
 
           return (
               <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-[fadeIn_200ms_ease-out]">
                   <div className="bg-white rounded-[2rem] w-full max-w-5xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden">
                       <div className="p-6 md:p-8 text-center relative border-b border-slate-100 shrink-0 flex flex-col items-center">
-                          <button onClick={() => setShowPricingModal(false)} className="absolute top-6 right-6 w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-500 transition"><X size={20} weight="bold"/></button>
+                          {/* Tombol Close pakai IconWrapper */}
+                          <button onClick={() => setShowPricingModal(false)} className="absolute top-6 right-6 w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-500 transition">
+                              <IconWrapper name="x" size={20} weight="bold"/>
+                          </button>
                           
                           {/* TIMER FOMO */}
                           <PromoTimer />
@@ -988,12 +991,14 @@ const PricingModal = () => {
                                       <p className="text-xs text-slate-400 mt-1 font-bold line-through decoration-rose-500">Rp 150.000</p>
                                   </div>
                                   <div className="space-y-4 flex-1 mb-8 text-sm font-bold text-slate-700">
-                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +5 Kelas</p>
-                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +50 Siswa</p>
-                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Link Pendaftaran Siswa</p>
-                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Akses Server Lifetime</p>
+                                      <p className="flex items-center gap-3"><IconWrapper name="check-circle" size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +5 Kelas</p>
+                                      <p className="flex items-center gap-3"><IconWrapper name="check-circle" size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +50 Siswa</p>
+                                      <p className="flex items-center gap-3"><IconWrapper name="check-circle" size={20} className="text-emerald-500 shrink-0" weight="fill"/> Link Pendaftaran Siswa</p>
+                                      <p className="flex items-center gap-3"><IconWrapper name="check-circle" size={20} className="text-emerald-500 shrink-0" weight="fill"/> Akses Server Selamanya</p>
                                   </div>
-                                  <a href={getPaymentLink(50000, "Paket Starter EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-md">Pilih Paket Starter <ChevronRight size={16} weight="bold"/></a>
+                                  <a href={getPaymentLink(50000, "Paket Starter EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-md">
+                                      Pilih Paket Starter <IconWrapper name="caret-right" size={16} weight="bold"/>
+                                  </a>
                               </div>
 
                               {/* PAKET PRO */}
@@ -1005,20 +1010,22 @@ const PricingModal = () => {
                                       <p className="text-xs text-rose-500 mt-1 font-bold line-through">Rp 350.000</p>
                                   </div>
                                   <div className="space-y-4 flex-1 mb-8 text-sm font-bold text-slate-800">
-                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-indigo-600 shrink-0" weight="fill"/> Tambahan +15 Kelas</p>
-                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-indigo-600 shrink-0" weight="fill"/> Tambahan +200 Siswa</p>
-                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-indigo-600 shrink-0" weight="fill"/> Link Pendaftaran Siswa</p>
-                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-indigo-600 shrink-0" weight="fill"/> Akses Server Lifetime</p>
+                                      <p className="flex items-center gap-3"><IconWrapper name="check-circle" size={20} className="text-indigo-600 shrink-0" weight="fill"/> Tambahan +15 Kelas</p>
+                                      <p className="flex items-center gap-3"><IconWrapper name="check-circle" size={20} className="text-indigo-600 shrink-0" weight="fill"/> Tambahan +200 Siswa</p>
+                                      <p className="flex items-center gap-3"><IconWrapper name="check-circle" size={20} className="text-indigo-600 shrink-0" weight="fill"/> Link Pendaftaran Siswa</p>
+                                      <p className="flex items-center gap-3"><IconWrapper name="check-circle" size={20} className="text-indigo-600 shrink-0" weight="fill"/> Akses Server Selamanya</p>
                                       
                                       <div className="flex items-start gap-3 border-t border-indigo-100 pt-3 mt-1">
-                                          <CheckCircle2 size={20} className="text-indigo-600 shrink-0 mt-0.5" weight="fill"/>
+                                          <IconWrapper name="check-circle" size={20} className="text-indigo-600 shrink-0 mt-0.5" weight="fill"/>
                                           <div>
                                               <p>Etalase Promo Publik</p>
                                               <span className="text-[10px] bg-rose-100 text-rose-600 px-2 py-0.5 rounded border border-rose-200 font-black inline-block mt-1 uppercase">S.D Akhir 2026</span>
                                           </div>
                                       </div>
                                   </div>
-                                  <a href={getPaymentLink(120000, "Paket Pro EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-lg shadow-indigo-200">Pilih Paket Pro <ChevronRight size={16} weight="bold"/></a>
+                                  <a href={getPaymentLink(120000, "Paket Pro EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-lg shadow-indigo-200">
+                                      Pilih Paket Pro <IconWrapper name="caret-right" size={16} weight="bold"/>
+                                  </a>
                               </div>
 
                               {/* PAKET ENTERPRISE */}
@@ -1029,20 +1036,22 @@ const PricingModal = () => {
                                       <p className="text-xs text-slate-400 mt-1 font-bold line-through decoration-rose-500">Rp 750.000</p>
                                   </div>
                                   <div className="space-y-4 flex-1 mb-8 text-sm font-bold text-slate-700">
-                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +50 Kelas</p>
-                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +1000 Siswa</p>
-                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Link Pendaftaran Siswa</p>
-                                      <p className="flex items-center gap-3"><CheckCircle2 size={20} className="text-emerald-500 shrink-0" weight="fill"/> Akses Server Lifetime</p>
+                                      <p className="flex items-center gap-3"><IconWrapper name="check-circle" size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +50 Kelas</p>
+                                      <p className="flex items-center gap-3"><IconWrapper name="check-circle" size={20} className="text-emerald-500 shrink-0" weight="fill"/> Tambahan +1000 Siswa</p>
+                                      <p className="flex items-center gap-3"><IconWrapper name="check-circle" size={20} className="text-emerald-500 shrink-0" weight="fill"/> Link Pendaftaran Siswa</p>
+                                      <p className="flex items-center gap-3"><IconWrapper name="check-circle" size={20} className="text-emerald-500 shrink-0" weight="fill"/> Akses Server Selamanya</p>
                                       
                                       <div className="flex items-start gap-3 border-t border-slate-100 pt-3 mt-1">
-                                          <CheckCircle2 size={20} className="text-emerald-500 shrink-0 mt-0.5" weight="fill"/>
+                                          <IconWrapper name="check-circle" size={20} className="text-emerald-500 shrink-0 mt-0.5" weight="fill"/>
                                           <div>
                                               <p>Etalase Promo Publik</p>
                                               <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded border border-emerald-200 font-black inline-block mt-1 uppercase">Akses Selamanya</span>
                                           </div>
                                       </div>
                                   </div>
-                                  <a href={getPaymentLink(250000, "Paket Enterprise EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-md">Pilih Enterprise <ChevronRight size={16} weight="bold"/></a>
+                                  <a href={getPaymentLink(250000, "Paket Enterprise EduLearn")} target="_blank" rel="noopener noreferrer" className="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl font-bold flex justify-center items-center gap-2 transition active:scale-95 shadow-md">
+                                      Pilih Enterprise <IconWrapper name="caret-right" size={16} weight="bold"/>
+                                  </a>
                               </div>
                           </div>
                       </div>
