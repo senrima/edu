@@ -28,15 +28,15 @@
     const Loader2 = (p) => <IconWrapper name="spinner" className="animate-spin" {...p} />;
 
     // Dekripsi Database EduLearn Terpusat
-    const _0xDbChunks = [
-        "aHR0cHM6Ly9zY3JpcHQuZ29v",
-        "Z2xlLmNvbS9tYWNyb3Mvcy9B",
-        "S2Z5Y2J3aHVvNFBmWTZvWnRk",
-        "bk5kRHpTdEFLOXlQNEszOW9P",
-        "V1JuNHpwSTk2VTA5M0tfcFVL",
-        "VllSbUV2V2djc1dPRVNIYkcv",
-        "ZXhlYw=="
-    ];
+const _0xDbChunks = [
+    "aHR0cHM6Ly9zY3JpcHQuZ29v",
+    "Z2xlLmNvbS9tYWNyb3Mvcy9B",
+    "S2Z5Y2J4OEl1ZmZsMF9OOU9r",
+    "alV2d1BjYUNkVFlCUUZWdEp1",
+    "WXdLVV90UUktLUpHVFQySXY2",
+    "bW9HVElEeVc4bk5jaHVFMVEv",
+    "ZXhlYw=="
+];
     const DEFAULT_SHEETS_URL = atob(_0xDbChunks.join(""));
 
     // Fungsi Format URL Video
@@ -84,24 +84,11 @@
                     setLoading(false);
                     return;
                 }
-
-                // =================================================================================
-                // BUG FIX: PENGECEKAN BOOLEAN TAHAN BANTING (BULLETPROOF PARSING)
-                // =================================================================================
                 
-                // 1. Cek apakah dia Super Admin (Otomatis dapat akses VVIP)
+                // Cek Super Admin & Premium
                 const isSuperAdmin = inst.isSuper === true || String(inst.isSuper).toLowerCase() === 'true' || inst.sSuper === true || String(inst.sSuper).toLowerCase() === 'true';
-                
-                // 2. Cek status Promo dengan membaca segala kemungkinan tipe data
                 const rawPromo = inst.allowPromo;
-                const isPromoAllowed = rawPromo === true || 
-                                       rawPromo === 1 || 
-                                       String(rawPromo).trim().toLowerCase() === 'true' || 
-                                       String(rawPromo).trim() === '1' ||
-                                       String(rawPromo).trim().toLowerCase() === 'yes' ||
-                                       String(rawPromo).trim().toLowerCase() === 'y';
-
-                // 3. Keputusan Final
+                const isPromoAllowed = rawPromo === true || rawPromo === 1 || String(rawPromo).trim().toLowerCase() === 'true' || String(rawPromo).trim() === '1' || String(rawPromo).trim().toLowerCase() === 'yes';
                 const isPremium = isSuperAdmin || isPromoAllowed;
 
                 if (!isPremium) {
@@ -109,19 +96,11 @@
                     setLoading(false);
                     return;
                 }
-                // =================================================================================
 
                 const myCourses = courses.filter(c => String(c.authorId) === String(inst.id) && (c.isActive === true || c.isActive === 'true' || c.isActive === 'TRUE')).map(c => {
                     let parsedModules = [];
-                    try {
-                        parsedModules = c.modules_json ? JSON.parse(c.modules_json) : (c.modules || []);
-                    } catch (e) { parsedModules = []; }
-                    
-                    return {
-                        ...c,
-                        modules: parsedModules,
-                        totalModules: parsedModules.length
-                    };
+                    try { parsedModules = c.modules_json ? JSON.parse(c.modules_json) : (c.modules || []); } catch (e) { parsedModules = []; }
+                    return { ...c, modules: parsedModules, totalModules: parsedModules.length };
                 });
 
                 setInstructorData(inst);
@@ -167,6 +146,12 @@
           c.code.toLowerCase().includes(searchTerm.toLowerCase())
       );
 
+      // ==============================================================================
+      // BUG FIX: PENGECEKAN WA SUPER AMAN (Ubah format apapun jadi string rapi)
+      // ==============================================================================
+      const rawWa = instructorData.whatsapp;
+      const waNumber = (rawWa && rawWa !== "null" && rawWa !== "undefined") ? String(rawWa).replace(/[^0-9]/g, '') : "";
+
       return (
           <div className="min-h-screen bg-slate-50 flex flex-col justify-between overflow-x-hidden hero-gradient">
               
@@ -192,7 +177,7 @@
                           {/* Konten Scrollable */}
                           <div className="flex-1 overflow-y-auto p-5 md:p-8 bg-white relative z-10">
                               
-                              {/* 1. Video Player (Modul Pertama) */}
+                              {/* 1. Video Player */}
                               {previewCourse.modules && previewCourse.modules.length > 0 ? (
                                   <div className="mb-10">
                                       <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">Trailer / Modul Pembuka:</h3>
@@ -213,7 +198,7 @@
                                   </div>
                               )}
 
-                              {/* 2. Daftar Silabus (Semua Modul) */}
+                              {/* 2. Daftar Silabus */}
                               <div className="bg-slate-50 rounded-3xl p-6 md:p-8 border border-slate-100">
                                   <div className="flex items-center gap-3 mb-6 border-b border-slate-200 pb-4">
                                       <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center"><IconWrapper name="list-dashes" size={20} weight="bold"/></div>
@@ -242,9 +227,9 @@
 
                           {/* Footer CTA Modal */}
                           <div className="p-5 md:p-6 border-t border-slate-100 bg-white shrink-0 relative z-20">
-                              {instructorData.whatsapp ? (
+                              {waNumber ? (
                                   <a 
-                                      href={`https://wa.me/${instructorData.whatsapp.replace(/[^0-9]/g, '')}?text=Halo%20Mentor%20${encodeURIComponent(instructorData.name)},%20setelah%20melihat%20preview%20dan%20silabusnya,%20saya%20tertarik%20untuk%20mendaftar%20kelas%20*${encodeURIComponent(previewCourse.title)}*.%20Bagaimana%20prosedurnya?`}
+                                      href={`https://wa.me/${waNumber}?text=Halo%20Mentor%20${encodeURIComponent(instructorData.name)},%20setelah%20melihat%20preview%20dan%20silabusnya,%20saya%20tertarik%20untuk%20mendaftar%20kelas%20*${encodeURIComponent(previewCourse.title)}*.%20Bagaimana%20prosedurnya?`}
                                       target="_blank" 
                                       rel="noopener noreferrer" 
                                       className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl text-sm sm:text-base font-black flex justify-center items-center gap-2 shadow-lg shadow-emerald-200 transition transform active:scale-95"
@@ -253,7 +238,10 @@
                                       <span>Mulai Belajar? Daftar via WhatsApp Sekarang</span>
                                   </a>
                               ) : (
-                                  <button disabled className="w-full bg-slate-100 text-slate-400 py-4 rounded-xl text-sm font-bold cursor-not-allowed">Pendaftaran Belum Dibuka</button>
+                                  <button disabled className="w-full bg-slate-100 text-slate-400 py-4 rounded-xl text-sm font-bold cursor-not-allowed">
+                                      <IconWrapper name="whatsapp-logo" size={24} />
+                                      WA Mentor Belum Set
+                                  </button>
                               )}
                           </div>
                       </div>
@@ -344,9 +332,9 @@
                                           <span>Lihat Sekilas Kelas</span>
                                       </button>
                                       
-                                      {instructorData.whatsapp ? (
+                                      {waNumber ? (
                                           <a 
-                                              href={`https://wa.me/${instructorData.whatsapp.replace(/[^0-9]/g, '')}?text=Halo%20Mentor%20${encodeURIComponent(instructorData.name)},%20saya%20tertarik%20untuk%20mendaftar%20kelas%20*${encodeURIComponent(course.title)}*%20(${encodeURIComponent(course.code)}).%20Bagaimana%20prosedurnya?`}
+                                              href={`https://wa.me/${waNumber}?text=Halo%20Mentor%20${encodeURIComponent(instructorData.name)},%20saya%20tertarik%20untuk%20mendaftar%20kelas%20*${encodeURIComponent(course.title)}*%20(${encodeURIComponent(course.code)}).%20Bagaimana%20prosedurnya?`}
                                               target="_blank" 
                                               rel="noopener noreferrer" 
                                               className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl text-sm font-black flex justify-center items-center gap-2 shadow-md shadow-emerald-100 transition transform active:scale-95"
