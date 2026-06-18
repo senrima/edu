@@ -23,10 +23,10 @@ jobs:
           node-version: '20'
 
       - name: Install Dependencies
-        run: npm install -g tailwindcss
+        run: npm init -y && npm install tailwindcss
 
       - name: Build Tailwind CSS
-        run: npx tailwindcss@latest -i ./input.css -o ./output.css
+        run: npx tailwindcss -i ./input.css -o ./output.css
 
       - name: Commit and Push Changes
         uses: stefanzweifel/git-auto-commit-action@v5
