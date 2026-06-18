@@ -332,7 +332,7 @@ React.useEffect(() => {
         loadData();
       }, [dbMode, appMode]);
 
-    React.useEffect(() => {
+      React.useEffect(() => {
         if (!dbReady || !dbRef.current) return;
         const saveToIndexedDB = async () => {
           const db = dbRef.current;
@@ -344,6 +344,58 @@ React.useEffect(() => {
         };
         saveToIndexedDB();
       }, [admins, courses, participants, enrollments, notifications, dbReady]);
+
+      React.useEffect(() => {
+        if (!dbReady) return; 
+
+        if (session) {
+            setAppMode(getInitialAppMode());
+            return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const loginEmail = params.get('email');
+        const loginUsername = params.get('username');
+
+        if (loginEmail || loginUsername) {
+            setAuthStatus("Memverifikasi Data Akun...");
+            
+            const currentEmail = String(loginEmail || '').trim().toLowerCase();
+            const currentUsername = String(loginUsername || '').trim().toLowerCase();
+
+            let adminFound = admins.find(a => 
+                (currentUsername && String(a.username).trim().toLowerCase() === currentUsername) ||
+                (currentEmail && String(a.email || '').trim().toLowerCase() === currentEmail)
+            );
+
+            let matchedPart = participants.find(p => String(p.email).trim().toLowerCase() === currentEmail);
+
+            if (adminFound || matchedPart) {
+                if (adminFound && !matchedPart) {
+                    const aEmail = adminFound.email || `${adminFound.username}@edulearn.local`;
+                    matchedPart = { id: 'p_virtual_' + adminFound.username, name: adminFound.name, email: aEmail, accessCode: adminFound.password };
+                }
+
+                const roles = [];
+                if (adminFound) {
+                    const isSuper = adminFound.isSuper === true || adminFound.isSuper === 'true' || adminFound.isSuper === 'TRUE';
+                    if (isSuper) roles.push({ id: 'super_admin', label: 'Super Admin', desc: 'Akses penuh kontrol.', icon: 'shield-check', color: 'from-amber-500 to-orange-600' });
+                    roles.push({ id: 'admin', label: 'Instruktur', desc: 'Kelola kelas Anda.', icon: 'chalkboard-teacher', color: 'from-indigo-500 to-indigo-700' });
+                }
+                if (matchedPart) {
+                    roles.push({ id: 'participant', label: 'Peserta Belajar', desc: 'Masuk ke ruang belajar.', icon: 'graduation-cap', color: 'from-emerald-500 to-teal-600' });
+                }
+
+                setLoginMatches({ admin: adminFound, participant: matchedPart, roles });
+                window.history.replaceState({}, document.title, window.location.pathname);
+                setAppMode('role_selection');
+            } else {
+                setAuthStatus("Akses ditolak. Akun tidak terdaftar di sistem.");
+            }
+        } else {
+            setAuthStatus("Akses ditolak. Silakan login melalui S-Tools ID.");
+        }
+      }, [dbReady, session, admins, participants]);
 
       const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
       
