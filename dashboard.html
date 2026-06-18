@@ -31,7 +31,6 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    let fbApp = null, fbAuth = null, fbDb = null;
 
     const API_ENDPOINT = "https://api.s-tools.id";
     const LOGIN_PORTAL_URL = "https://s-tools.id/edu/page-instruktur.html";
@@ -157,6 +156,7 @@ const _0xDbChunks = [
     };
 
     function App() {
+      const syncTimeout = React.useRef(null);
       const [dbMode, setDbMode] = React.useState(() => localStorage.getItem('edu_db_mode') || 'sheets');
       const [dbReady, setDbReady] = React.useState(false);
       const [setupError, setSetupError] = React.useState("");
@@ -366,25 +366,31 @@ const _0xDbChunks = [
         return prog > 100 ? 100 : prog;
       };
 
-      const execDbAction = async (localAction, firebaseAction) => {
+      const execDbAction = async (localAction) => {
         try {
+          localAction();
           if (dbMode === 'sheets') {
-              localAction(); 
-              const url = localStorage.getItem('edu_sheets_url') || DEFAULT_SHEETS_URL;
-              if (url) {
+              if (syncTimeout.current) clearTimeout(syncTimeout.current);
+              
+              syncTimeout.current = setTimeout(() => {
+                  const url = localStorage.getItem('edu_sheets_url') || DEFAULT_SHEETS_URL;
+                  if (!url) return;
+                  
                   const currentAdmins = JSON.parse(localStorage.getItem('edu_admins')) || admins;
                   const uniqueAdmins = Array.from(new Map(currentAdmins.map(a => [a.id, a])).values());
                   const rawEnrollments = JSON.parse(localStorage.getItem('edu_enrollments')) || enrollments;
                   const mappedEnrollments = rawEnrollments.map(enr => ({ ...enr, completedModules_json: JSON.stringify(enr.completedModules || []) }));
+                  
                   const payload = {
                       admins: uniqueAdmins, courses: JSON.parse(localStorage.getItem('edu_courses')) || courses,
                       participants: JSON.parse(localStorage.getItem('edu_participants')) || participants,
                       enrollments: mappedEnrollments, notifications: JSON.parse(localStorage.getItem('edu_notifications')) || notifications
                   };
-                const postUrl = url + (url.includes('?') ? '&' : '?') + 'nocache=' + new Date().getTime();
-                fetch(postUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) }).catch(console.error);
-              }
-          } else { localAction(); }
+                  
+                  const postUrl = url + (url.includes('?') ? '&' : '?') + 'nocache=' + new Date().getTime();
+                  fetch(postUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) }).catch(console.error);
+              }, 3000);
+          }
         } catch (error) { console.error(error); showToast("Gagal menyimpan."); }
       };
 
