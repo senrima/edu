@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.23.6/babel.min.js"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,7 +31,6 @@
   <div id="root"></div>
 
   <script type="text/babel">
-    let fbApp = null, fbAuth = null, fbDb = null;
 
     const API_ENDPOINT = "https://api.s-tools.id";
     const LOGIN_PORTAL_URL = "https://s-tools.id/edu/page-instruktur.html";
@@ -89,6 +88,36 @@ const _0xDbChunks = [
     const Sparkle = (p) => <IconWrapper name="sparkle" {...p} />;
     const MagnifyingGlass = (p) => <IconWrapper name="magnifying-glass" {...p} />;
 
+    const dbName = "EduLearnDatabase";
+    const storeName = "store";
+
+    const openDB = () => {
+      return new Promise((resolve) => {
+        const request = indexedDB.open(dbName, 1);
+        request.onupgradeneeded = (e) => {
+          e.target.result.createObjectStore(storeName);
+        };
+        request.onsuccess = (e) => resolve(e.target.result);
+      });
+    };
+
+    const getLocalData = (db, key, fallback) => {
+      return new Promise((resolve) => {
+        const tx = db.transaction(storeName, "readonly");
+        const request = tx.objectStore(storeName).get(key);
+        request.onsuccess = () => resolve(request.result || fallback);
+        request.onerror = () => resolve(fallback);
+      });
+    };
+
+    const setLocalData = (db, key, value) => {
+      return new Promise((resolve) => {
+        const tx = db.transaction(storeName, "readwrite");
+        tx.objectStore(storeName).put(value, key);
+        tx.oncomplete = () => resolve(true);
+      });
+    };
+    
     const initialAdmins = [];
     const initialCourses = [];
     const initialParticipants = [];
@@ -157,6 +186,8 @@ const _0xDbChunks = [
     };
 
     function App() {
+      const syncTimeout = React.useRef(null);
+      const dbRef = React.useRef(null);
       const [dbMode, setDbMode] = React.useState(() => localStorage.getItem('edu_db_mode') || 'sheets');
       const [dbReady, setDbReady] = React.useState(false);
       const [setupError, setSetupError] = React.useState("");
@@ -240,119 +271,78 @@ const _0xDbChunks = [
           }
       }, [session, admins]);
 
-      React.useEffect(() => {
-        if (appMode === 'setup_db') return;
-        if (dbMode === 'local') {
-          setAdmins(JSON.parse(localStorage.getItem('edu_admins')) || initialAdmins);
-          setCourses(normalizeCourses(JSON.parse(localStorage.getItem('edu_courses')) || initialCourses));
-          setParticipants(JSON.parse(localStorage.getItem('edu_participants')) || initialParticipants);
-          setEnrollments(JSON.parse(localStorage.getItem('edu_enrollments')) || initialEnrollments);
-          setNotifications(JSON.parse(localStorage.getItem('edu_notifications')) || []);
-          setDbReady(true);
-        } else if (dbMode === 'sheets') {
-          const url = localStorage.getItem('edu_sheets_url') || DEFAULT_SHEETS_URL;
-          if(!url) { setAppMode('setup_db'); return; }
-          const fetchUrl = url + (url.includes('?') ? '&' : '?') + 'nocache=' + new Date().getTime();
-          fetch(fetchUrl)
-            .then(res => { if(!res.ok) throw new Error("Network error"); return res.json(); })
-            .then(data => {
-                if(data.admins) {
-                    const uniqueAdmins = Array.from(new Map(data.admins.map(a => [a.id, a])).values());
-                    setAdmins(uniqueAdmins); localStorage.setItem('edu_admins', JSON.stringify(uniqueAdmins));
-                }
-                if(data.courses) {
-                    const normCourses = normalizeCourses(data.courses);
-                    setCourses(normCourses); localStorage.setItem('edu_courses', JSON.stringify(normCourses));
-                }
-                if(data.participants) {
-                    setParticipants(data.participants); localStorage.setItem('edu_participants', JSON.stringify(data.participants));
-                }
-                if(data.enrollments) {
-                    setEnrollments(data.enrollments); localStorage.setItem('edu_enrollments', JSON.stringify(data.enrollments));
-                }
-                if(data.notifications) {
-                    setNotifications(data.notifications); localStorage.setItem('edu_notifications', JSON.stringify(data.notifications));
-                }
-                setDbReady(true);
-            })
-            .catch(e => { 
-                let errorMsg = "Database belum terkoneksi. Silakan periksa jaringan internet Anda atau coba lagi nanti.";
-                if (e.toString().includes("Failed to fetch") || e.toString().includes("Network error")) {
-                    errorMsg = "Koneksi ke Database diblokir oleh browser (CORS). Anda HARUS memperbarui Deployment GAS dengan memilih 'Versi Baru' (New Version) pada opsi Kelola Penerapan.";
-                }
-                setSetupError(errorMsg); setAppMode('setup_db'); 
-            });
-        }
+React.useEffect(() => {
+        const loadData = async () => {
+          if (appMode === 'setup_db') return;
+          if (!dbRef.current) {
+            dbRef.current = await openDB();
+          }
+          const db = dbRef.current;
+
+          if (dbMode === 'local') {
+            const localAdmins = await getLocalData(db, 'edu_admins', initialAdmins);
+            const localCourses = await getLocalData(db, 'edu_courses', initialCourses);
+            const localParts = await getLocalData(db, 'edu_participants', initialParticipants);
+            const localEnrs = await getLocalData(db, 'edu_enrollments', initialEnrollments);
+            const localNotifs = await getLocalData(db, 'edu_notifications', []);
+
+            setAdmins(localAdmins);
+            setCourses(normalizeCourses(localCourses));
+            setParticipants(localParts);
+            setEnrollments(localEnrs);
+            setNotifications(localNotifs);
+            setDbReady(true);
+          } else if (dbMode === 'sheets') {
+            const url = localStorage.getItem('edu_sheets_url') || DEFAULT_SHEETS_URL;
+            if(!url) { setAppMode('setup_db'); return; }
+            const fetchUrl = url + (url.includes('?') ? '&' : '?') + 'nocache=' + new Date().getTime();
+            try {
+              const res = await fetch(fetchUrl);
+              if(!res.ok) throw new Error("Network error");
+              const data = await res.json();
+              
+              if(data.admins) {
+                  const uniqueAdmins = Array.from(new Map(data.admins.map(a => [a.id, a])).values());
+                  setAdmins(uniqueAdmins); await setLocalData(db, 'edu_admins', uniqueAdmins);
+              }
+              if(data.courses) {
+                  const normCourses = normalizeCourses(data.courses);
+                  setCourses(normCourses); await setLocalData(db, 'edu_courses', normCourses);
+              }
+              if(data.participants) {
+                  setParticipants(data.participants); await setLocalData(db, 'edu_participants', data.participants);
+              }
+              if(data.enrollments) {
+                  setEnrollments(data.enrollments); await setLocalData(db, 'edu_enrollments', data.enrollments);
+              }
+              if(data.notifications) {
+                  setNotifications(data.notifications); await setLocalData(db, 'edu_notifications', data.notifications);
+              }
+              setDbReady(true);
+            } catch(e) {
+              let errorMsg = "Database belum terkoneksi. Silakan periksa jaringan internet Anda.";
+              if (e.toString().includes("Failed to fetch") || e.toString().includes("Network error")) {
+                  errorMsg = "Koneksi ke Database diblokir oleh browser (CORS). Anda HARUS memperbarui Deployment GAS.";
+              }
+              setSetupError(errorMsg); setAppMode('setup_db');
+            }
+          }
+        };
+        loadData();
       }, [dbMode, appMode]);
 
-      React.useEffect(() => {
-          if (appMode === 'auth' && dbReady) {
-              const performSSO = async () => {
-                  setAuthStatus("Memverifikasi Keamanan Sistem S-Tools ID...");
-                  const localToken = localStorage.getItem('sessionToken');
-                  const headers = { 'Content-Type': 'application/json' };
-                  if (localToken) headers['x-auth-token'] = localToken;
-
-                  try {
-                      const response = await fetch(API_ENDPOINT, {
-                          method: 'POST',
-                          headers: headers,
-                          credentials: 'include', 
-                          body: JSON.stringify({ kontrol: 'proteksi', action: 'getDashboardData' })
-                      });
-                      const result = await response.json();
-                      
-                      if (result.status === 'success' && result.userData) {
-                          setAuthStatus("Akses diterima! Membuka gerbang EduLearn...");
-                          const ssoEmail = String(result.userData.email || result.userData.username || '').trim().toLowerCase();
-                          
-                          const adminFound = admins.find(a => (a.email && String(a.email).trim().toLowerCase() === ssoEmail) || String(a.username).trim().toLowerCase() === ssoEmail);
-                          
-                          if (adminFound) {
-                              if (!adminFound.isActive) { 
-                                  setAuthStatus("Akses ditolak: Akun Instruktur Anda dinonaktifkan oleh Sistem."); 
-                                  return; 
-                              }
-                              const adminEmail = adminFound.email ? String(adminFound.email).trim().toLowerCase() : `${String(adminFound.username).trim().toLowerCase()}@edulearn.local`;
-                              let matchedPart = participants.find(p => p.email.trim().toLowerCase() === adminEmail);
-                              if (!matchedPart) {
-                                  matchedPart = { id: 'p_virtual_' + adminFound.username, name: adminFound.name || adminFound.username, email: adminEmail, accessCode: adminFound.password };
-                              }
-                              const roles = [];
-                              const isItSuper = adminFound.isSuper === true || adminFound.isSuper === 'true' || adminFound.isSuper === 'TRUE';
-                              if (isItSuper) { roles.push({ id: 'super_admin', label: 'Super Admin', desc: 'Akses penuh ke semua kontrol, daftar instruktur, dan semua kursus.', icon: 'shield-check', color: 'from-amber-500 to-orange-600' }); }
-                              roles.push({ id: 'admin', label: 'Instruktur', desc: 'Kelola kelas Anda sendiri, tonton, periksa tugas, dan tambah modul baru.', icon: 'chalkboard-teacher', color: 'from-indigo-500 to-indigo-700' });
-                              roles.push({ id: 'participant', label: 'Peserta Belajar', desc: 'Masuk ke ruang belajar kelas Anda, ikuti kuis, tonton video, dan dapatkan sertifikat.', icon: 'graduation-cap', color: 'from-emerald-500 to-teal-600' });
-
-                              setLoginMatches({ admin: adminFound, participant: matchedPart, roles });
-                              setAppMode('role_selection');
-                              return;
-                          }
-
-                          const partFound = participants.find(p => p.email.trim().toLowerCase() === ssoEmail);
-                          if (partFound) {
-                              const sessData = { role: 'participant', data: partFound };
-                              setSession(sessData); sessionStorage.setItem('edu_session', JSON.stringify(sessData));
-                              setAppMode('part_dashboard');
-                              return;
-                          }
-
-                          setAuthStatus(`Akses ditolak: Email (${ssoEmail}) belum didaftarkan di kelas manapun. Silakan hubungi Instruktur Anda.`);
-                      } else {
-                          throw new Error("Sesi tidak valid");
-                      }
-                  } catch (error) {
-                      setAuthStatus("Sesi ditolak. Mengarahkan Anda ke S-Tools ID untuk mendapatkan token...");
-                      localStorage.removeItem('sessionToken');
-                      setTimeout(() => {
-                          window.location.href = LOGIN_PORTAL_URL + "?redirect=" + encodeURIComponent(window.location.href);
-                      }, 1500);
-                  }
-              };
-              
-              performSSO();
-          }
-      }, [appMode, dbReady, admins, participants]);
+React.useEffect(() => {
+        if (!dbReady || !dbRef.current) return;
+        const saveToIndexedDB = async () => {
+          const db = dbRef.current;
+          await setLocalData(db, 'edu_admins', admins);
+          await setLocalData(db, 'edu_courses', courses);
+          await setLocalData(db, 'edu_participants', participants);
+          await setLocalData(db, 'edu_enrollments', enrollments);
+          await setLocalData(db, 'edu_notifications', notifications);
+        };
+        saveToIndexedDB();
+      }, [admins, courses, participants, enrollments, notifications, dbReady]);
 
       const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
       
@@ -368,23 +358,33 @@ const _0xDbChunks = [
 
       const execDbAction = async (localAction, firebaseAction) => {
         try {
+          localAction();
           if (dbMode === 'sheets') {
-              localAction(); 
-              const url = localStorage.getItem('edu_sheets_url') || DEFAULT_SHEETS_URL;
-              if (url) {
-                  const currentAdmins = JSON.parse(localStorage.getItem('edu_admins')) || admins;
+              if (syncTimeout.current) clearTimeout(syncTimeout.current);
+              
+              syncTimeout.current = setTimeout(async () => {
+                  const url = localStorage.getItem('edu_sheets_url') || DEFAULT_SHEETS_URL;
+                  if (!url) return;
+                  
+                  const db = dbRef.current || await openDB();
+                  const currentAdmins = await getLocalData(db, 'edu_admins', admins);
                   const uniqueAdmins = Array.from(new Map(currentAdmins.map(a => [a.id, a])).values());
-                  const rawEnrollments = JSON.parse(localStorage.getItem('edu_enrollments')) || enrollments;
+                  const currentCourses = await getLocalData(db, 'edu_courses', courses);
+                  const currentParts = await getLocalData(db, 'edu_participants', participants);
+                  const currentNotifs = await getLocalData(db, 'edu_notifications', notifications);
+                  
+                  const rawEnrollments = await getLocalData(db, 'edu_enrollments', enrollments);
                   const mappedEnrollments = rawEnrollments.map(enr => ({ ...enr, completedModules_json: JSON.stringify(enr.completedModules || []) }));
+                  
                   const payload = {
-                      admins: uniqueAdmins, courses: JSON.parse(localStorage.getItem('edu_courses')) || courses,
-                      participants: JSON.parse(localStorage.getItem('edu_participants')) || participants,
-                      enrollments: mappedEnrollments, notifications: JSON.parse(localStorage.getItem('edu_notifications')) || notifications
+                      admins: uniqueAdmins, courses: currentCourses,
+                      participants: currentParts, enrollments: mappedEnrollments, notifications: currentNotifs
                   };
-                const postUrl = url + (url.includes('?') ? '&' : '?') + 'nocache=' + new Date().getTime();
-                fetch(postUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) }).catch(console.error);
-              }
-          } else { localAction(); }
+                  
+                  const postUrl = url + (url.includes('?') ? '&' : '?') + 'nocache=' + new Date().getTime();
+                  fetch(postUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) }).catch(console.error);
+              }, 3000);
+          }
         } catch (error) { console.error(error); showToast("Gagal menyimpan."); }
       };
 
