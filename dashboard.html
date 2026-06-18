@@ -296,29 +296,31 @@ React.useEffect(() => {
             const url = localStorage.getItem('edu_sheets_url') || DEFAULT_SHEETS_URL;
             if(!url) { setAppMode('setup_db'); return; }
             const fetchUrl = url + (url.includes('?') ? '&' : '?') + 'nocache=' + new Date().getTime();
+            
             try {
               const res = await fetch(fetchUrl);
               if(!res.ok) throw new Error("Network error");
               const data = await res.json();
               
+              // Proses pemuatan super cepat tanpa blokir antrean IndexedDB
               if(data.admins) {
                   const uniqueAdmins = Array.from(new Map(data.admins.map(a => [a.id, a])).values());
-                  setAdmins(uniqueAdmins); await setLocalData(db, 'edu_admins', uniqueAdmins);
+                  setAdmins(uniqueAdmins); 
               }
               if(data.courses) {
-                  const normCourses = normalizeCourses(data.courses);
-                  setCourses(normCourses); await setLocalData(db, 'edu_courses', normCourses);
+                  setCourses(normalizeCourses(data.courses)); 
               }
               if(data.participants) {
-                  setParticipants(data.participants); await setLocalData(db, 'edu_participants', data.participants);
+                  setParticipants(data.participants); 
               }
               if(data.enrollments) {
-                  setEnrollments(data.enrollments); await setLocalData(db, 'edu_enrollments', data.enrollments);
+                  setEnrollments(data.enrollments); 
               }
               if(data.notifications) {
-                  setNotifications(data.notifications); await setLocalData(db, 'edu_notifications', data.notifications);
+                  setNotifications(data.notifications); 
               }
-              setDbReady(true);
+              
+              setDbReady(true); // Layar langsung terbuka instan
             } catch(e) {
               let errorMsg = "Database belum terkoneksi. Silakan periksa jaringan internet Anda.";
               if (e.toString().includes("Failed to fetch") || e.toString().includes("Network error")) {
